@@ -10,7 +10,6 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
-local TextService = game:GetService("TextService")
 
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
@@ -21,6 +20,7 @@ local Exter = {
     Theme = nil,
     ToggleKey = Enum.KeyCode.RightControl,
     ScreenGui = nil,
+    _connections = {},
 }
 
 -- ═══════════════════════════════════════════════════════════
@@ -409,6 +409,12 @@ local function RippleEffect(button, x, y)
     task.delay(0.55, function() ripple:Destroy() end)
 end
 
+-- Helper to track connections for cleanup
+local function TrackConnection(conn)
+    table.insert(Exter._connections, conn)
+    return conn
+end
+
 -- ═══════════════════════════════════════════════════════════
 -- CONFIGURATION SAVING
 -- ═══════════════════════════════════════════════════════════
@@ -429,6 +435,7 @@ local function SaveConfiguration()
         end
     end
     pcall(function()
+        if not isfolder(LibraryFolder) then makefolder(LibraryFolder) end
         if not isfolder(ConfigFolder) then makefolder(ConfigFolder) end
         writefile(ConfigFolder .. "/" .. ConfigFileName .. ConfigExtension, HttpService:JSONEncode(data))
     end)
@@ -436,12 +443,14 @@ end
 
 local function LoadConfiguration(configString)
     local success, data = pcall(HttpService.JSONDecode, HttpService, configString)
-    if not success then return end
+    if not success or typeof(data) ~= "table" then return end
     for flagName, flagValue in pairs(data) do
         if Exter.Flags[flagName] then
             task.spawn(function()
                 if Exter.Flags[flagName].Type == "ColorPicker" then
-                    Exter.Flags[flagName]:Set(UnpackColor(flagValue))
+                    if typeof(flagValue) == "table" and flagValue.R and flagValue.G and flagValue.B then
+                        Exter.Flags[flagName]:Set(UnpackColor(flagValue))
+                    end
                 else
                     Exter.Flags[flagName]:Set(flagValue)
                 end
@@ -457,24 +466,37 @@ end
 local function MakeDraggable(dragHandle, targetFrame)
     local dragging = false
     local dragStart, startPos
+    local dragInputConn = nil
+
     dragHandle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             startPos = targetFrame.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            -- Disconnect previous connection to prevent leak
+            if dragInputConn then
+                dragInputConn:Disconnect()
+                dragInputConn = nil
+            end
+            dragInputConn = input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                    if dragInputConn then
+                        dragInputConn:Disconnect()
+                        dragInputConn = nil
+                    end
+                end
             end)
         end
     end)
-    UserInputService.InputChanged:Connect(function(input)
+    TrackConnection(UserInputService.InputChanged:Connect(function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - dragStart
             Tween(targetFrame, 0.12, {
                 Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
             }, Enum.EasingStyle.Quart)
         end
-    end)
+    end))
 end
 
 -- ═══════════════════════════════════════════════════════════
@@ -584,7 +606,7 @@ local function CreateFullscreenLoadingScreen(screenGui, settings, theme)
     -- Animated gradient rotation
     task.spawn(function()
         local rot = 45
-        while loadScreen.Parent do
+        while loadScreen and loadScreen.Parent do
             rot = rot + 0.3
             gradientEffect.Rotation = rot
             task.wait()
@@ -600,7 +622,7 @@ local function CreateFullscreenLoadingScreen(screenGui, settings, theme)
             ZIndex = 101, Parent = loadScreen })
         AddCorner(particle, 999)
         task.spawn(function()
-            while particle.Parent do
+            while particle and particle.Parent do
                 Tween(particle, math.random(30, 80) / 10, {
                     Position = UDim2.new(math.random() * 0.8 + 0.1, 0, math.random() * 0.8 + 0.1, 0),
                     BackgroundTransparency = math.random(70, 95) / 100,
@@ -633,7 +655,7 @@ local function CreateFullscreenLoadingScreen(screenGui, settings, theme)
 
     task.spawn(function()
         local ringRot = 0
-        while outerRing.Parent do
+        while outerRing and outerRing.Parent do
             ringRot = ringRot + 2
             ringGrad.Rotation = ringRot
             task.wait()
@@ -653,7 +675,7 @@ local function CreateFullscreenLoadingScreen(screenGui, settings, theme)
 
     -- Pulse animation
     task.spawn(function()
-        while logoCircle.Parent do
+        while logoCircle and logoCircle.Parent do
             Tween(logoCircle, 1.2, { Size = UDim2.new(1, 4, 1, 4) }, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
             task.wait(1.2)
             Tween(logoCircle, 1.2, { Size = UDim2.new(1, 0, 1, 0) }, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
@@ -801,8 +823,10 @@ function Exter:CreateWindow(settings)
     end)
 
     local parentContainer = screenGui.Parent
-    for _, child in ipairs(parentContainer:GetChildren()) do
-        if child.Name == "ExterLib" and child ~= screenGui then child:Destroy() end
+    if parentContainer then
+        for _, child in ipairs(parentContainer:GetChildren()) do
+            if child.Name == "ExterLib" and child ~= screenGui then child:Destroy() end
+        end
     end
     Exter.ScreenGui = screenGui
 
@@ -957,7 +981,8 @@ function Exter:CreateWindow(settings)
         else
             isMinimized = true
             minimizeBtn.Text = "+"
-            task.delay(0.1, function() sidebar.Visible = false; contentArea.Visible = false end)
+            sidebar.Visible = false
+            contentArea.Visible = false
             Tween(mainFrame, 0.45, { Size = UDim2.new(0, 580, 0, 48) })
         end
     end)
@@ -968,7 +993,7 @@ function Exter:CreateWindow(settings)
         task.delay(0.45, function() mainFrame.Visible = false end)
     end)
 
-    UserInputService.InputBegan:Connect(function(input, processed)
+    TrackConnection(UserInputService.InputBegan:Connect(function(input, processed)
         if processed then return end
         if input.KeyCode == Exter.ToggleKey then
             if isHidden then
@@ -987,7 +1012,7 @@ function Exter:CreateWindow(settings)
                 task.delay(0.45, function() mainFrame.Visible = false end)
             end
         end
-    end)
+    end))
 
     -- Theme cycling
     local themeOrder = { "Dark", "Neon", "Ocean", "Sunset", "Cyberpunk" }
@@ -1012,7 +1037,11 @@ function Exter:CreateWindow(settings)
     local Window = {}
 
     function Window:CreateTab(tabSettings)
-        local tabName = tabSettings.Name or tabSettings
+        -- FIX: Handle both string and table input for tabSettings
+        if typeof(tabSettings) == "string" then
+            tabSettings = { Name = tabSettings }
+        end
+        local tabName = tabSettings.Name or "Tab"
         local tabIcon = tabSettings.Icon or nil
 
         local tabBtn = Create("TextButton", { Name = tabName, BackgroundColor3 = theme.TabBackground,
@@ -1021,9 +1050,11 @@ function Exter:CreateWindow(settings)
         AddCorner(tabBtn, 10)
 
         if tabIcon then
+            -- FIX: Added missing TextColor3 and FontFace for icon
             Create("TextLabel", { Name = "Icon", BackgroundTransparency = 1,
                 Size = UDim2.new(0, 26, 1, 0), Position = UDim2.new(0, 10, 0, 0),
-                Text = tabIcon, TextSize = 15, Parent = tabBtn })
+                Text = tabIcon, TextColor3 = theme.TabText, TextSize = 15,
+                FontFace = theme.FontFace, Parent = tabBtn })
         end
 
         local tabTitle = Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
@@ -1053,6 +1084,8 @@ function Exter:CreateWindow(settings)
                     Tween(otherBtn, 0.3, { BackgroundTransparency = 0.4, BackgroundColor3 = theme.TabBackground })
                     local otherTitle = otherBtn:FindFirstChild("Title")
                     if otherTitle then Tween(otherTitle, 0.3, { TextColor3 = theme.TabText }) end
+                    local otherIcon = otherBtn:FindFirstChild("Icon")
+                    if otherIcon then Tween(otherIcon, 0.3, { TextColor3 = theme.TabText }) end
                     local otherInd = otherBtn:FindFirstChild("ActiveIndicator")
                     if otherInd then Tween(otherInd, 0.3, { Size = UDim2.new(0, 3, 0, 0) }) end
                 end
@@ -1060,6 +1093,8 @@ function Exter:CreateWindow(settings)
             for _, page in pairs(tabPages) do page.Visible = false end
             Tween(tabBtn, 0.3, { BackgroundTransparency = 0.05, BackgroundColor3 = LerpColor(theme.TabBackground, theme.Accent, 0.18) })
             Tween(tabTitle, 0.3, { TextColor3 = theme.TextPrimary })
+            local iconLabel = tabBtn:FindFirstChild("Icon")
+            if iconLabel then Tween(iconLabel, 0.3, { TextColor3 = theme.TextPrimary }) end
             SpringTween(activeIndicator, 0.35, { Size = UDim2.new(0, 3, 0, 20) })
             tabPage.Visible = true
             currentTab = tabName
@@ -1117,6 +1152,8 @@ function Exter:CreateWindow(settings)
             AddCorner(paragraph, 10)
             AddStroke(paragraph, theme.ElementBorder, 1, 0.4)
             AddPadding(paragraph, 12, 14, 12, 14)
+            -- FIX: Add UIListLayout BEFORE children so layout order works correctly
+            AddListLayout(paragraph, 6)
             local pTitle = Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
                 Size = UDim2.new(1, 0, 0, 20), Text = paragraphSettings.Title or "Title",
                 TextColor3 = theme.TextPrimary, TextSize = 14, FontFace = theme.FontFaceBold,
@@ -1126,7 +1163,6 @@ function Exter:CreateWindow(settings)
                 Text = paragraphSettings.Content or "Content", TextColor3 = theme.TextSecondary,
                 TextSize = 12, FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
                 TextWrapped = true, LayoutOrder = 2, Parent = paragraph })
-            AddListLayout(paragraph, 6)
             function paragraphValue:Set(s) pTitle.Text = s.Title or pTitle.Text; pContent.Text = s.Content or pContent.Text end
             return paragraphValue
         end
@@ -1153,11 +1189,13 @@ function Exter:CreateWindow(settings)
 
             interact.MouseEnter:Connect(function()
                 Tween(button, 0.25, { BackgroundColor3 = theme.ElementBackgroundHover, BackgroundTransparency = 0.05 })
-                Tween(button.UIStroke, 0.25, { Color = theme.ElementBorderHover })
+                local stroke = button:FindFirstChildOfClass("UIStroke")
+                if stroke then Tween(stroke, 0.25, { Color = theme.ElementBorderHover }) end
             end)
             interact.MouseLeave:Connect(function()
                 Tween(button, 0.25, { BackgroundColor3 = theme.ElementBackground, BackgroundTransparency = 0.15 })
-                Tween(button.UIStroke, 0.25, { Color = theme.ElementBorder })
+                local stroke = button:FindFirstChildOfClass("UIStroke")
+                if stroke then Tween(stroke, 0.25, { Color = theme.ElementBorder }) end
             end)
             interact.MouseButton1Click:Connect(function()
                 RippleEffect(button, Mouse.X, Mouse.Y)
@@ -1182,7 +1220,9 @@ function Exter:CreateWindow(settings)
         -- Toggle
         function Tab:CreateToggle(toggleSettings)
             toggleSettings.Type = "Toggle"
-            toggleSettings.CurrentValue = toggleSettings.CurrentValue or false
+            if toggleSettings.CurrentValue == nil then
+                toggleSettings.CurrentValue = false
+            end
             local toggle = Create("Frame", { Name = "Toggle_" .. (toggleSettings.Name or "Toggle"),
                 BackgroundColor3 = theme.ElementBackground, BackgroundTransparency = 0.15,
                 Size = UDim2.new(1, 0, 0, 40), Parent = tabPage })
@@ -1244,6 +1284,10 @@ function Exter:CreateWindow(settings)
             local increment = sliderSettings.Increment or 1
             sliderSettings.CurrentValue = sliderSettings.CurrentValue or range[1]
 
+            -- FIX: Prevent division by zero
+            local rangeSpan = range[2] - range[1]
+            if rangeSpan == 0 then rangeSpan = 1 end
+
             local slider = Create("Frame", { Name = "Slider_" .. (sliderSettings.Name or "Slider"),
                 BackgroundColor3 = theme.ElementBackground, BackgroundTransparency = 0.15,
                 Size = UDim2.new(1, 0, 0, 54), Parent = tabPage })
@@ -1264,9 +1308,9 @@ function Exter:CreateWindow(settings)
             local sliderTrack = Create("Frame", { Name = "Track", BackgroundColor3 = theme.SliderBackground,
                 Size = UDim2.new(1, -28, 0, 8), Position = UDim2.new(0, 14, 0, 36), Parent = slider })
             AddCorner(sliderTrack, 4)
-            local initialPercent = (sliderSettings.CurrentValue - range[1]) / (range[2] - range[1])
+            local initialPercent = math.clamp((sliderSettings.CurrentValue - range[1]) / rangeSpan, 0, 1)
             local sliderFill = Create("Frame", { Name = "Fill", BackgroundColor3 = theme.SliderFill,
-                Size = UDim2.new(math.clamp(initialPercent, 0, 1), 0, 1, 0), Parent = sliderTrack })
+                Size = UDim2.new(initialPercent, 0, 1, 0), Parent = sliderTrack })
             AddCorner(sliderFill, 4)
             AddGradient(sliderFill, ColorSequence.new({
                 ColorSequenceKeypoint.new(0, theme.GradientAccent1),
@@ -1274,7 +1318,7 @@ function Exter:CreateWindow(settings)
             }))
             local sliderKnob = Create("Frame", { Name = "Knob", BackgroundColor3 = theme.SliderKnob,
                 Size = UDim2.new(0, 16, 0, 16),
-                Position = UDim2.new(math.clamp(initialPercent, 0, 1), -8, 0.5, 0),
+                Position = UDim2.new(initialPercent, -8, 0.5, 0),
                 AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3, Parent = sliderTrack })
             AddCorner(sliderKnob, 8)
             AddShadow(sliderKnob, 0.5, 8)
@@ -1284,20 +1328,17 @@ function Exter:CreateWindow(settings)
             local interact = Create("TextButton", { Name = "Interact", BackgroundTransparency = 1,
                 Size = UDim2.new(1, 0, 1, 14), Position = UDim2.new(0, 0, 0, -7),
                 Text = "", ZIndex = 5, Parent = sliderTrack })
-            interact.MouseButton1Down:Connect(function() sliderDragging = true end)
-            UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then sliderDragging = false end
-            end)
 
             local function updateSlider(inputX)
                 local trackPos = sliderTrack.AbsolutePosition.X
                 local trackSize = sliderTrack.AbsoluteSize.X
+                if trackSize == 0 then return end
                 local relativeX = math.clamp((inputX - trackPos) / trackSize, 0, 1)
-                local rawValue = range[1] + relativeX * (range[2] - range[1])
+                local rawValue = range[1] + relativeX * rangeSpan
                 local newValue = math.floor(rawValue / increment + 0.5) * increment
                 newValue = math.clamp(newValue, range[1], range[2])
                 newValue = tonumber(string.format("%.6f", newValue))
-                local percent = (newValue - range[1]) / (range[2] - range[1])
+                local percent = math.clamp((newValue - range[1]) / rangeSpan, 0, 1)
                 Tween(sliderFill, 0.08, { Size = UDim2.new(percent, 0, 1, 0) })
                 Tween(sliderKnob, 0.08, { Position = UDim2.new(percent, -8, 0.5, 0) })
                 valueLabel.Text = tostring(newValue) .. (sliderSettings.Suffix and " " .. sliderSettings.Suffix or "")
@@ -1308,10 +1349,20 @@ function Exter:CreateWindow(settings)
                 end
             end
 
-            RunService.RenderStepped:Connect(function()
-                if sliderDragging then updateSlider(Mouse.X) end
+            -- FIX: Single MouseButton1Down handler instead of duplicate
+            interact.MouseButton1Down:Connect(function()
+                sliderDragging = true
+                updateSlider(Mouse.X)
             end)
-            interact.MouseButton1Down:Connect(function() updateSlider(Mouse.X) end)
+            TrackConnection(UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    sliderDragging = false
+                end
+            end))
+
+            TrackConnection(RunService.RenderStepped:Connect(function()
+                if sliderDragging then updateSlider(Mouse.X) end
+            end))
             slider.MouseEnter:Connect(function()
                 Tween(slider, 0.25, { BackgroundColor3 = theme.ElementBackgroundHover, BackgroundTransparency = 0.05 })
             end)
@@ -1322,7 +1373,7 @@ function Exter:CreateWindow(settings)
             function sliderSettings:Set(newValue)
                 newValue = math.clamp(newValue, range[1], range[2])
                 sliderSettings.CurrentValue = newValue
-                local percent = (newValue - range[1]) / (range[2] - range[1])
+                local percent = math.clamp((newValue - range[1]) / rangeSpan, 0, 1)
                 Tween(sliderFill, 0.3, { Size = UDim2.new(percent, 0, 1, 0) })
                 Tween(sliderKnob, 0.3, { Position = UDim2.new(percent, -8, 0.5, 0) })
                 valueLabel.Text = tostring(newValue) .. (sliderSettings.Suffix and " " .. sliderSettings.Suffix or "")
@@ -1335,7 +1386,7 @@ function Exter:CreateWindow(settings)
         -- Input
         function Tab:CreateInput(inputSettings)
             inputSettings.Type = "Input"
-            inputSettings.CurrentValue = ""
+            inputSettings.CurrentValue = inputSettings.CurrentValue or ""
             local inputFrame = Create("Frame", { Name = "Input_" .. (inputSettings.Name or "Input"),
                 BackgroundColor3 = theme.ElementBackground, BackgroundTransparency = 0.15,
                 Size = UDim2.new(1, 0, 0, 40), Parent = tabPage })
@@ -1348,7 +1399,7 @@ function Exter:CreateWindow(settings)
                 Parent = inputFrame })
             local inputBox = Create("TextBox", { Name = "InputBox", BackgroundColor3 = theme.InputBackground,
                 Size = UDim2.new(0.52, -16, 0, 28), Position = UDim2.new(0.48, 4, 0.5, 0),
-                AnchorPoint = Vector2.new(0, 0.5), Text = "",
+                AnchorPoint = Vector2.new(0, 0.5), Text = inputSettings.CurrentValue,
                 PlaceholderText = inputSettings.PlaceholderText or "Type here...",
                 PlaceholderColor3 = theme.PlaceholderText, TextColor3 = theme.TextPrimary,
                 TextSize = 12, FontFace = theme.FontFace, ClearTextOnFocus = false, Parent = inputFrame })
@@ -1357,10 +1408,12 @@ function Exter:CreateWindow(settings)
             AddPadding(inputBox, 0, 10, 0, 10)
 
             inputBox.Focused:Connect(function()
-                Tween(inputBox.UIStroke, 0.2, { Color = theme.InputBorderFocus, Transparency = 0 })
+                local stroke = inputBox:FindFirstChildOfClass("UIStroke")
+                if stroke then Tween(stroke, 0.2, { Color = theme.InputBorderFocus, Transparency = 0 }) end
             end)
             inputBox.FocusLost:Connect(function()
-                Tween(inputBox.UIStroke, 0.2, { Color = theme.InputBorder, Transparency = 0.3 })
+                local stroke = inputBox:FindFirstChildOfClass("UIStroke")
+                if stroke then Tween(stroke, 0.2, { Color = theme.InputBorder, Transparency = 0.3 }) end
                 inputSettings.CurrentValue = inputBox.Text
                 pcall(inputSettings.Callback, inputBox.Text)
                 if inputSettings.RemoveTextAfterFocusLost then inputBox.Text = "" end
@@ -1387,6 +1440,15 @@ function Exter:CreateWindow(settings)
             if not dropdownSettings.MultipleOptions then
                 dropdownSettings.CurrentOption = {dropdownSettings.CurrentOption[1]}
             end
+            -- FIX: Clean nil values from CurrentOption table
+            local cleanedOptions = {}
+            for _, opt in ipairs(dropdownSettings.CurrentOption) do
+                if opt ~= nil then
+                    table.insert(cleanedOptions, opt)
+                end
+            end
+            dropdownSettings.CurrentOption = cleanedOptions
+
             local isOpen = false
 
             local dropdown = Create("Frame", { Name = "Dropdown_" .. (dropdownSettings.Name or "Dropdown"),
@@ -1407,7 +1469,8 @@ function Exter:CreateWindow(settings)
                 Parent = dropdown })
             local arrow = Create("TextLabel", { Name = "Arrow", BackgroundTransparency = 1,
                 Size = UDim2.new(0, 22, 0, 40), Position = UDim2.new(1, -28, 0, 0),
-                Text = "V", TextColor3 = theme.Accent, TextSize = 10, Rotation = 0, Parent = dropdown })
+                Text = "V", TextColor3 = theme.Accent, TextSize = 10, FontFace = theme.FontFaceBold,
+                Rotation = 0, Parent = dropdown })
 
             local optionsContainer = Create("Frame", { Name = "Options", BackgroundTransparency = 1,
                 Size = UDim2.new(1, -14, 0, 0), Position = UDim2.new(0, 7, 0, 46),
@@ -1419,7 +1482,7 @@ function Exter:CreateWindow(settings)
                     if #dropdownSettings.CurrentOption == 0 then selectedLabel.Text = "None"
                     elseif #dropdownSettings.CurrentOption == 1 then selectedLabel.Text = dropdownSettings.CurrentOption[1]
                     else selectedLabel.Text = #dropdownSettings.CurrentOption .. " selected" end
-                else selectedLabel.Text = dropdownSettings.CurrentOption[1] or "None" end
+                else selectedLabel.Text = (dropdownSettings.CurrentOption[1] or "None") end
             end
             updateSelectedText()
 
@@ -1501,6 +1564,24 @@ function Exter:CreateWindow(settings)
                 end
             end)
 
+            -- FIX: Add Refresh method to update options dynamically
+            function dropdownSettings:Refresh(newOptionsList)
+                dropdownSettings.Options = newOptionsList
+                for _, child in ipairs(optionsContainer:GetChildren()) do
+                    if child:IsA("TextButton") then child:Destroy() end
+                end
+                for _, option in ipairs(newOptionsList) do createOption(option) end
+                -- Clean current selection to only include valid options
+                local validOptions = {}
+                for _, opt in ipairs(dropdownSettings.CurrentOption) do
+                    if table.find(newOptionsList, opt) then
+                        table.insert(validOptions, opt)
+                    end
+                end
+                dropdownSettings.CurrentOption = validOptions
+                updateSelectedText()
+            end
+
             function dropdownSettings:Set(newOptions)
                 if typeof(newOptions) == "string" then newOptions = {newOptions} end
                 dropdownSettings.CurrentOption = newOptions
@@ -1546,23 +1627,28 @@ function Exter:CreateWindow(settings)
             keybindBox.MouseButton1Click:Connect(function()
                 listening = true
                 keybindBox.Text = "..."
-                Tween(keybindBox.UIStroke, 0.2, { Color = theme.Accent })
+                local stroke = keybindBox:FindFirstChildOfClass("UIStroke")
+                if stroke then Tween(stroke, 0.2, { Color = theme.Accent }) end
             end)
-            UserInputService.InputBegan:Connect(function(input, processed)
+            TrackConnection(UserInputService.InputBegan:Connect(function(input, processed)
                 if listening then
                     if input.KeyCode ~= Enum.KeyCode.Unknown then
                         keybindSettings.CurrentKeybind = input.KeyCode.Name
                         keybindBox.Text = input.KeyCode.Name
                         listening = false
-                        Tween(keybindBox.UIStroke, 0.2, { Color = theme.InputBorder })
+                        local stroke = keybindBox:FindFirstChildOfClass("UIStroke")
+                        if stroke then Tween(stroke, 0.2, { Color = theme.InputBorder }) end
                         SaveConfiguration()
                     end
                 elseif not processed and keybindSettings.CurrentKeybind then
-                    if input.KeyCode == Enum.KeyCode[keybindSettings.CurrentKeybind] then
-                        pcall(keybindSettings.Callback)
-                    end
+                    -- FIX: Wrap KeyCode lookup in pcall to handle invalid key names
+                    pcall(function()
+                        if input.KeyCode == Enum.KeyCode[keybindSettings.CurrentKeybind] then
+                            pcall(keybindSettings.Callback)
+                        end
+                    end)
                 end
-            end)
+            end))
             keybind.MouseEnter:Connect(function()
                 Tween(keybind, 0.25, { BackgroundColor3 = theme.ElementBackgroundHover, BackgroundTransparency = 0.05 })
             end)
@@ -1630,7 +1716,7 @@ function Exter:CreateWindow(settings)
 
             local hexInput = Create("TextBox", { Name = "HexInput", BackgroundColor3 = theme.InputBackground,
                 Size = UDim2.new(0.5, -4, 0, 22), Position = UDim2.new(0, 0, 0, 96),
-                Text = string.format("#%02X%02X%02X", cpSettings.Color.R * 255, cpSettings.Color.G * 255, cpSettings.Color.B * 255),
+                Text = string.format("#%02X%02X%02X", math.floor(cpSettings.Color.R * 255), math.floor(cpSettings.Color.G * 255), math.floor(cpSettings.Color.B * 255)),
                 TextColor3 = theme.TextPrimary, TextSize = 11, FontFace = theme.FontFace,
                 ClearTextOnFocus = false, Parent = pickerArea })
             AddCorner(hexInput, 4)
@@ -1651,38 +1737,54 @@ function Exter:CreateWindow(settings)
                 svPoint.Position = UDim2.new(s, -6, 1 - v, -6)
                 svPoint.BackgroundColor3 = color
                 huePoint.Position = UDim2.new(-0.1, 0, h, -3)
-                hexInput.Text = string.format("#%02X%02X%02X", color.R * 255, color.G * 255, color.B * 255)
+                hexInput.Text = string.format("#%02X%02X%02X", math.floor(color.R * 255), math.floor(color.G * 255), math.floor(color.B * 255))
                 pcall(cpSettings.Callback, color); SaveConfiguration()
             end
 
             local svDragging, hueDragging = false, false
             svPicker.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then svDragging = true end
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    svDragging = true
+                end
             end)
             hueSlider.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then hueDragging = true end
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    hueDragging = true
+                end
             end)
-            UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then svDragging = false; hueDragging = false end
-            end)
-            RunService.RenderStepped:Connect(function()
+            TrackConnection(UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    svDragging = false
+                    hueDragging = false
+                end
+            end))
+            TrackConnection(RunService.RenderStepped:Connect(function()
                 if svDragging then
-                    s = math.clamp((Mouse.X - svPicker.AbsolutePosition.X) / svPicker.AbsoluteSize.X, 0, 1)
-                    v = 1 - math.clamp((Mouse.Y - svPicker.AbsolutePosition.Y) / svPicker.AbsoluteSize.Y, 0, 1)
-                    updateColor()
+                    local svSizeX = svPicker.AbsoluteSize.X
+                    local svSizeY = svPicker.AbsoluteSize.Y
+                    if svSizeX > 0 and svSizeY > 0 then
+                        s = math.clamp((Mouse.X - svPicker.AbsolutePosition.X) / svSizeX, 0, 1)
+                        v = 1 - math.clamp((Mouse.Y - svPicker.AbsolutePosition.Y) / svSizeY, 0, 1)
+                        updateColor()
+                    end
                 end
                 if hueDragging then
-                    h = math.clamp((Mouse.Y - hueSlider.AbsolutePosition.Y) / hueSlider.AbsoluteSize.Y, 0, 1)
-                    updateColor()
+                    local hueSizeY = hueSlider.AbsoluteSize.Y
+                    if hueSizeY > 0 then
+                        h = math.clamp((Mouse.Y - hueSlider.AbsolutePosition.Y) / hueSizeY, 0, 1)
+                        updateColor()
+                    end
                 end
-            end)
+            end))
             hexInput.FocusLost:Connect(function()
                 pcall(function()
                     local hex = hexInput.Text:gsub("#", "")
-                    local r = tonumber(hex:sub(1, 2), 16)
-                    local g = tonumber(hex:sub(3, 4), 16)
-                    local b = tonumber(hex:sub(5, 6), 16)
-                    if r and g and b then h, s, v = Color3.fromRGB(r, g, b):ToHSV(); updateColor() end
+                    if #hex == 6 then
+                        local r = tonumber(hex:sub(1, 2), 16)
+                        local g = tonumber(hex:sub(3, 4), 16)
+                        local b = tonumber(hex:sub(5, 6), 16)
+                        if r and g and b then h, s, v = Color3.fromRGB(r, g, b):ToHSV(); updateColor() end
+                    end
                 end)
             end)
             function cpSettings:Set(newColor) h, s, v = newColor:ToHSV(); cpSettings.Color = newColor; updateColor() end
@@ -1711,6 +1813,13 @@ function Exter:CreateWindow(settings)
 end
 
 function Exter:Destroy()
+    -- FIX: Disconnect all tracked global connections to prevent memory leaks
+    for _, conn in ipairs(Exter._connections) do
+        pcall(function() conn:Disconnect() end)
+    end
+    Exter._connections = {}
+    Exter.Flags = {}
+    NotificationContainer = nil
     if Exter.ScreenGui then Exter.ScreenGui:Destroy(); Exter.ScreenGui = nil end
 end
 
