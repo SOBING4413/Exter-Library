@@ -29,10 +29,10 @@
 Load the library in your script executor with a single line:
 
 ```lua
-local Exter = loadstring(game:HttpGet('https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/ExterLibrary.lua'))()
+local Exter = loadstring(game:HttpGet('https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/ExterLibrary'))()
 ```
 
-> **Note:** Replace the URL with the raw GitHub URL where you host `ExterLibrary.lua`.
+> **Note:** Replace the URL with the raw GitHub URL where you host `ExterLibrary`.
 
 ### Minimal Example
 
@@ -764,7 +764,7 @@ SettingsTab:CreateButton({
 ## 📁 File Structure
 
 ```
-ExterLibrary.lua          ← Main library file (single file, no dependencies)
+ExterLibrary          ← Main library file (single file, no dependencies)
 README.md                 ← This documentation
 ```
 
