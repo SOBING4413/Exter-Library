@@ -819,6 +819,6 @@ This project is licensed under the **MIT License** — free to use, modify, and 
 ---
 
 <p align="center">
-  <strong>Built with ❤️ by the Exter Team</strong><br/>
+  <strong>Built with ❤️ by Sobing4413</strong><br/>
   <sub>If you find this library useful, consider giving it a ⭐ on GitHub!</sub>
 </p>
