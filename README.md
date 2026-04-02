@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/Exter_Library-v2.0-7C5CFF?style=for-the-badge&logo=lua&logoColor=white" alt="Exter Library v2.0"/>
+  <img src="https://img.shields.io/badge/Exter_Library-v1-7C5CFF?style=for-the-badge&logo=lua&logoColor=white" alt="Exter Library v1"/>
   <img src="https://img.shields.io/badge/Platform-Roblox-00A2FF?style=for-the-badge&logo=roblox&logoColor=white" alt="Roblox"/>
   <img src="https://img.shields.io/badge/Language-Lua-2C2D72?style=for-the-badge&logo=lua&logoColor=white" alt="Lua"/>
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License"/>
@@ -593,7 +593,7 @@ local Exter = loadstring(game:HttpGet('YOUR_RAW_URL_HERE'))()
 
 -- Create Window
 local Window = Exter:CreateWindow({
-    Name = "Exter Hub v2.0",
+    Name = "Exter Hub v1",
     Theme = "Dark",
     LoadingTitle = "Exter Hub",
     LoadingSubtitle = "Initializing modules...",
@@ -730,7 +730,7 @@ SettingsTab:CreateKeybind({
 
 SettingsTab:CreateParagraph({
     Title = "About Exter Library",
-    Content = "Exter Library v2.0 — A modern UI library for Roblox executors. Features smooth animations, multiple themes, and full configuration saving.",
+    Content = "Exter Library v1 — A modern UI library for Roblox executors. Features smooth animations, multiple themes, and full configuration saving.",
 })
 
 SettingsTab:CreateButton({
@@ -797,7 +797,7 @@ Exter.Flags["color_esp"]:Set(Color3.fromRGB(0, 255, 0))
 
 ## 📝 Changelog
 
-### v2.0 (Current)
+### v1 (Current)
 - Complete rewrite with modern design language
 - 5 built-in themes with full color token system
 - Smooth Quint/Spring easing animations
