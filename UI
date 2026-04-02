@@ -1,12 +1,18 @@
 -- ═══════════════════════════════════════════════════════════
+-- EXTER LIBRARY v1
+-- UI Library for Roblox Executors
+-- Hook: local Exter = loadstring(game:HttpGet('YOUR_RAW_URL_HERE'))()
+-- ═══════════════════════════════════════════════════════════
+
+-- ═══════════════════════════════════════════════════════════
 -- CONFIGURATION
 -- ═══════════════════════════════════════════════════════════
 
-local Release = "Premium v2.0"
+local Release = "Exter v1"
 local DefaultNotificationDuration = 5
-local LibraryFolder = "PremiumUI"
+local LibraryFolder = "ExterLib"
 local ConfigFolder = LibraryFolder .. "/Configs"
-local ConfigExtension = ".pui"
+local ConfigExtension = ".exter"
 
 -- ═══════════════════════════════════════════════════════════
 -- SERVICES
@@ -27,7 +33,7 @@ local Mouse = Player:GetMouse()
 -- LIBRARY TABLE
 -- ═══════════════════════════════════════════════════════════
 
-local PremiumUI = {
+local Exter = {
     Flags = {},
     Windows = {},
     Theme = nil,
@@ -42,7 +48,7 @@ local PremiumUI = {
 local Themes = {
     Dark = {
         Name = "Dark",
-        FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Regular, Enum.FontStyle.Normal), -- Gotham/Inter style
+        FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
         FontFaceBold = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
         
         Background = Color3.fromRGB(16, 16, 20),
@@ -55,7 +61,7 @@ local Themes = {
         TextSecondary = Color3.fromRGB(160, 160, 175),
         TextMuted = Color3.fromRGB(100, 100, 115),
         
-        Accent = Color3.fromRGB(88, 101, 242),  -- Discord-like blue/purple
+        Accent = Color3.fromRGB(88, 101, 242),
         AccentHover = Color3.fromRGB(105, 117, 255),
         AccentDark = Color3.fromRGB(60, 70, 180),
         
@@ -332,7 +338,7 @@ local Themes = {
 }
 
 -- Set default theme
-PremiumUI.Theme = Themes.Dark
+Exter.Theme = Themes.Dark
 
 -- ═══════════════════════════════════════════════════════════
 -- UTILITY FUNCTIONS
@@ -377,7 +383,7 @@ end
 
 local function AddStroke(parent, color, thickness, transparency)
     return Create("UIStroke", {
-        Color = color or PremiumUI.Theme.ElementBorder,
+        Color = color or Exter.Theme.ElementBorder,
         Thickness = thickness or 1,
         Transparency = transparency or 0,
         ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
@@ -478,7 +484,7 @@ local ConfigFileName = nil
 local function SaveConfiguration()
     if not ConfigEnabled or not ConfigFileName then return end
     local data = {}
-    for flagName, flagData in pairs(PremiumUI.Flags) do
+    for flagName, flagData in pairs(Exter.Flags) do
         if flagData.Type == "ColorPicker" then
             data[flagName] = PackColor(flagData.Color)
         elseif flagData.Type == "Toggle" then
@@ -506,12 +512,12 @@ local function LoadConfiguration(configString)
     if not success then return end
     
     for flagName, flagValue in pairs(data) do
-        if PremiumUI.Flags[flagName] then
+        if Exter.Flags[flagName] then
             task.spawn(function()
-                if PremiumUI.Flags[flagName].Type == "ColorPicker" then
-                    PremiumUI.Flags[flagName]:Set(UnpackColor(flagValue))
+                if Exter.Flags[flagName].Type == "ColorPicker" then
+                    Exter.Flags[flagName]:Set(UnpackColor(flagValue))
                 else
-                    PremiumUI.Flags[flagName]:Set(flagValue)
+                    Exter.Flags[flagName]:Set(flagValue)
                 end
             end)
         end
@@ -559,11 +565,11 @@ end
 
 local NotificationContainer = nil
 
-function PremiumUI:Notify(settings)
+function Exter:Notify(settings)
     if not NotificationContainer then return end
     
-    local theme = PremiumUI.Theme
-    local notifType = settings.Type or "Info" -- Info, Success, Warning, Error
+    local theme = Exter.Theme
+    local notifType = settings.Type or "Info"
     local duration = settings.Duration or DefaultNotificationDuration
     
     local accentColor
@@ -752,21 +758,19 @@ end
 
 local function ApplyTheme(themeName)
     if not Themes[themeName] then return end
-    PremiumUI.Theme = Themes[themeName]
-    -- Theme change event can be connected by the user
-    -- Full re-render would require storing references, simplified here
+    Exter.Theme = Themes[themeName]
 end
 
 -- ═══════════════════════════════════════════════════════════
 -- MAIN WINDOW CREATION
 -- ═══════════════════════════════════════════════════════════
 
-function PremiumUI:CreateWindow(settings)
-    local theme = PremiumUI.Theme
+function Exter:CreateWindow(settings)
+    local theme = Exter.Theme
     
     if settings.Theme and Themes[settings.Theme] then
-        PremiumUI.Theme = Themes[settings.Theme]
-        theme = PremiumUI.Theme
+        Exter.Theme = Themes[settings.Theme]
+        theme = Exter.Theme
     end
     
     -- Configuration
@@ -783,12 +787,12 @@ function PremiumUI:CreateWindow(settings)
     
     -- Toggle key
     if settings.ToggleKey then
-        PremiumUI.ToggleKey = settings.ToggleKey
+        Exter.ToggleKey = settings.ToggleKey
     end
     
     -- ScreenGui
     local screenGui = Create("ScreenGui", {
-        Name = "PremiumUI",
+        Name = "ExterLib",
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
         ResetOnSpawn = false,
         DisplayOrder = 120,
@@ -809,12 +813,12 @@ function PremiumUI:CreateWindow(settings)
     -- Cleanup old instances
     local parentContainer = screenGui.Parent
     for _, child in ipairs(parentContainer:GetChildren()) do
-        if child.Name == "PremiumUI" and child ~= screenGui then
+        if child.Name == "ExterLib" and child ~= screenGui then
             child:Destroy()
         end
     end
     
-    PremiumUI.ScreenGui = screenGui
+    Exter.ScreenGui = screenGui
     
     -- ═══════════════════════════════════════════════════════
     -- MAIN FRAME
@@ -844,7 +848,6 @@ function PremiumUI:CreateWindow(settings)
         BorderSizePixel = 0,
         Parent = mainFrame,
     })
-    -- Corner repair for topbar (only top corners rounded)
     Create("Frame", {
         Name = "CornerRepair",
         BackgroundColor3 = theme.Topbar,
@@ -871,7 +874,7 @@ function PremiumUI:CreateWindow(settings)
         BackgroundTransparency = 1,
         Size = UDim2.new(0.5, 0, 1, 0),
         Position = UDim2.new(0, 16, 0, 0),
-        Text = settings.Name or "Premium UI",
+        Text = settings.Name or "Exter Library",
         TextColor3 = theme.TextPrimary,
         TextSize = 15,
         FontFace = theme.FontFaceBold,
@@ -887,7 +890,7 @@ function PremiumUI:CreateWindow(settings)
         Size = UDim2.new(0, 50, 0, 18),
         Position = UDim2.new(0, titleLabel.TextBounds.X + 24, 0.5, 0),
         AnchorPoint = Vector2.new(0, 0.5),
-        Text = "v2.0",
+        Text = "v1",
         TextColor3 = theme.Accent,
         TextSize = 10,
         FontFace = theme.FontFaceBold,
@@ -979,7 +982,6 @@ function PremiumUI:CreateWindow(settings)
         Parent = mainFrame,
     })
     
-    -- Sidebar divider
     Create("Frame", {
         Name = "Divider",
         BackgroundColor3 = theme.DividerColor,
@@ -1072,7 +1074,7 @@ function PremiumUI:CreateWindow(settings)
     -- Toggle key
     UserInputService.InputBegan:Connect(function(input, processed)
         if processed then return end
-        if input.KeyCode == PremiumUI.ToggleKey then
+        if input.KeyCode == Exter.ToggleKey then
             if isHidden then
                 isHidden = false
                 mainFrame.Visible = true
@@ -1107,14 +1109,12 @@ function PremiumUI:CreateWindow(settings)
         currentThemeIndex = currentThemeIndex % #themeOrder + 1
         local newThemeName = themeOrder[currentThemeIndex]
         ApplyTheme(newThemeName)
-        PremiumUI:Notify({
+        Exter:Notify({
             Title = "Theme Changed",
             Content = "Switched to " .. newThemeName .. " theme",
             Type = "Info",
             Duration = 2,
         })
-        -- Note: Full live theme switching requires storing all element references
-        -- and updating them. For simplicity, a full re-creation approach is recommended.
     end)
     
     -- ═══════════════════════════════════════════════════════
@@ -1134,7 +1134,7 @@ function PremiumUI:CreateWindow(settings)
         BackgroundTransparency = 1,
         Size = UDim2.new(1, 0, 0, 30),
         Position = UDim2.new(0, 0, 0.35, 0),
-        Text = settings.LoadingTitle or "Premium Interface Suite",
+        Text = settings.LoadingTitle or "Exter Library",
         TextColor3 = theme.TextPrimary,
         TextSize = 20,
         FontFace = theme.FontFaceBold,
@@ -1212,7 +1212,7 @@ function PremiumUI:CreateWindow(settings)
     
     function Window:CreateTab(tabSettings)
         local tabName = tabSettings.Name or tabSettings
-        local tabIcon = tabSettings.Icon or nil -- Text emoji icon
+        local tabIcon = tabSettings.Icon or nil
         
         -- Tab button in sidebar
         local tabBtn = Create("TextButton", {
@@ -1265,7 +1265,7 @@ function PremiumUI:CreateWindow(settings)
         })
         AddCorner(activeIndicator, 2)
         
-        -- Tab page (scrolling frame for elements)
+        -- Tab page
         local tabPage = Create("ScrollingFrame", {
             Name = tabName,
             BackgroundTransparency = 1,
@@ -1286,7 +1286,6 @@ function PremiumUI:CreateWindow(settings)
         
         -- Tab selection
         local function selectTab()
-            -- Deselect all
             for _, otherBtn in ipairs(tabListScroll:GetChildren()) do
                 if otherBtn:IsA("TextButton") then
                     Tween(otherBtn, 0.25, { BackgroundTransparency = 0.5, BackgroundColor3 = theme.TabBackground })
@@ -1301,12 +1300,10 @@ function PremiumUI:CreateWindow(settings)
                 end
             end
             
-            -- Hide all pages
             for _, page in pairs(tabPages) do
                 page.Visible = false
             end
             
-            -- Select current
             Tween(tabBtn, 0.25, { BackgroundTransparency = 0.1, BackgroundColor3 = LerpColor(theme.TabBackground, theme.Accent, 0.15) })
             Tween(tabTitle, 0.25, { TextColor3 = theme.TextPrimary })
             Tween(activeIndicator, 0.3, { Size = UDim2.new(0, 3, 0, 18) })
@@ -1329,7 +1326,6 @@ function PremiumUI:CreateWindow(settings)
         
         tabBtn.MouseButton1Click:Connect(selectTab)
         
-        -- Auto-select first tab
         if #tabs == 0 then
             task.defer(selectTab)
         end
@@ -1366,7 +1362,6 @@ function PremiumUI:CreateWindow(settings)
                 Parent = section,
             })
             
-            -- Divider line
             Create("Frame", {
                 BackgroundColor3 = theme.DividerColor,
                 Size = UDim2.new(1, -16, 0, 1),
@@ -1496,7 +1491,6 @@ function PremiumUI:CreateWindow(settings)
                 Parent = button,
             })
             
-            -- Arrow indicator
             Create("TextLabel", {
                 Name = "Arrow",
                 BackgroundTransparency = 1,
@@ -1534,12 +1528,11 @@ function PremiumUI:CreateWindow(settings)
                 if not success then
                     Tween(button, 0.3, { BackgroundColor3 = theme.Error })
                     btnTitle.Text = "Error!"
-                    warn("PremiumUI | Button Callback Error: " .. tostring(err))
+                    warn("Exter | Button Callback Error: " .. tostring(err))
                     task.wait(0.5)
                     btnTitle.Text = buttonSettings.Name or "Button"
                     Tween(button, 0.3, { BackgroundColor3 = theme.ElementBackground })
                 else
-                    -- Success flash
                     Tween(button, 0.15, { BackgroundColor3 = LerpColor(theme.ElementBackground, theme.Accent, 0.2) })
                     task.wait(0.15)
                     Tween(button, 0.3, { BackgroundColor3 = theme.ElementBackground })
@@ -1582,7 +1575,6 @@ function PremiumUI:CreateWindow(settings)
                 Parent = toggle,
             })
             
-            -- Switch track
             local switchTrack = Create("Frame", {
                 Name = "Switch",
                 BackgroundColor3 = toggleSettings.CurrentValue and theme.ToggleEnabled or theme.ToggleDisabled,
@@ -1593,7 +1585,6 @@ function PremiumUI:CreateWindow(settings)
             })
             AddCorner(switchTrack, 11)
             
-            -- Switch knob
             local switchKnob = Create("Frame", {
                 Name = "Knob",
                 BackgroundColor3 = theme.ToggleKnob,
@@ -1637,7 +1628,7 @@ function PremiumUI:CreateWindow(settings)
                 
                 local success, err = pcall(toggleSettings.Callback, toggleSettings.CurrentValue)
                 if not success then
-                    warn("PremiumUI | Toggle Callback Error: " .. tostring(err))
+                    warn("Exter | Toggle Callback Error: " .. tostring(err))
                 end
                 SaveConfiguration()
             end)
@@ -1650,7 +1641,7 @@ function PremiumUI:CreateWindow(settings)
             end
             
             if toggleSettings.Flag then
-                PremiumUI.Flags[toggleSettings.Flag] = toggleSettings
+                Exter.Flags[toggleSettings.Flag] = toggleSettings
             end
             
             return toggleSettings
@@ -1699,7 +1690,6 @@ function PremiumUI:CreateWindow(settings)
             })
             AddCorner(valueLabel, 4)
             
-            -- Slider track
             local sliderTrack = Create("Frame", {
                 Name = "Track",
                 BackgroundColor3 = theme.SliderBackground,
@@ -1709,7 +1699,6 @@ function PremiumUI:CreateWindow(settings)
             })
             AddCorner(sliderTrack, 3)
             
-            -- Slider fill
             local initialPercent = (sliderSettings.CurrentValue - range[1]) / (range[2] - range[1])
             local sliderFill = Create("Frame", {
                 Name = "Fill",
@@ -1723,7 +1712,6 @@ function PremiumUI:CreateWindow(settings)
                 ColorSequenceKeypoint.new(1, theme.Accent),
             }))
             
-            -- Slider knob
             local sliderKnob = Create("Frame", {
                 Name = "Knob",
                 BackgroundColor3 = theme.SliderKnob,
@@ -1736,7 +1724,6 @@ function PremiumUI:CreateWindow(settings)
             AddCorner(sliderKnob, 7)
             AddShadow(sliderKnob, 0.6, 6)
             
-            -- Interaction
             local sliderDragging = false
             
             local interact = Create("TextButton", {
@@ -1767,8 +1754,6 @@ function PremiumUI:CreateWindow(settings)
                 local rawValue = range[1] + relativeX * (range[2] - range[1])
                 local newValue = math.floor(rawValue / increment + 0.5) * increment
                 newValue = math.clamp(newValue, range[1], range[2])
-                
-                -- Round to avoid floating point issues
                 newValue = tonumber(string.format("%.6f", newValue))
                 
                 local percent = (newValue - range[1]) / (range[2] - range[1])
@@ -1814,7 +1799,7 @@ function PremiumUI:CreateWindow(settings)
             end
             
             if sliderSettings.Flag then
-                PremiumUI.Flags[sliderSettings.Flag] = sliderSettings
+                Exter.Flags[sliderSettings.Flag] = sliderSettings
             end
             
             return sliderSettings
@@ -1876,7 +1861,7 @@ function PremiumUI:CreateWindow(settings)
                 
                 local success, err = pcall(inputSettings.Callback, inputBox.Text)
                 if not success then
-                    warn("PremiumUI | Input Callback Error: " .. tostring(err))
+                    warn("Exter | Input Callback Error: " .. tostring(err))
                 end
                 
                 if inputSettings.RemoveTextAfterFocusLost then
@@ -1898,7 +1883,7 @@ function PremiumUI:CreateWindow(settings)
             end
             
             if inputSettings.Flag then
-                PremiumUI.Flags[inputSettings.Flag] = inputSettings
+                Exter.Flags[inputSettings.Flag] = inputSettings
             end
             
             return inputSettings
@@ -1956,7 +1941,6 @@ function PremiumUI:CreateWindow(settings)
                 Parent = dropdown,
             })
             
-            -- Arrow
             local arrow = Create("TextLabel", {
                 Name = "Arrow",
                 BackgroundTransparency = 1,
@@ -1969,7 +1953,6 @@ function PremiumUI:CreateWindow(settings)
                 Parent = dropdown,
             })
             
-            -- Options container
             local optionsContainer = Create("Frame", {
                 Name = "Options",
                 BackgroundTransparency = 1,
@@ -2021,7 +2004,6 @@ function PremiumUI:CreateWindow(settings)
                     Parent = optionBtn,
                 })
                 
-                -- Checkmark
                 local checkmark = Create("TextLabel", {
                     Name = "Check",
                     BackgroundTransparency = 1,
@@ -2057,9 +2039,7 @@ function PremiumUI:CreateWindow(settings)
                             Tween(optionBtn, 0.2, { BackgroundColor3 = LerpColor(theme.DropdownBackground, theme.Accent, 0.15) })
                         end
                     else
-                        -- Single select
                         dropdownSettings.CurrentOption = {optionName}
-                        -- Update all options visuals
                         for _, child in ipairs(optionsContainer:GetChildren()) do
                             if child:IsA("TextButton") then
                                 local cTitle = child:FindFirstChild("Title")
@@ -2075,7 +2055,6 @@ function PremiumUI:CreateWindow(settings)
                                 end
                             end
                         end
-                        -- Close dropdown after single select
                         task.delay(0.15, function()
                             isOpen = false
                             Tween(dropdown, 0.3, { Size = UDim2.new(1, 0, 0, 38) })
@@ -2091,12 +2070,10 @@ function PremiumUI:CreateWindow(settings)
                 return optionBtn
             end
             
-            -- Create all options
             for _, option in ipairs(dropdownSettings.Options or {}) do
                 createOption(option)
             end
             
-            -- Toggle dropdown
             local interact = Create("TextButton", {
                 Name = "Interact",
                 BackgroundTransparency = 1,
@@ -2126,7 +2103,6 @@ function PremiumUI:CreateWindow(settings)
                 dropdownSettings.CurrentOption = newOptions
                 updateSelectedText()
                 
-                -- Update visuals
                 for _, child in ipairs(optionsContainer:GetChildren()) do
                     if child:IsA("TextButton") then
                         local sel = table.find(newOptions, child.Name) ~= nil
@@ -2143,7 +2119,7 @@ function PremiumUI:CreateWindow(settings)
             end
             
             if dropdownSettings.Flag then
-                PremiumUI.Flags[dropdownSettings.Flag] = dropdownSettings
+                Exter.Flags[dropdownSettings.Flag] = dropdownSettings
             end
             
             return dropdownSettings
@@ -2231,7 +2207,7 @@ function PremiumUI:CreateWindow(settings)
             end
             
             if keybindSettings.Flag then
-                PremiumUI.Flags[keybindSettings.Flag] = keybindSettings
+                Exter.Flags[keybindSettings.Flag] = keybindSettings
             end
             
             return keybindSettings
@@ -2268,7 +2244,6 @@ function PremiumUI:CreateWindow(settings)
                 Parent = cpFrame,
             })
             
-            -- Color preview
             local colorPreview = Create("Frame", {
                 Name = "Preview",
                 BackgroundColor3 = colorPickerSettings.Color,
@@ -2279,7 +2254,6 @@ function PremiumUI:CreateWindow(settings)
             AddCorner(colorPreview, 6)
             AddStroke(colorPreview, theme.ElementBorder, 1, 0.3)
             
-            -- Color picker area
             local pickerArea = Create("Frame", {
                 Name = "PickerArea",
                 BackgroundTransparency = 1,
@@ -2288,7 +2262,6 @@ function PremiumUI:CreateWindow(settings)
                 Parent = cpFrame,
             })
             
-            -- Saturation/Value picker
             local svPicker = Create("ImageLabel", {
                 Name = "SVPicker",
                 BackgroundColor3 = Color3.fromHSV(h, 1, 1),
@@ -2309,7 +2282,6 @@ function PremiumUI:CreateWindow(settings)
             AddCorner(svPoint, 6)
             AddStroke(svPoint, Color3.fromRGB(0, 0, 0), 2, 0.3)
             
-            -- Hue slider
             local hueSlider = Create("Frame", {
                 Name = "HueSlider",
                 Size = UDim2.new(0, 18, 0, 90),
@@ -2338,7 +2310,6 @@ function PremiumUI:CreateWindow(settings)
             AddCorner(huePoint, 3)
             AddStroke(huePoint, Color3.fromRGB(0, 0, 0), 1, 0.3)
             
-            -- Hex input
             local hexInput = Create("TextBox", {
                 Name = "HexInput",
                 BackgroundColor3 = theme.InputBackground,
@@ -2354,7 +2325,6 @@ function PremiumUI:CreateWindow(settings)
             AddCorner(hexInput, 4)
             AddStroke(hexInput, theme.InputBorder, 1, 0.5)
             
-            -- Toggle open
             local interact = Create("TextButton", {
                 Name = "Interact",
                 BackgroundTransparency = 1,
@@ -2386,7 +2356,6 @@ function PremiumUI:CreateWindow(settings)
                 SaveConfiguration()
             end
             
-            -- SV picker dragging
             local svDragging = false
             svPicker.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -2394,7 +2363,6 @@ function PremiumUI:CreateWindow(settings)
                 end
             end)
             
-            -- Hue slider dragging
             local hueDragging = false
             hueSlider.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -2445,7 +2413,7 @@ function PremiumUI:CreateWindow(settings)
             end
             
             if colorPickerSettings.Flag then
-                PremiumUI.Flags[colorPickerSettings.Flag] = colorPickerSettings
+                Exter.Flags[colorPickerSettings.Flag] = colorPickerSettings
             end
             
             return colorPickerSettings
@@ -2464,7 +2432,7 @@ function PremiumUI:CreateWindow(settings)
                 local path = ConfigFolder .. "/" .. ConfigFileName .. ConfigExtension
                 if isfile(path) then
                     LoadConfiguration(readfile(path))
-                    PremiumUI:Notify({
+                    Exter:Notify({
                         Title = "Configuration Loaded",
                         Content = "Your saved settings have been restored.",
                         Type = "Success",
@@ -2487,10 +2455,10 @@ end
 -- DESTROY
 -- ═══════════════════════════════════════════════════════════
 
-function PremiumUI:Destroy()
-    if PremiumUI.ScreenGui then
-        PremiumUI.ScreenGui:Destroy()
-        PremiumUI.ScreenGui = nil
+function Exter:Destroy()
+    if Exter.ScreenGui then
+        Exter.ScreenGui:Destroy()
+        Exter.ScreenGui = nil
     end
 end
 
@@ -2498,21 +2466,22 @@ end
 -- RETURN LIBRARY
 -- ═══════════════════════════════════════════════════════════
 
-return PremiumUI
+return Exter
 
 
 --[[
 
 ═══════════════════════════════════════════════════════════
-USAGE EXAMPLE
+USAGE EXAMPLE — EXTER LIBRARY
 ═══════════════════════════════════════════════════════════
 
-local PremiumUI = loadstring(game:HttpGet("YOUR_URL_HERE"))()
+-- Hook (ganti URL dengan raw URL GitHub kamu):
+local Exter = loadstring(game:HttpGet('https://raw.githubusercontent.com/USERNAME/REPO/main/ExterLibrary.lua'))()
 
-local Window = PremiumUI:CreateWindow({
-    Name = "My Premium Hub",
+local Window = Exter:CreateWindow({
+    Name = "Exter Hub",
     Theme = "Dark",  -- Dark, Light, Neon, Ocean, Sunset
-    LoadingTitle = "Premium Hub",
+    LoadingTitle = "Exter Hub",
     LoadingSubtitle = "Loading modules...",
     ToggleKey = Enum.KeyCode.RightControl,
     ConfigurationSaving = {
@@ -2522,9 +2491,9 @@ local Window = PremiumUI:CreateWindow({
 })
 
 -- Notifications
-PremiumUI:Notify({
+Exter:Notify({
     Title = "Welcome!",
-    Content = "Premium UI has been loaded successfully.",
+    Content = "Exter Library has been loaded successfully.",
     Type = "Success",  -- Success, Warning, Error, Info
     Duration = 5,
     Actions = {
@@ -2540,12 +2509,12 @@ local SettingsTab = Window:CreateTab({ Name = "Settings", Icon = "⚙" })
 MainTab:CreateSection("General")
 
 -- Label
-MainTab:CreateLabel("Welcome to Premium UI v2.0")
+MainTab:CreateLabel("Welcome to Exter Library v1")
 
 -- Paragraph
 MainTab:CreateParagraph({
     Title = "About",
-    Content = "This is a premium GUI library with modern design, smooth animations, and multiple themes.",
+    Content = "This is the Exter GUI library with modern design, smooth animations, and multiple themes.",
 })
 
 -- Button
