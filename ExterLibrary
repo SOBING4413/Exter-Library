@@ -388,6 +388,37 @@ local function LerpColor(c1, c2, t)
     return Color3.new(c1.R + (c2.R - c1.R) * t, c1.G + (c2.G - c1.G) * t, c1.B + (c2.B - c1.B) * t)
 end
 
+local function ColorKey(color)
+    return string.format("%d,%d,%d", math.floor(color.R * 255 + 0.5), math.floor(color.G * 255 + 0.5), math.floor(color.B * 255 + 0.5))
+end
+
+local function BuildThemeColorLookup(theme)
+    local lookup = {}
+    for key, value in pairs(theme) do
+        if typeof(value) == "Color3" then
+            lookup[ColorKey(value)] = key
+        end
+    end
+    return lookup
+end
+
+local function MapThemeColor(color, oldTheme, newTheme, lookup)
+    local themeKey = lookup[ColorKey(color)]
+    if themeKey and typeof(newTheme[themeKey]) == "Color3" then
+        return newTheme[themeKey]
+    end
+    return color
+end
+
+local function MapThemeGradient(gradient, oldTheme, newTheme, lookup)
+    local keypoints = gradient.Color.Keypoints
+    local updated = table.create(#keypoints)
+    for i, keypoint in ipairs(keypoints) do
+        updated[i] = ColorSequenceKeypoint.new(keypoint.Time, MapThemeColor(keypoint.Value, oldTheme, newTheme, lookup))
+    end
+    gradient.Color = ColorSequence.new(updated)
+end
+
 local function PackColor(color)
     return { R = math.floor(color.R * 255), G = math.floor(color.G * 255), B = math.floor(color.B * 255) }
 end
@@ -826,6 +857,10 @@ function Exter:CreateWindow(settings)
     AddStroke(mainFrame, theme.TopbarBorder, 1, 0.4)
     AddShadow(mainFrame, 0.4, 70)
     if theme.GlowEnabled then AddGlow(mainFrame, theme.Accent, 100, 0.85) end
+    AddGradient(mainFrame, ColorSequence.new({
+        ColorSequenceKeypoint.new(0, LerpColor(theme.Background, theme.Accent, 0.06)),
+        ColorSequenceKeypoint.new(1, theme.Background),
+    }), 135)
 
     local topbar = Create("Frame", { Name = "Topbar", BackgroundColor3 = theme.Topbar,
         Size = UDim2.new(1, 0, 0, 50), BorderSizePixel = 0, Parent = mainFrame })
@@ -833,6 +868,10 @@ function Exter:CreateWindow(settings)
         Size = UDim2.new(1, 0, 0, 14), Position = UDim2.new(0, 0, 1, -14),
         BorderSizePixel = 0, Parent = topbar })
     AddCorner(topbar, 14)
+    AddGradient(topbar, ColorSequence.new({
+        ColorSequenceKeypoint.new(0, LerpColor(theme.Topbar, theme.Accent, 0.14)),
+        ColorSequenceKeypoint.new(1, theme.Topbar),
+    }), 20)
 
     local topbarAccent = Create("Frame", { Name = "AccentLine", BackgroundColor3 = theme.Accent,
         Size = UDim2.new(1, 0, 0, 2), Position = UDim2.new(0, 0, 1, 0),
@@ -899,6 +938,10 @@ function Exter:CreateWindow(settings)
     local sidebar = Create("Frame", { Name = "Sidebar", BackgroundColor3 = theme.BackgroundSecondary,
         Size = UDim2.new(0, 160, 1, -50), Position = UDim2.new(0, 0, 0, 50),
         BorderSizePixel = 0, Parent = mainFrame })
+    AddGradient(sidebar, ColorSequence.new({
+        ColorSequenceKeypoint.new(0, LerpColor(theme.BackgroundSecondary, theme.Accent, 0.16)),
+        ColorSequenceKeypoint.new(1, theme.BackgroundSecondary),
+    }), 90)
     Create("Frame", { Name = "Divider", BackgroundColor3 = theme.DividerColor,
         Size = UDim2.new(0, 1, 1, 0), Position = UDim2.new(1, 0, 0, 0),
         BorderSizePixel = 0, Parent = sidebar })
@@ -907,6 +950,10 @@ function Exter:CreateWindow(settings)
         BackgroundTransparency = 0.9, Size = UDim2.new(1, -12, 0, 55),
         Position = UDim2.new(0, 6, 0, 6), Parent = sidebar })
     AddCorner(userSection, 10)
+    AddGradient(userSection, ColorSequence.new({
+        ColorSequenceKeypoint.new(0, LerpColor(theme.Accent, theme.GradientAccent1, 0.2)),
+        ColorSequenceKeypoint.new(1, LerpColor(theme.Accent, theme.GradientAccent2, 0.3)),
+    }), 30)
 
     local userAvatar = Create("Frame", { Name = "Avatar", BackgroundColor3 = theme.Accent,
         BackgroundTransparency = 0.7, Size = UDim2.new(0, 36, 0, 36),
@@ -998,20 +1045,53 @@ function Exter:CreateWindow(settings)
 
     local function ApplyThemeToUI(themeName)
         if not Themes[themeName] then return end
+        local oldTheme = Exter.Theme
         local newTheme = Themes[themeName]
         Exter.Theme = newTheme
-        
+
+        local lookup = BuildThemeColorLookup(oldTheme)
+        local roots = { screenGui }
+        if NotificationContainer then
+            table.insert(roots, NotificationContainer)
+        end
+
+        for _, root in ipairs(roots) do
+            for _, instance in ipairs(root:GetDescendants()) do
+                if instance:IsA("Frame") or instance:IsA("TextButton") or instance:IsA("TextLabel") or instance:IsA("ImageLabel") or instance:IsA("ImageButton") or instance:IsA("ScrollingFrame") then
+                    if instance.BackgroundTransparency < 1 then
+                        instance.BackgroundColor3 = MapThemeColor(instance.BackgroundColor3, oldTheme, newTheme, lookup)
+                    end
+                end
+                if instance:IsA("TextLabel") or instance:IsA("TextButton") or instance:IsA("TextBox") then
+                    instance.TextColor3 = MapThemeColor(instance.TextColor3, oldTheme, newTheme, lookup)
+                    if instance:IsA("TextBox") then
+                        instance.PlaceholderColor3 = MapThemeColor(instance.PlaceholderColor3, oldTheme, newTheme, lookup)
+                    end
+                elseif instance:IsA("ImageLabel") or instance:IsA("ImageButton") then
+                    instance.ImageColor3 = MapThemeColor(instance.ImageColor3, oldTheme, newTheme, lookup)
+                elseif instance:IsA("UIStroke") then
+                    instance.Color = MapThemeColor(instance.Color, oldTheme, newTheme, lookup)
+                elseif instance:IsA("ScrollingFrame") then
+                    instance.ScrollBarImageColor3 = MapThemeColor(instance.ScrollBarImageColor3, oldTheme, newTheme, lookup)
+                elseif instance:IsA("UIGradient") then
+                    MapThemeGradient(instance, oldTheme, newTheme, lookup)
+                end
+            end
+        end
+
         mainFrame.BackgroundColor3 = newTheme.Background
         topbar.BackgroundColor3 = newTheme.Topbar
         sidebar.BackgroundColor3 = newTheme.BackgroundSecondary
         topbarAccent.BackgroundColor3 = newTheme.Accent
-        
-        for _, stroke in ipairs(mainFrame:FindDescendantsOfClass("UIStroke")) do
-            if stroke.Parent.Name == "Main" then
-                stroke.Color = newTheme.TopbarBorder
+        hideBtn.BackgroundColor3 = newTheme.Error
+
+        if newTheme.GlowEnabled then
+            local glow = mainFrame:FindFirstChild("Glow")
+            if glow and glow:IsA("ImageLabel") then
+                glow.ImageColor3 = newTheme.Accent
             end
         end
-        
+
         Exter:Notify({ Title = "Theme Changed", Content = "Switched to " .. themeName, Type = "Success", Duration = 2 })
     end
 
