@@ -140,6 +140,7 @@ Creates the main UI window.
 | `ToggleKey` | `Enum.KeyCode` | `RightControl` | Key to toggle UI visibility |
 | `GameplayFriendly` | `boolean` | `true` | Uses compact sizing + higher UI transparency so gameplay stays visible |
 | `EnableBackgroundEffects` | `boolean` | `false` | Enables cinematic backdrop/orb effects (recommended only when not playing actively) |
+| `UsageInfo` | `table` | `nil` | Mandatory usage info table shown in sidebar (character/script/executor/build + extra rows) |
 | `ConfigurationSaving` | `table` | `nil` | Configuration saving options (see below) |
 
 **ConfigurationSaving options:**
@@ -148,6 +149,19 @@ Creates the main UI window.
 |-----------|------|---------|-------------|
 | `Enabled` | `boolean` | `false` | Enable/disable config saving |
 | `FileName` | `string` | `game.PlaceId` | Config file name (without extension) |
+
+**UsageInfo options:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `Title` | `string` | `"Informasi Wajib"` | Header for the mandatory info table |
+| `Subtitle` | `string` | `"Karakter / Script yang menggunakan UI"` | Subtitle label shown above rows |
+| `Character` | `string` | `LocalPlayer.Name` | Character/user name currently using the UI |
+| `Script` | `string` | `Window Name` | Script name using the GUI |
+| `Executor` | `string` | `identifyexecutor()` | Executor/client identifier |
+| `Build` | `string` | `Release` | Build/version tag |
+| `Required` | `table<string>` | `{"Character","Script","Executor","Build"}` | Required key list displayed in subtitle |
+| `Extra` | `table` | `{}` | Additional rows in `{ Key = \"...\", Value = \"...\" }` format |
 
 ```lua
 local Window = Exter:CreateWindow({
@@ -158,6 +172,16 @@ local Window = Exter:CreateWindow({
     ToggleKey = Enum.KeyCode.RightShift,
     GameplayFriendly = true,
     EnableBackgroundEffects = false,
+    UsageInfo = {
+        Character = game.Players.LocalPlayer.Name,
+        Script = "My Hub Script",
+        Executor = "Auto",
+        Build = "v2.0",
+        Extra = {
+            { Key = "Mode", Value = "Raid" },
+            { Key = "Server", Value = tostring(game.JobId) },
+        }
+    },
     ConfigurationSaving = {
         Enabled = true,
         FileName = "MyHubConfig",
