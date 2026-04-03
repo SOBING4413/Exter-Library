@@ -1141,16 +1141,16 @@ local function EvaluateResponsiveScale()
     local shortest = math.max(480, math.min(viewport.X, viewport.Y))
     local scale = shortest / 900
     -- Keep menu compact so it does not dominate gameplay on bigger screens.
-    return math.clamp(scale, 0.72, 1), viewport
+    return math.clamp(scale, 0.62, 0.9), viewport
 end
 
 local function BuildWindowLayoutPresets(viewport)
-    -- Gameplay-first layout: smaller by default and easier to keep out of view.
-    local width = math.clamp(math.floor(viewport.X * 0.46), 480, 760)
-    local height = math.clamp(math.floor(viewport.Y * 0.54), 320, 560)
+    -- Compact-first layout: keeps HUD and world visibility clear.
+    local width = math.clamp(math.floor(viewport.X * 0.38), 420, 640)
+    local height = math.clamp(math.floor(viewport.Y * 0.46), 290, 470)
     local compact = viewport.X <= 860 or viewport.Y <= 560
-    local sidebarWidth = compact and 120 or math.clamp(math.floor(width * 0.28), 132, 185)
-    local topbarHeight = compact and 42 or 46
+    local sidebarWidth = compact and 112 or math.clamp(math.floor(width * 0.27), 118, 156)
+    local topbarHeight = compact and 38 or 42
 
     return {
         MainSize = UDim2.fromOffset(width, height),
@@ -1294,6 +1294,43 @@ local function ApplyGlassSurface(frame, theme, transparency)
     return glass
 end
 
+local function NormalizeUsageInfo(settings)
+    local usageInfo = settings.UsageInfo or {}
+    local characterName = usageInfo.Character or Player.Name or "Unknown"
+    local scriptName = usageInfo.Script or settings.Name or "Untitled Script"
+    local executorName = usageInfo.Executor or identifyexecutor and identifyexecutor() or "Unknown Executor"
+    local buildTag = usageInfo.Build or Release
+    local requiredList = usageInfo.Required
+    if type(requiredList) ~= "table" then
+        requiredList = { "Character", "Script", "Executor", "Build" }
+    end
+
+    local rows = {
+        { Key = "Character", Value = tostring(characterName) },
+        { Key = "Script", Value = tostring(scriptName) },
+        { Key = "Executor", Value = tostring(executorName) },
+        { Key = "Build", Value = tostring(buildTag) },
+    }
+
+    if usageInfo.Extra and type(usageInfo.Extra) == "table" then
+        for _, extra in ipairs(usageInfo.Extra) do
+            if type(extra) == "table" and extra.Key and extra.Value ~= nil then
+                table.insert(rows, {
+                    Key = tostring(extra.Key),
+                    Value = tostring(extra.Value),
+                })
+            end
+        end
+    end
+
+    return {
+        Title = usageInfo.Title or "Informasi Wajib",
+        Subtitle = usageInfo.Subtitle or "Karakter / Script yang menggunakan UI",
+        Required = requiredList,
+        Rows = rows,
+    }
+end
+
 -- ═══════════════════════════════════════════════════════════
 -- MAIN WINDOW CREATION
 -- ═══════════════════════════════════════════════════════════
@@ -1340,10 +1377,11 @@ function Exter:CreateWindow(settings)
     local layout = BuildWindowLayoutPresets(viewport)
 
     local gameplayFriendly = settings.GameplayFriendly ~= false
+    local usageInfo = NormalizeUsageInfo(settings)
     local backdropEffectsEnabled = settings.EnableBackgroundEffects == true
-    local windowTransparency = gameplayFriendly and math.max(theme.WindowTransparency or 0.08, 0.2) or (theme.WindowTransparency or 0.08)
-    local topbarTransparency = gameplayFriendly and math.max(theme.TopbarTransparency or 0.05, 0.2) or (theme.TopbarTransparency or 0.05)
-    local sidebarTransparency = gameplayFriendly and math.max(theme.SidebarTransparency or 0.1, 0.24) or (theme.SidebarTransparency or 0.1)
+    local windowTransparency = gameplayFriendly and math.max(theme.WindowTransparency or 0.08, 0.34) or math.max(theme.WindowTransparency or 0.08, 0.24)
+    local topbarTransparency = gameplayFriendly and math.max(theme.TopbarTransparency or 0.05, 0.36) or math.max(theme.TopbarTransparency or 0.05, 0.26)
+    local sidebarTransparency = gameplayFriendly and math.max(theme.SidebarTransparency or 0.1, 0.42) or math.max(theme.SidebarTransparency or 0.1, 0.3)
 
     local backdropDim = CreateBackdropLayer(screenGui, theme)
     local orbLayer = CreateAmbientOrbs(screenGui, theme)
@@ -1365,10 +1403,10 @@ function Exter:CreateWindow(settings)
         BackgroundTransparency = windowTransparency,
         Size = layout.MainSize, Position = UDim2.new(0.5, 0, 0.5, 0),
         AnchorPoint = Vector2.new(0.5, 0.5), ClipsDescendants = true, Parent = screenGui })
-    AddCorner(mainFrame, 14)
-    ApplyGlassSurface(mainFrame, theme, theme.WindowTransparency or 0.08)
+    AddCorner(mainFrame, 12)
+    ApplyGlassSurface(mainFrame, theme, windowTransparency)
     AddStroke(mainFrame, theme.TopbarBorder, 1, 0.4)
-    AddShadow(mainFrame, 0.4, 70)
+    AddShadow(mainFrame, 0.32, 52)
     if theme.GlowEnabled then AddGlow(mainFrame, theme.Accent, 100, 0.85) end
     AddGradient(mainFrame, ColorSequence.new({
         ColorSequenceKeypoint.new(0, LerpColor(theme.Background, theme.Accent, 0.06)),
@@ -1381,7 +1419,7 @@ function Exter:CreateWindow(settings)
     Create("Frame", { Name = "CornerRepair", BackgroundColor3 = theme.Topbar,
         Size = UDim2.new(1, 0, 0, 14), Position = UDim2.new(0, 0, 1, -14),
         BorderSizePixel = 0, Parent = topbar })
-    AddCorner(topbar, 14)
+    AddCorner(topbar, 12)
     AddGradient(topbar, ColorSequence.new({
         ColorSequenceKeypoint.new(0, LerpColor(theme.Topbar, theme.Accent, 0.14)),
         ColorSequenceKeypoint.new(1, theme.Topbar),
@@ -1486,8 +1524,44 @@ function Exter:CreateWindow(settings)
         TextSize = 11, FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
         Parent = userSection })
 
+    local infoCard = Create("Frame", { Name = "UsageInfoTable", BackgroundColor3 = theme.ElementBackground,
+        BackgroundTransparency = math.clamp((theme.ElementTransparency or 0.2) + 0.2, 0.3, 0.72), Size = UDim2.new(1, -12, 0, 130),
+        Position = UDim2.new(0, 6, 0, 66), Parent = sidebar })
+    AddCorner(infoCard, 9)
+    AddStroke(infoCard, theme.ElementBorder, 1, 0.35)
+    AddGradient(infoCard, ColorSequence.new({
+        ColorSequenceKeypoint.new(0, LerpColor(theme.ElementBackground, theme.Accent, 0.12)),
+        ColorSequenceKeypoint.new(1, theme.ElementBackground),
+    }), 90)
+
+    Create("TextLabel", { Name = "InfoTitle", BackgroundTransparency = 1,
+        Size = UDim2.new(1, -14, 0, 18), Position = UDim2.new(0, 8, 0, 5),
+        Text = usageInfo.Title, TextColor3 = theme.TextPrimary, TextSize = 12,
+        FontFace = theme.FontFaceBold, TextXAlignment = Enum.TextXAlignment.Left, Parent = infoCard })
+    Create("TextLabel", { Name = "InfoSubtitle", BackgroundTransparency = 1,
+        Size = UDim2.new(1, -14, 0, 14), Position = UDim2.new(0, 8, 0, 22),
+        Text = usageInfo.Subtitle .. " | Wajib: " .. table.concat(usageInfo.Required, ", "), TextColor3 = theme.TextMuted, TextSize = 10,
+        FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left, Parent = infoCard })
+
+    local infoRows = Create("Frame", { Name = "Rows", BackgroundTransparency = 1,
+        Size = UDim2.new(1, -12, 1, -42), Position = UDim2.new(0, 6, 0, 36), Parent = infoCard })
+    AddListLayout(infoRows, 2)
+
+    for rowIndex, row in ipairs(usageInfo.Rows) do
+        local rowFrame = Create("Frame", { Name = "Row" .. rowIndex, BackgroundColor3 = theme.InputBackground,
+            BackgroundTransparency = math.clamp((theme.ElementTransparency or 0.18) + 0.26, 0.35, 0.8), Size = UDim2.new(1, 0, 0, 20),
+            Parent = infoRows })
+        AddCorner(rowFrame, 6)
+        Create("TextLabel", { Name = "Key", BackgroundTransparency = 1, Size = UDim2.new(0.44, -6, 1, 0),
+            Position = UDim2.new(0, 6, 0, 0), Text = row.Key, TextColor3 = theme.TextSecondary, TextSize = 10,
+            FontFace = theme.FontFaceBold, TextXAlignment = Enum.TextXAlignment.Left, Parent = rowFrame })
+        Create("TextLabel", { Name = "Value", BackgroundTransparency = 1, Size = UDim2.new(0.56, -6, 1, 0),
+            Position = UDim2.new(0.44, 0, 0, 0), Text = row.Value, TextColor3 = theme.TextPrimary, TextSize = 10,
+            FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Right, TextTruncate = Enum.TextTruncate.AtEnd, Parent = rowFrame })
+    end
+
     local tabListScroll = Create("ScrollingFrame", { Name = "TabList", BackgroundTransparency = 1,
-        Size = UDim2.new(1, -8, 1, -(layout.Compact and 69 or 73)), Position = UDim2.new(0, 4, 0, layout.Compact and 63 or 67),
+        Size = UDim2.new(1, -8, 1, -203), Position = UDim2.new(0, 4, 0, 199),
         ScrollBarThickness = 2, ScrollBarImageColor3 = theme.ScrollbarColor,
         ScrollBarImageTransparency = 0.4, CanvasSize = UDim2.new(0, 0, 0, 0),
         AutomaticCanvasSize = Enum.AutomaticSize.Y, BorderSizePixel = 0, Parent = sidebar })
@@ -1583,6 +1657,9 @@ function Exter:CreateWindow(settings)
         versionBadge.Visible = not layout.Compact
         topbarButtons.Size = UDim2.new(0, layout.Compact and 126 or 140, 0, layout.TopbarHeight)
         topbarButtons.Position = UDim2.new(1, layout.Compact and -134 or -150, 0, 0)
+        infoCard.Size = UDim2.new(1, -12, 0, layout.Compact and 118 or 130)
+        tabListScroll.Size = UDim2.new(1, -8, 1, -(infoCard.Size.Y.Offset + 77))
+        tabListScroll.Position = UDim2.new(0, 4, 0, infoCard.Size.Y.Offset + 73)
     end
 
     TrackConnection(screenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(ReflowResponsiveLayout))
@@ -1598,9 +1675,9 @@ function Exter:CreateWindow(settings)
         local oldTheme = Exter.Theme
         local newTheme = Themes[themeName]
         Exter.Theme = newTheme
-        windowTransparency = gameplayFriendly and math.max(newTheme.WindowTransparency or 0.08, 0.2) or (newTheme.WindowTransparency or 0.08)
-        topbarTransparency = gameplayFriendly and math.max(newTheme.TopbarTransparency or 0.05, 0.2) or (newTheme.TopbarTransparency or 0.05)
-        sidebarTransparency = gameplayFriendly and math.max(newTheme.SidebarTransparency or 0.1, 0.24) or (newTheme.SidebarTransparency or 0.1)
+        windowTransparency = gameplayFriendly and math.max(newTheme.WindowTransparency or 0.08, 0.34) or math.max(newTheme.WindowTransparency or 0.08, 0.24)
+        topbarTransparency = gameplayFriendly and math.max(newTheme.TopbarTransparency or 0.05, 0.36) or math.max(newTheme.TopbarTransparency or 0.05, 0.26)
+        sidebarTransparency = gameplayFriendly and math.max(newTheme.SidebarTransparency or 0.1, 0.42) or math.max(newTheme.SidebarTransparency or 0.1, 0.3)
 
         local lookup = BuildThemeColorLookup(oldTheme)
         local roots = { screenGui }
@@ -2435,8 +2512,8 @@ function Exter:CreateWindow(settings)
     function Window:SetCompactMode(enabled)
         if enabled then
             layout.Compact = true
-            layout.SidebarWidth = 126
-            layout.TopbarHeight = 46
+            layout.SidebarWidth = 112
+            layout.TopbarHeight = 38
         else
             local _, latestViewport = EvaluateResponsiveScale()
             local rebuilt = BuildWindowLayoutPresets(latestViewport)
