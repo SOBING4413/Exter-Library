@@ -76,6 +76,12 @@ local Themes = {
         GlowEnabled = true,
         GradientAccent1 = Color3.fromRGB(100, 120, 255),
         GradientAccent2 = Color3.fromRGB(180, 100, 255),
+        WindowTransparency = 0.08,
+        TopbarTransparency = 0.04,
+        SidebarTransparency = 0.1,
+        ElementTransparency = 0.14,
+        OverlayTransparency = 0.32,
+        BackdropTransparency = 0.22,
     },
     Neon = {
         Name = "Neon",
@@ -125,6 +131,12 @@ local Themes = {
         GlowEnabled = true,
         GradientAccent1 = Color3.fromRGB(0, 255, 170),
         GradientAccent2 = Color3.fromRGB(0, 200, 255),
+        WindowTransparency = 0.14,
+        TopbarTransparency = 0.08,
+        SidebarTransparency = 0.18,
+        ElementTransparency = 0.2,
+        OverlayTransparency = 0.38,
+        BackdropTransparency = 0.28,
     },
     Ocean = {
         Name = "Ocean",
@@ -174,6 +186,12 @@ local Themes = {
         GlowEnabled = true,
         GradientAccent1 = Color3.fromRGB(60, 155, 240),
         GradientAccent2 = Color3.fromRGB(100, 80, 255),
+        WindowTransparency = 0.1,
+        TopbarTransparency = 0.06,
+        SidebarTransparency = 0.14,
+        ElementTransparency = 0.17,
+        OverlayTransparency = 0.35,
+        BackdropTransparency = 0.24,
     },
     Sunset = {
         Name = "Sunset",
@@ -223,6 +241,12 @@ local Themes = {
         GlowEnabled = true,
         GradientAccent1 = Color3.fromRGB(255, 105, 135),
         GradientAccent2 = Color3.fromRGB(255, 180, 80),
+        WindowTransparency = 0.09,
+        TopbarTransparency = 0.05,
+        SidebarTransparency = 0.13,
+        ElementTransparency = 0.16,
+        OverlayTransparency = 0.33,
+        BackdropTransparency = 0.23,
     },
     Cyberpunk = {
         Name = "Cyberpunk",
@@ -273,6 +297,226 @@ local Themes = {
         GradientAccent1 = Color3.fromRGB(180, 0, 255),
         GradientAccent2 = Color3.fromRGB(0, 200, 255),
     },
+    Aurora = {
+        Name = "Aurora",
+        FontFace = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+        FontFaceBold = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+        Background = Color3.fromRGB(7, 13, 20),
+        BackgroundSecondary = Color3.fromRGB(11, 20, 30),
+        Topbar = Color3.fromRGB(10, 18, 26),
+        TopbarBorder = Color3.fromRGB(65, 195, 175),
+        Shadow = Color3.fromRGB(2, 4, 8),
+        TextPrimary = Color3.fromRGB(225, 247, 244),
+        TextSecondary = Color3.fromRGB(145, 205, 196),
+        TextMuted = Color3.fromRGB(88, 130, 124),
+        Accent = Color3.fromRGB(70, 225, 200),
+        AccentHover = Color3.fromRGB(95, 240, 218),
+        AccentDark = Color3.fromRGB(38, 160, 142),
+        AccentGlow = Color3.fromRGB(70, 225, 200),
+        ElementBackground = Color3.fromRGB(15, 26, 40),
+        ElementBackgroundHover = Color3.fromRGB(21, 35, 51),
+        ElementBorder = Color3.fromRGB(38, 72, 90),
+        ElementBorderHover = Color3.fromRGB(50, 102, 122),
+        TabBackground = Color3.fromRGB(15, 26, 40),
+        TabBackgroundSelected = Color3.fromRGB(70, 225, 200),
+        TabBorder = Color3.fromRGB(38, 72, 90),
+        TabText = Color3.fromRGB(145, 205, 196),
+        TabTextSelected = Color3.fromRGB(9, 19, 26),
+        ToggleEnabled = Color3.fromRGB(70, 225, 200),
+        ToggleDisabled = Color3.fromRGB(30, 48, 56),
+        ToggleKnob = Color3.fromRGB(255, 255, 255),
+        SliderBackground = Color3.fromRGB(20, 34, 50),
+        SliderFill = Color3.fromRGB(70, 225, 200),
+        SliderKnob = Color3.fromRGB(255, 255, 255),
+        InputBackground = Color3.fromRGB(10, 18, 26),
+        InputBorder = Color3.fromRGB(38, 72, 90),
+        InputBorderFocus = Color3.fromRGB(70, 225, 200),
+        PlaceholderText = Color3.fromRGB(82, 128, 124),
+        DropdownBackground = Color3.fromRGB(10, 18, 26),
+        DropdownItemHover = Color3.fromRGB(20, 34, 50),
+        NotificationBackground = Color3.fromRGB(10, 18, 26),
+        NotificationBorder = Color3.fromRGB(38, 72, 90),
+        Success = Color3.fromRGB(78, 220, 150),
+        Warning = Color3.fromRGB(245, 190, 60),
+        Error = Color3.fromRGB(255, 95, 110),
+        Info = Color3.fromRGB(70, 225, 200),
+        ScrollbarColor = Color3.fromRGB(50, 90, 102),
+        DividerColor = Color3.fromRGB(30, 58, 74),
+        GlowEnabled = true,
+        GradientAccent1 = Color3.fromRGB(70, 225, 200),
+        GradientAccent2 = Color3.fromRGB(110, 175, 255),
+        WindowTransparency = 0.08,
+        TopbarTransparency = 0.04,
+        SidebarTransparency = 0.12,
+        ElementTransparency = 0.16,
+        OverlayTransparency = 0.33,
+        BackdropTransparency = 0.22,
+    },
+    Ruby = {
+        Name = "Ruby",
+        FontFace = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+        FontFaceBold = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+        Background = Color3.fromRGB(20, 8, 14),
+        BackgroundSecondary = Color3.fromRGB(28, 12, 19),
+        Topbar = Color3.fromRGB(24, 10, 16),
+        TopbarBorder = Color3.fromRGB(208, 66, 112),
+        Shadow = Color3.fromRGB(9, 3, 6),
+        TextPrimary = Color3.fromRGB(255, 232, 240),
+        TextSecondary = Color3.fromRGB(228, 158, 182),
+        TextMuted = Color3.fromRGB(156, 94, 116),
+        Accent = Color3.fromRGB(244, 92, 140),
+        AccentHover = Color3.fromRGB(255, 122, 162),
+        AccentDark = Color3.fromRGB(196, 58, 103),
+        AccentGlow = Color3.fromRGB(244, 92, 140),
+        ElementBackground = Color3.fromRGB(33, 15, 23),
+        ElementBackgroundHover = Color3.fromRGB(44, 20, 31),
+        ElementBorder = Color3.fromRGB(82, 35, 55),
+        ElementBorderHover = Color3.fromRGB(118, 48, 76),
+        TabBackground = Color3.fromRGB(33, 15, 23),
+        TabBackgroundSelected = Color3.fromRGB(244, 92, 140),
+        TabBorder = Color3.fromRGB(82, 35, 55),
+        TabText = Color3.fromRGB(228, 158, 182),
+        TabTextSelected = Color3.fromRGB(255, 245, 250),
+        ToggleEnabled = Color3.fromRGB(244, 92, 140),
+        ToggleDisabled = Color3.fromRGB(55, 26, 39),
+        ToggleKnob = Color3.fromRGB(255, 255, 255),
+        SliderBackground = Color3.fromRGB(44, 20, 31),
+        SliderFill = Color3.fromRGB(244, 92, 140),
+        SliderKnob = Color3.fromRGB(255, 255, 255),
+        InputBackground = Color3.fromRGB(24, 10, 16),
+        InputBorder = Color3.fromRGB(82, 35, 55),
+        InputBorderFocus = Color3.fromRGB(244, 92, 140),
+        PlaceholderText = Color3.fromRGB(132, 72, 92),
+        DropdownBackground = Color3.fromRGB(24, 10, 16),
+        DropdownItemHover = Color3.fromRGB(44, 20, 31),
+        NotificationBackground = Color3.fromRGB(24, 10, 16),
+        NotificationBorder = Color3.fromRGB(82, 35, 55),
+        Success = Color3.fromRGB(100, 225, 164),
+        Warning = Color3.fromRGB(255, 198, 78),
+        Error = Color3.fromRGB(255, 88, 88),
+        Info = Color3.fromRGB(196, 148, 255),
+        ScrollbarColor = Color3.fromRGB(82, 35, 55),
+        DividerColor = Color3.fromRGB(72, 30, 48),
+        GlowEnabled = true,
+        GradientAccent1 = Color3.fromRGB(244, 92, 140),
+        GradientAccent2 = Color3.fromRGB(255, 170, 105),
+        WindowTransparency = 0.09,
+        TopbarTransparency = 0.04,
+        SidebarTransparency = 0.13,
+        ElementTransparency = 0.16,
+        OverlayTransparency = 0.34,
+        BackdropTransparency = 0.23,
+    },
+    Frost = {
+        Name = "Frost",
+        FontFace = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+        FontFaceBold = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+        Background = Color3.fromRGB(16, 21, 29),
+        BackgroundSecondary = Color3.fromRGB(22, 30, 40),
+        Topbar = Color3.fromRGB(20, 26, 35),
+        TopbarBorder = Color3.fromRGB(120, 170, 235),
+        Shadow = Color3.fromRGB(4, 6, 10),
+        TextPrimary = Color3.fromRGB(235, 244, 255),
+        TextSecondary = Color3.fromRGB(168, 195, 230),
+        TextMuted = Color3.fromRGB(110, 133, 164),
+        Accent = Color3.fromRGB(132, 180, 255),
+        AccentHover = Color3.fromRGB(158, 198, 255),
+        AccentDark = Color3.fromRGB(92, 136, 205),
+        AccentGlow = Color3.fromRGB(132, 180, 255),
+        ElementBackground = Color3.fromRGB(29, 39, 52),
+        ElementBackgroundHover = Color3.fromRGB(36, 48, 64),
+        ElementBorder = Color3.fromRGB(62, 86, 116),
+        ElementBorderHover = Color3.fromRGB(86, 110, 140),
+        TabBackground = Color3.fromRGB(29, 39, 52),
+        TabBackgroundSelected = Color3.fromRGB(132, 180, 255),
+        TabBorder = Color3.fromRGB(62, 86, 116),
+        TabText = Color3.fromRGB(168, 195, 230),
+        TabTextSelected = Color3.fromRGB(255, 255, 255),
+        ToggleEnabled = Color3.fromRGB(132, 180, 255),
+        ToggleDisabled = Color3.fromRGB(48, 65, 82),
+        ToggleKnob = Color3.fromRGB(255, 255, 255),
+        SliderBackground = Color3.fromRGB(36, 48, 64),
+        SliderFill = Color3.fromRGB(132, 180, 255),
+        SliderKnob = Color3.fromRGB(255, 255, 255),
+        InputBackground = Color3.fromRGB(20, 26, 35),
+        InputBorder = Color3.fromRGB(62, 86, 116),
+        InputBorderFocus = Color3.fromRGB(132, 180, 255),
+        PlaceholderText = Color3.fromRGB(96, 118, 150),
+        DropdownBackground = Color3.fromRGB(20, 26, 35),
+        DropdownItemHover = Color3.fromRGB(36, 48, 64),
+        NotificationBackground = Color3.fromRGB(20, 26, 35),
+        NotificationBorder = Color3.fromRGB(62, 86, 116),
+        Success = Color3.fromRGB(88, 210, 165),
+        Warning = Color3.fromRGB(240, 195, 70),
+        Error = Color3.fromRGB(255, 98, 98),
+        Info = Color3.fromRGB(132, 180, 255),
+        ScrollbarColor = Color3.fromRGB(80, 100, 130),
+        DividerColor = Color3.fromRGB(56, 76, 100),
+        GlowEnabled = true,
+        GradientAccent1 = Color3.fromRGB(132, 180, 255),
+        GradientAccent2 = Color3.fromRGB(190, 148, 255),
+        WindowTransparency = 0.11,
+        TopbarTransparency = 0.07,
+        SidebarTransparency = 0.16,
+        ElementTransparency = 0.2,
+        OverlayTransparency = 0.38,
+        BackdropTransparency = 0.26,
+    },
+    Monochrome = {
+        Name = "Monochrome",
+        FontFace = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+        FontFaceBold = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+        Background = Color3.fromRGB(16, 16, 18),
+        BackgroundSecondary = Color3.fromRGB(24, 24, 28),
+        Topbar = Color3.fromRGB(22, 22, 26),
+        TopbarBorder = Color3.fromRGB(164, 164, 176),
+        Shadow = Color3.fromRGB(0, 0, 0),
+        TextPrimary = Color3.fromRGB(244, 244, 248),
+        TextSecondary = Color3.fromRGB(186, 186, 198),
+        TextMuted = Color3.fromRGB(122, 122, 134),
+        Accent = Color3.fromRGB(214, 214, 228),
+        AccentHover = Color3.fromRGB(230, 230, 240),
+        AccentDark = Color3.fromRGB(162, 162, 176),
+        AccentGlow = Color3.fromRGB(214, 214, 228),
+        ElementBackground = Color3.fromRGB(30, 30, 34),
+        ElementBackgroundHover = Color3.fromRGB(38, 38, 44),
+        ElementBorder = Color3.fromRGB(72, 72, 82),
+        ElementBorderHover = Color3.fromRGB(96, 96, 110),
+        TabBackground = Color3.fromRGB(30, 30, 34),
+        TabBackgroundSelected = Color3.fromRGB(214, 214, 228),
+        TabBorder = Color3.fromRGB(72, 72, 82),
+        TabText = Color3.fromRGB(186, 186, 198),
+        TabTextSelected = Color3.fromRGB(22, 22, 26),
+        ToggleEnabled = Color3.fromRGB(214, 214, 228),
+        ToggleDisabled = Color3.fromRGB(58, 58, 66),
+        ToggleKnob = Color3.fromRGB(255, 255, 255),
+        SliderBackground = Color3.fromRGB(38, 38, 44),
+        SliderFill = Color3.fromRGB(214, 214, 228),
+        SliderKnob = Color3.fromRGB(255, 255, 255),
+        InputBackground = Color3.fromRGB(22, 22, 26),
+        InputBorder = Color3.fromRGB(72, 72, 82),
+        InputBorderFocus = Color3.fromRGB(214, 214, 228),
+        PlaceholderText = Color3.fromRGB(105, 105, 116),
+        DropdownBackground = Color3.fromRGB(22, 22, 26),
+        DropdownItemHover = Color3.fromRGB(38, 38, 44),
+        NotificationBackground = Color3.fromRGB(22, 22, 26),
+        NotificationBorder = Color3.fromRGB(72, 72, 82),
+        Success = Color3.fromRGB(150, 215, 173),
+        Warning = Color3.fromRGB(235, 205, 118),
+        Error = Color3.fromRGB(250, 134, 134),
+        Info = Color3.fromRGB(214, 214, 228),
+        ScrollbarColor = Color3.fromRGB(88, 88, 102),
+        DividerColor = Color3.fromRGB(62, 62, 72),
+        GlowEnabled = true,
+        GradientAccent1 = Color3.fromRGB(214, 214, 228),
+        GradientAccent2 = Color3.fromRGB(158, 158, 178),
+        WindowTransparency = 0.12,
+        TopbarTransparency = 0.08,
+        SidebarTransparency = 0.18,
+        ElementTransparency = 0.22,
+        OverlayTransparency = 0.42,
+        BackdropTransparency = 0.28,
+    },
 }
 
 Exter.Theme = Themes.Dark
@@ -281,9 +525,81 @@ Exter.Theme = Themes.Dark
 -- UTILITY FUNCTIONS
 -- ═══════════════════════════════════════════════════════════
 
+local MotionProfiles = {
+    Calm = {
+        TweenTime = 0.25,
+        HoverTime = 0.2,
+        ActivateTime = 0.32,
+        BounceStyle = Enum.EasingStyle.Back,
+        BounceDirection = Enum.EasingDirection.Out,
+        FadeTime = 0.24,
+        DragSmoothness = 0.12,
+        NotificationIn = 0.4,
+        NotificationOut = 0.32,
+    },
+    Snappy = {
+        TweenTime = 0.18,
+        HoverTime = 0.14,
+        ActivateTime = 0.2,
+        BounceStyle = Enum.EasingStyle.Quint,
+        BounceDirection = Enum.EasingDirection.Out,
+        FadeTime = 0.18,
+        DragSmoothness = 0.08,
+        NotificationIn = 0.28,
+        NotificationOut = 0.22,
+    },
+    Cinematic = {
+        TweenTime = 0.38,
+        HoverTime = 0.3,
+        ActivateTime = 0.46,
+        BounceStyle = Enum.EasingStyle.Exponential,
+        BounceDirection = Enum.EasingDirection.Out,
+        FadeTime = 0.36,
+        DragSmoothness = 0.2,
+        NotificationIn = 0.52,
+        NotificationOut = 0.4,
+    },
+    Drift = {
+        TweenTime = 0.3,
+        HoverTime = 0.24,
+        ActivateTime = 0.36,
+        BounceStyle = Enum.EasingStyle.Sine,
+        BounceDirection = Enum.EasingDirection.InOut,
+        FadeTime = 0.28,
+        DragSmoothness = 0.16,
+        NotificationIn = 0.44,
+        NotificationOut = 0.34,
+    },
+    Turbo = {
+        TweenTime = 0.12,
+        HoverTime = 0.1,
+        ActivateTime = 0.16,
+        BounceStyle = Enum.EasingStyle.Linear,
+        BounceDirection = Enum.EasingDirection.Out,
+        FadeTime = 0.14,
+        DragSmoothness = 0.05,
+        NotificationIn = 0.2,
+        NotificationOut = 0.16,
+    },
+}
+
+local ActiveMotionProfile = MotionProfiles.Calm
+
+local function SetMotionProfile(profileName)
+    if MotionProfiles[profileName] then
+        ActiveMotionProfile = MotionProfiles[profileName]
+        return true
+    end
+    return false
+end
+
+local function GetMotionProfile()
+    return ActiveMotionProfile
+end
+
 local function Tween(object, duration, properties, easingStyle, easingDirection)
-    easingStyle = easingStyle or Enum.EasingStyle.Quint
-    easingDirection = easingDirection or Enum.EasingDirection.Out
+    easingStyle = easingStyle or ActiveMotionProfile.BounceStyle or Enum.EasingStyle.Quint
+    easingDirection = easingDirection or ActiveMotionProfile.BounceDirection or Enum.EasingDirection.Out
     local tween = TweenService:Create(object, TweenInfo.new(duration, easingStyle, easingDirection), properties)
     tween:Play()
     return tween
@@ -809,6 +1125,172 @@ local function CreateFullscreenLoadingScreen(screenGui, settings, theme)
 end
 
 -- ═══════════════════════════════════════════════════════════
+-- RESPONSIVE & GLASS HELPERS
+-- ═══════════════════════════════════════════════════════════
+
+local function GetViewportSize()
+    local cam = workspace.CurrentCamera
+    if cam and cam.ViewportSize then
+        return cam.ViewportSize
+    end
+    return Vector2.new(1920, 1080)
+end
+
+local function EvaluateResponsiveScale()
+    local viewport = GetViewportSize()
+    local shortest = math.max(480, math.min(viewport.X, viewport.Y))
+    local scale = shortest / 900
+    return math.clamp(scale, 0.7, 1.12), viewport
+end
+
+local function BuildWindowLayoutPresets(viewport)
+    local width = math.clamp(math.floor(viewport.X * 0.66), 540, 980)
+    local height = math.clamp(math.floor(viewport.Y * 0.68), 380, 720)
+    local compact = viewport.X <= 860 or viewport.Y <= 560
+    local sidebarWidth = compact and 128 or math.clamp(math.floor(width * 0.25), 160, 240)
+    local topbarHeight = compact and 46 or 52
+
+    return {
+        MainSize = UDim2.fromOffset(width, height),
+        MinimizedSize = UDim2.fromOffset(width, topbarHeight),
+        SidebarWidth = sidebarWidth,
+        TopbarHeight = topbarHeight,
+        Compact = compact,
+        NotificationWidth = compact and 300 or 360,
+        NotificationHeight = compact and 360 or 450,
+    }
+end
+
+local function CreateBackdropLayer(parent, theme)
+    local dim = Create("Frame", {
+        Name = "BackdropDim",
+        BackgroundColor3 = Color3.fromRGB(5, 6, 11),
+        BackgroundTransparency = theme.BackdropTransparency or 0.24,
+        BorderSizePixel = 0,
+        Size = UDim2.fromScale(1, 1),
+        ZIndex = 0,
+        Parent = parent,
+    })
+    AddGradient(dim, ColorSequence.new({
+        ColorSequenceKeypoint.new(0, LerpColor(theme.Background, Color3.new(0, 0, 0), 0.4)),
+        ColorSequenceKeypoint.new(1, LerpColor(theme.BackgroundSecondary, Color3.new(0, 0, 0), 0.5)),
+    }), 122)
+
+    local noise = Create("ImageLabel", {
+        Name = "Noise",
+        BackgroundTransparency = 1,
+        Image = "rbxassetid://9968344227",
+        ImageColor3 = theme.TextMuted,
+        ImageTransparency = 0.92,
+        ScaleType = Enum.ScaleType.Tile,
+        TileSize = UDim2.fromOffset(180, 180),
+        Size = UDim2.fromScale(1, 1),
+        ZIndex = 0,
+        Parent = dim,
+    })
+
+    local vignette = Create("ImageLabel", {
+        Name = "Vignette",
+        BackgroundTransparency = 1,
+        Image = "rbxassetid://4576475446",
+        ImageColor3 = Color3.fromRGB(0, 0, 0),
+        ImageTransparency = 0.62,
+        Size = UDim2.fromScale(1, 1),
+        ZIndex = 0,
+        Parent = dim,
+    })
+
+    return dim, noise, vignette
+end
+
+local function CreateAmbientOrbs(parent, theme)
+    local orbLayer = Create("Frame", {
+        Name = "AmbientOrbs",
+        BackgroundTransparency = 1,
+        Size = UDim2.fromScale(1, 1),
+        ZIndex = 1,
+        Parent = parent,
+    })
+
+    local orbPalette = {
+        LerpColor(theme.Accent, theme.GradientAccent1, 0.2),
+        LerpColor(theme.Accent, theme.GradientAccent2, 0.25),
+        LerpColor(theme.GradientAccent1, theme.GradientAccent2, 0.35),
+    }
+
+    local seeds = {
+        {0.08, 0.17, 220},
+        {0.82, 0.21, 180},
+        {0.18, 0.78, 260},
+        {0.85, 0.84, 200},
+    }
+
+    for idx, seed in ipairs(seeds) do
+        local orb = Create("Frame", {
+            Name = "Orb" .. idx,
+            BackgroundColor3 = orbPalette[((idx - 1) % #orbPalette) + 1],
+            BackgroundTransparency = 0.86,
+            Size = UDim2.fromOffset(seed[3], seed[3]),
+            Position = UDim2.fromScale(seed[1], seed[2]),
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            ZIndex = 1,
+            Parent = orbLayer,
+        })
+        AddCorner(orb, 999)
+        AddGradient(orb, ColorSequence.new({
+            ColorSequenceKeypoint.new(0, LerpColor(theme.Accent, Color3.new(1, 1, 1), 0.12)),
+            ColorSequenceKeypoint.new(1, LerpColor(theme.AccentDark, Color3.new(0, 0, 0), 0.15)),
+        }), idx * 35)
+
+        task.spawn(function()
+            while orb.Parent and orbLayer.Parent do
+                local randScale = math.random(88, 122) / 100
+                local jitterX = math.random(-80, 80)
+                local jitterY = math.random(-60, 60)
+                Tween(orb, 5 + idx, {
+                    Position = UDim2.new(seed[1], jitterX, seed[2], jitterY),
+                    Size = UDim2.fromOffset(math.floor(seed[3] * randScale), math.floor(seed[3] * randScale)),
+                    BackgroundTransparency = 0.84 + (math.random(0, 8) / 100),
+                }, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+                task.wait(5 + idx)
+            end
+        end)
+    end
+
+    return orbLayer
+end
+
+local function ApplyGlassSurface(frame, theme, transparency)
+    frame.BackgroundTransparency = transparency
+    local glass = Create("ImageLabel", {
+        Name = "GlassOverlay",
+        BackgroundTransparency = 1,
+        Image = "rbxassetid://8992230677",
+        ImageColor3 = LerpColor(theme.TextPrimary, theme.Accent, 0.08),
+        ImageTransparency = theme.OverlayTransparency or 0.35,
+        ScaleType = Enum.ScaleType.Crop,
+        Size = UDim2.fromScale(1, 1),
+        ZIndex = frame.ZIndex + 1,
+        Parent = frame,
+    })
+    Create("UIGradient", {
+        Rotation = 110,
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+            ColorSequenceKeypoint.new(0.35, LerpColor(theme.Accent, Color3.new(1, 1, 1), 0.4)),
+            ColorSequenceKeypoint.new(1, theme.AccentDark),
+        }),
+        Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 0.92),
+            NumberSequenceKeypoint.new(0.4, 0.97),
+            NumberSequenceKeypoint.new(1, 1),
+        }),
+        Parent = glass,
+    })
+    return glass
+end
+
+-- ═══════════════════════════════════════════════════════════
 -- MAIN WINDOW CREATION
 -- ═══════════════════════════════════════════════════════════
 
@@ -850,10 +1332,18 @@ function Exter:CreateWindow(settings)
 
     CreateFullscreenLoadingScreen(screenGui, settings, theme)
 
+    local responsiveScale, viewport = EvaluateResponsiveScale()
+    local layout = BuildWindowLayoutPresets(viewport)
+
+    local backdropDim = CreateBackdropLayer(screenGui, theme)
+    local orbLayer = CreateAmbientOrbs(screenGui, theme)
+
     local mainFrame = Create("Frame", { Name = "Main", BackgroundColor3 = theme.Background,
-        Size = UDim2.new(0, 600, 0, 420), Position = UDim2.new(0.5, 0, 0.5, 0),
+        BackgroundTransparency = theme.WindowTransparency or 0.08,
+        Size = layout.MainSize, Position = UDim2.new(0.5, 0, 0.5, 0),
         AnchorPoint = Vector2.new(0.5, 0.5), ClipsDescendants = true, Parent = screenGui })
     AddCorner(mainFrame, 14)
+    ApplyGlassSurface(mainFrame, theme, theme.WindowTransparency or 0.08)
     AddStroke(mainFrame, theme.TopbarBorder, 1, 0.4)
     AddShadow(mainFrame, 0.4, 70)
     if theme.GlowEnabled then AddGlow(mainFrame, theme.Accent, 100, 0.85) end
@@ -863,7 +1353,8 @@ function Exter:CreateWindow(settings)
     }), 135)
 
     local topbar = Create("Frame", { Name = "Topbar", BackgroundColor3 = theme.Topbar,
-        Size = UDim2.new(1, 0, 0, 50), BorderSizePixel = 0, Parent = mainFrame })
+        BackgroundTransparency = theme.TopbarTransparency or 0.05,
+        Size = UDim2.new(1, 0, 0, layout.TopbarHeight), BorderSizePixel = 0, Parent = mainFrame })
     Create("Frame", { Name = "CornerRepair", BackgroundColor3 = theme.Topbar,
         Size = UDim2.new(1, 0, 0, 14), Position = UDim2.new(0, 0, 1, -14),
         BorderSizePixel = 0, Parent = topbar })
@@ -936,7 +1427,8 @@ function Exter:CreateWindow(settings)
     MakeDraggable(topbar, mainFrame)
 
     local sidebar = Create("Frame", { Name = "Sidebar", BackgroundColor3 = theme.BackgroundSecondary,
-        Size = UDim2.new(0, 160, 1, -50), Position = UDim2.new(0, 0, 0, 50),
+        BackgroundTransparency = theme.SidebarTransparency or 0.1,
+        Size = UDim2.new(0, layout.SidebarWidth, 1, -layout.TopbarHeight), Position = UDim2.new(0, 0, 0, layout.TopbarHeight),
         BorderSizePixel = 0, Parent = mainFrame })
     AddGradient(sidebar, ColorSequence.new({
         ColorSequenceKeypoint.new(0, LerpColor(theme.BackgroundSecondary, theme.Accent, 0.16)),
@@ -972,7 +1464,7 @@ function Exter:CreateWindow(settings)
         Parent = userSection })
 
     local tabListScroll = Create("ScrollingFrame", { Name = "TabList", BackgroundTransparency = 1,
-        Size = UDim2.new(1, -8, 1, -73), Position = UDim2.new(0, 4, 0, 67),
+        Size = UDim2.new(1, -8, 1, -(layout.Compact and 69 or 73)), Position = UDim2.new(0, 4, 0, layout.Compact and 63 or 67),
         ScrollBarThickness = 2, ScrollBarImageColor3 = theme.ScrollbarColor,
         ScrollBarImageTransparency = 0.4, CanvasSize = UDim2.new(0, 0, 0, 0),
         AutomaticCanvasSize = Enum.AutomaticSize.Y, BorderSizePixel = 0, Parent = sidebar })
@@ -980,17 +1472,18 @@ function Exter:CreateWindow(settings)
     AddPadding(tabListScroll, 4, 4, 4, 4)
 
     local contentArea = Create("Frame", { Name = "Content", BackgroundTransparency = 1,
-        Size = UDim2.new(1, -161, 1, -50), Position = UDim2.new(0, 160, 0, 50),
+        Size = UDim2.new(1, -(layout.SidebarWidth + 1), 1, -layout.TopbarHeight), Position = UDim2.new(0, layout.SidebarWidth, 0, layout.TopbarHeight),
         ClipsDescendants = true, Parent = mainFrame })
 
     NotificationContainer = Create("Frame", { Name = "Notifications", BackgroundTransparency = 1,
-        Size = UDim2.new(0, 340, 0, 450), Position = UDim2.new(1, -350, 1, -460),
+        Size = UDim2.fromOffset(layout.NotificationWidth, layout.NotificationHeight),
+        Position = UDim2.new(1, -(layout.NotificationWidth + 10), 1, -(layout.NotificationHeight + 10)),
         Parent = screenGui })
     AddListLayout(NotificationContainer, 8, Enum.FillDirection.Vertical, Enum.HorizontalAlignment.Center, Enum.VerticalAlignment.Bottom)
 
     local isMinimized = false
     local isHidden = false
-    local originalSize = UDim2.new(0, 600, 0, 420)
+    local originalSize = layout.MainSize
 
     minimizeBtn.MouseButton1Click:Connect(function()
         if isMinimized then
@@ -1006,7 +1499,7 @@ function Exter:CreateWindow(settings)
             minimizeBtn.Text = "□"
             sidebar.Visible = false
             contentArea.Visible = false
-            Tween(mainFrame, 0.45, { Size = UDim2.new(0, 600, 0, 50) })
+            Tween(mainFrame, 0.45, { Size = layout.MinimizedSize })
         end
     end)
 
@@ -1025,9 +1518,9 @@ function Exter:CreateWindow(settings)
                 mainFrame.Size = UDim2.new(0, 0, 0, 0)
                 mainFrame.BackgroundTransparency = 1
                 if isMinimized then
-                    Tween(mainFrame, 0.45, { Size = UDim2.new(0, 600, 0, 50), BackgroundTransparency = 0 })
+                    Tween(mainFrame, 0.45, { Size = layout.MinimizedSize, BackgroundTransparency = theme.WindowTransparency or 0.08 })
                 else
-                    Tween(mainFrame, 0.45, { Size = originalSize, BackgroundTransparency = 0 })
+                    Tween(mainFrame, 0.45, { Size = originalSize, BackgroundTransparency = theme.WindowTransparency or 0.08 })
                 end
             else
                 isHidden = true
@@ -1037,7 +1530,41 @@ function Exter:CreateWindow(settings)
         end
     end))
 
-    local themeOrder = { "Dark", "Neon", "Ocean", "Sunset", "Cyberpunk" }
+    local uiScale = Create("UIScale", {
+        Name = "AdaptiveScale",
+        Scale = responsiveScale,
+        Parent = mainFrame,
+    })
+
+    local function ReflowResponsiveLayout()
+        local latestScale, latestViewport = EvaluateResponsiveScale()
+        responsiveScale = latestScale
+        uiScale.Scale = responsiveScale
+        layout = BuildWindowLayoutPresets(latestViewport)
+        if not isMinimized then
+            originalSize = layout.MainSize
+            mainFrame.Size = originalSize
+        else
+            mainFrame.Size = layout.MinimizedSize
+        end
+
+        topbar.Size = UDim2.new(1, 0, 0, layout.TopbarHeight)
+        sidebar.Size = UDim2.new(0, layout.SidebarWidth, 1, -layout.TopbarHeight)
+        sidebar.Position = UDim2.new(0, 0, 0, layout.TopbarHeight)
+        contentArea.Size = UDim2.new(1, -(layout.SidebarWidth + 1), 1, -layout.TopbarHeight)
+        contentArea.Position = UDim2.new(0, layout.SidebarWidth, 0, layout.TopbarHeight)
+
+        NotificationContainer.Size = UDim2.fromOffset(layout.NotificationWidth, layout.NotificationHeight)
+        NotificationContainer.Position = UDim2.new(1, -(layout.NotificationWidth + 10), 1, -(layout.NotificationHeight + 10))
+
+        versionBadge.Visible = not layout.Compact
+        topbarButtons.Size = UDim2.new(0, layout.Compact and 126 or 140, 0, layout.TopbarHeight)
+        topbarButtons.Position = UDim2.new(1, layout.Compact and -134 or -150, 0, 0)
+    end
+
+    TrackConnection(screenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(ReflowResponsiveLayout))
+
+    local themeOrder = { "Dark", "Neon", "Ocean", "Sunset", "Cyberpunk", "Aurora", "Ruby", "Frost", "Monochrome" }
     local currentThemeIndex = 1
     for i, name in ipairs(themeOrder) do
         if name == (settings.Theme or "Dark") then currentThemeIndex = i; break end
@@ -1080,10 +1607,23 @@ function Exter:CreateWindow(settings)
         end
 
         mainFrame.BackgroundColor3 = newTheme.Background
+        mainFrame.BackgroundTransparency = newTheme.WindowTransparency or 0.08
         topbar.BackgroundColor3 = newTheme.Topbar
+        topbar.BackgroundTransparency = newTheme.TopbarTransparency or 0.05
         sidebar.BackgroundColor3 = newTheme.BackgroundSecondary
+        sidebar.BackgroundTransparency = newTheme.SidebarTransparency or 0.1
         topbarAccent.BackgroundColor3 = newTheme.Accent
         hideBtn.BackgroundColor3 = newTheme.Error
+
+        local backdrop = screenGui:FindFirstChild("BackdropDim")
+        if backdrop and backdrop:IsA("Frame") then
+            backdrop.BackgroundTransparency = newTheme.BackdropTransparency or 0.24
+        end
+        local glass = mainFrame:FindFirstChild("GlassOverlay")
+        if glass and glass:IsA("ImageLabel") then
+            glass.ImageColor3 = LerpColor(newTheme.TextPrimary, newTheme.Accent, 0.08)
+            glass.ImageTransparency = newTheme.OverlayTransparency or 0.35
+        end
 
         if newTheme.GlowEnabled then
             local glow = mainFrame:FindFirstChild("Glow")
@@ -1117,7 +1657,7 @@ function Exter:CreateWindow(settings)
         local tabIcon = tabSettings.Icon or nil
 
         local tabBtn = Create("TextButton", { Name = tabName, BackgroundColor3 = Exter.Theme.TabBackground,
-            BackgroundTransparency = 0.4, Size = UDim2.new(1, 0, 0, 38), Text = "",
+            BackgroundTransparency = Exter.Theme.ElementTransparency or 0.2, Size = UDim2.new(1, 0, 0, 38), Text = "",
             AutoButtonColor = false, Parent = tabListScroll })
         AddCorner(tabBtn, 10)
 
@@ -1201,7 +1741,7 @@ function Exter:CreateWindow(settings)
         function Tab:CreateLabel(labelText)
             local labelValue = {}
             local label = Create("Frame", { Name = "Label", BackgroundColor3 = Exter.Theme.ElementBackground,
-                BackgroundTransparency = 0.2, Size = UDim2.new(1, 0, 0, 40), Parent = tabPage })
+                BackgroundTransparency = Exter.Theme.ElementTransparency or 0.2, Size = UDim2.new(1, 0, 0, 40), Parent = tabPage })
             AddCorner(label, 10)
             AddStroke(label, Exter.Theme.ElementBorder, 1, 0.4)
             local labelTitle = Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
@@ -1215,7 +1755,7 @@ function Exter:CreateWindow(settings)
         function Tab:CreateParagraph(paragraphSettings)
             local paragraphValue = {}
             local paragraph = Create("Frame", { Name = "Paragraph", BackgroundColor3 = Exter.Theme.ElementBackground,
-                BackgroundTransparency = 0.2, Size = UDim2.new(1, 0, 0, 70),
+                BackgroundTransparency = Exter.Theme.ElementTransparency or 0.2, Size = UDim2.new(1, 0, 0, 70),
                 AutomaticSize = Enum.AutomaticSize.Y, Parent = tabPage })
             AddCorner(paragraph, 10)
             AddStroke(paragraph, Exter.Theme.ElementBorder, 1, 0.4)
@@ -1849,6 +2389,87 @@ function Exter:CreateWindow(settings)
         return Tab
     end
 
+    function Window:SetWindowOpacity(value)
+        local amount = math.clamp(tonumber(value) or 0.08, 0, 0.55)
+        mainFrame.BackgroundTransparency = amount
+        local glass = mainFrame:FindFirstChild("GlassOverlay")
+        if glass and glass:IsA("ImageLabel") then
+            glass.ImageTransparency = math.clamp(amount + 0.24, 0.2, 0.82)
+        end
+    end
+
+    function Window:SetBackdropOpacity(value)
+        local amount = math.clamp(tonumber(value) or 0.24, 0, 0.85)
+        local backdrop = screenGui:FindFirstChild("BackdropDim")
+        if backdrop and backdrop:IsA("Frame") then
+            backdrop.BackgroundTransparency = amount
+        end
+    end
+
+    function Window:SetCompactMode(enabled)
+        if enabled then
+            layout.Compact = true
+            layout.SidebarWidth = 126
+            layout.TopbarHeight = 46
+        else
+            local _, latestViewport = EvaluateResponsiveScale()
+            local rebuilt = BuildWindowLayoutPresets(latestViewport)
+            layout.Compact = rebuilt.Compact
+            layout.SidebarWidth = rebuilt.SidebarWidth
+            layout.TopbarHeight = rebuilt.TopbarHeight
+        end
+        ReflowResponsiveLayout()
+    end
+
+    function Window:PulseAccent(times)
+        times = math.clamp(math.floor(tonumber(times) or 1), 1, 8)
+        task.spawn(function()
+            for _ = 1, times do
+                Tween(topbarAccent, 0.22, { BackgroundTransparency = 0.18 })
+                task.wait(0.22)
+                Tween(topbarAccent, 0.28, { BackgroundTransparency = 0 })
+                task.wait(0.28)
+            end
+        end)
+    end
+
+    function Window:SetMotionProfile(profileName)
+        if SetMotionProfile(profileName) then
+            Exter:Notify({
+                Title = "Motion Profile",
+                Content = "Profile switched to " .. tostring(profileName),
+                Type = "Info",
+                Duration = 2,
+            })
+            return true
+        end
+        Exter:Notify({
+            Title = "Motion Profile",
+            Content = "Unknown profile: " .. tostring(profileName),
+            Type = "Warning",
+            Duration = 2,
+        })
+        return false
+    end
+
+    function Window:GetAvailableThemes()
+        local names = {}
+        for name in pairs(Themes) do
+            table.insert(names, name)
+        end
+        table.sort(names)
+        return names
+    end
+
+    function Window:GetAvailableMotionProfiles()
+        local names = {}
+        for name in pairs(MotionProfiles) do
+            table.insert(names, name)
+        end
+        table.sort(names)
+        return names
+    end
+
     function Window:LoadConfiguration()
         if ConfigEnabled and ConfigFileName then
             pcall(function()
@@ -1863,6 +2484,14 @@ function Exter:CreateWindow(settings)
 
     task.delay(2.5, function() Window:LoadConfiguration() end)
     return Window
+end
+
+function Exter:SetMotionProfile(profileName)
+    return SetMotionProfile(profileName)
+end
+
+function Exter:GetMotionProfile()
+    return GetMotionProfile()
 end
 
 function Exter:Destroy()
