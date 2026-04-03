@@ -30,8 +30,8 @@ local Exter = {
 local Themes = {
     Dark = {
         Name = "Dark",
-        FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
-        FontFaceBold = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+        FontFace = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+        FontFaceBold = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
         Background = Color3.fromRGB(12, 12, 18),
         BackgroundSecondary = Color3.fromRGB(18, 18, 26),
         Topbar = Color3.fromRGB(16, 16, 24),
@@ -79,8 +79,8 @@ local Themes = {
     },
     Neon = {
         Name = "Neon",
-        FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
-        FontFaceBold = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+        FontFace = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+        FontFaceBold = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
         Background = Color3.fromRGB(5, 5, 14),
         BackgroundSecondary = Color3.fromRGB(8, 8, 22),
         Topbar = Color3.fromRGB(6, 6, 18),
@@ -128,8 +128,8 @@ local Themes = {
     },
     Ocean = {
         Name = "Ocean",
-        FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
-        FontFaceBold = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+        FontFace = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+        FontFaceBold = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
         Background = Color3.fromRGB(10, 18, 32),
         BackgroundSecondary = Color3.fromRGB(14, 24, 42),
         Topbar = Color3.fromRGB(12, 21, 38),
@@ -177,8 +177,8 @@ local Themes = {
     },
     Sunset = {
         Name = "Sunset",
-        FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
-        FontFaceBold = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+        FontFace = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+        FontFaceBold = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
         Background = Color3.fromRGB(18, 10, 18),
         BackgroundSecondary = Color3.fromRGB(26, 14, 24),
         Topbar = Color3.fromRGB(22, 12, 21),
@@ -226,8 +226,8 @@ local Themes = {
     },
     Cyberpunk = {
         Name = "Cyberpunk",
-        FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
-        FontFaceBold = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+        FontFace = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+        FontFaceBold = Font.new("rbxasset://fonts/Families/GothamSSM.rbxfont", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
         Background = Color3.fromRGB(6, 2, 15),
         BackgroundSecondary = Color3.fromRGB(12, 5, 25),
         Topbar = Color3.fromRGB(8, 3, 20),
@@ -409,7 +409,6 @@ local function RippleEffect(button, x, y)
     task.delay(0.55, function() ripple:Destroy() end)
 end
 
--- Helper to track connections for cleanup
 local function TrackConnection(conn)
     table.insert(Exter._connections, conn)
     return conn
@@ -473,7 +472,6 @@ local function MakeDraggable(dragHandle, targetFrame)
             dragging = true
             dragStart = input.Position
             startPos = targetFrame.Position
-            -- Disconnect previous connection to prevent leak
             if dragInputConn then
                 dragInputConn:Disconnect()
                 dragInputConn = nil
@@ -581,29 +579,23 @@ function Exter:Notify(settings)
     task.delay(duration, closeNotif)
 end
 
-local function ApplyTheme(themeName)
-    if not Themes[themeName] then return end
-    Exter.Theme = Themes[themeName]
-end
-
 -- ═══════════════════════════════════════════════════════════
 -- PREMIUM FULLSCREEN LOADING SCREEN
 -- ═══════════════════════════════════════════════════════════
 
 local function CreateFullscreenLoadingScreen(screenGui, settings, theme)
     local loadScreen = Create("Frame", { Name = "FullscreenLoading",
-        BackgroundColor3 = Color3.fromRGB(0, 0, 0), Size = UDim2.new(1, 0, 1, 0),
-        ZIndex = 100, Parent = screenGui })
+        BackgroundColor3 = theme.Background, Size = UDim2.new(1, 0, 1, 0),
+        ZIndex = 999999, Parent = screenGui })
 
     local bgGradient = Create("Frame", { Name = "BGGradient", BackgroundColor3 = theme.Background,
-        Size = UDim2.new(1, 0, 1, 0), ZIndex = 100, Parent = loadScreen })
+        Size = UDim2.new(1, 0, 1, 0), ZIndex = 999999, Parent = loadScreen })
     local gradientEffect = AddGradient(bgGradient, ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
         ColorSequenceKeypoint.new(0.5, LerpColor(theme.Background, theme.Accent, 0.08)),
         ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0)),
     }), 45)
 
-    -- Animated gradient rotation
     task.spawn(function()
         local rot = 45
         while loadScreen and loadScreen.Parent do
@@ -613,13 +605,12 @@ local function CreateFullscreenLoadingScreen(screenGui, settings, theme)
         end
     end)
 
-    -- Floating particles
     for i = 1, 12 do
         local particle = Create("Frame", { Name = "Particle" .. i,
             BackgroundColor3 = theme.Accent, BackgroundTransparency = math.random(75, 95) / 100,
             Size = UDim2.new(0, math.random(2, 6), 0, math.random(2, 6)),
             Position = UDim2.new(math.random() * 0.8 + 0.1, 0, math.random() * 0.8 + 0.1, 0),
-            ZIndex = 101, Parent = loadScreen })
+            ZIndex = 1000000, Parent = loadScreen })
         AddCorner(particle, 999)
         task.spawn(function()
             while particle and particle.Parent do
@@ -632,19 +623,17 @@ local function CreateFullscreenLoadingScreen(screenGui, settings, theme)
         end)
     end
 
-    -- Center container
     local center = Create("Frame", { Name = "Center", BackgroundTransparency = 1,
         Size = UDim2.new(0, 400, 0, 300), Position = UDim2.new(0.5, 0, 0.5, 0),
-        AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 102, Parent = loadScreen })
+        AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 1000001, Parent = loadScreen })
 
-    -- Logo circle with animated ring
     local logoCont = Create("Frame", { Name = "LogoContainer", BackgroundTransparency = 1,
         Size = UDim2.new(0, 80, 0, 80), Position = UDim2.new(0.5, 0, 0, 20),
-        AnchorPoint = Vector2.new(0.5, 0), ZIndex = 103, Parent = center })
+        AnchorPoint = Vector2.new(0.5, 0), ZIndex = 1000001, Parent = center })
 
     local outerRing = Create("Frame", { Name = "OuterRing", BackgroundTransparency = 1,
         Size = UDim2.new(1, 16, 1, 16), Position = UDim2.new(0.5, 0, 0.5, 0),
-        AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 103, Parent = logoCont })
+        AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 1000001, Parent = logoCont })
     AddCorner(outerRing, 999)
     local outerStroke = AddStroke(outerRing, theme.Accent, 2, 0)
     local ringGrad = AddGradient(outerStroke, ColorSequence.new({
@@ -665,15 +654,14 @@ local function CreateFullscreenLoadingScreen(screenGui, settings, theme)
     local logoCircle = Create("Frame", { Name = "LogoCircle",
         BackgroundColor3 = LerpColor(theme.Background, theme.Accent, 0.12),
         Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0.5, 0, 0.5, 0),
-        AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 104, Parent = logoCont })
+        AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 1000002, Parent = logoCont })
     AddCorner(logoCircle, 999)
     AddStroke(logoCircle, theme.Accent, 1, 0.5)
 
     Create("TextLabel", { Name = "LogoText", BackgroundTransparency = 1,
         Size = UDim2.new(1, 0, 1, 0), Text = "E", TextColor3 = theme.Accent,
-        TextSize = 36, FontFace = theme.FontFaceBold, ZIndex = 105, Parent = logoCircle })
+        TextSize = 36, FontFace = theme.FontFaceBold, ZIndex = 1000002, Parent = logoCircle })
 
-    -- Pulse animation
     task.spawn(function()
         while logoCircle and logoCircle.Parent do
             Tween(logoCircle, 1.2, { Size = UDim2.new(1, 4, 1, 4) }, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
@@ -687,33 +675,33 @@ local function CreateFullscreenLoadingScreen(screenGui, settings, theme)
         Size = UDim2.new(1, 0, 0, 36), Position = UDim2.new(0, 0, 0, 115),
         Text = settings.LoadingTitle or "EXTER LIBRARY", TextColor3 = theme.TextPrimary,
         TextTransparency = 1, TextSize = 28, FontFace = theme.FontFaceBold,
-        ZIndex = 103, Parent = center })
+        ZIndex = 1000001, Parent = center })
 
     local loadSub = Create("TextLabel", { Name = "Subtitle", BackgroundTransparency = 1,
         Size = UDim2.new(1, 0, 0, 22), Position = UDim2.new(0, 0, 0, 152),
         Text = settings.LoadingSubtitle or "Premium Edition", TextColor3 = theme.TextSecondary,
         TextTransparency = 1, TextSize = 14, FontFace = theme.FontFace,
-        ZIndex = 103, Parent = center })
+        ZIndex = 1000001, Parent = center })
 
     local statusText = Create("TextLabel", { Name = "Status", BackgroundTransparency = 1,
         Size = UDim2.new(1, 0, 0, 18), Position = UDim2.new(0, 0, 0, 220),
         Text = "Initializing...", TextColor3 = theme.TextMuted, TextTransparency = 1,
-        TextSize = 12, FontFace = theme.FontFace, ZIndex = 103, Parent = center })
+        TextSize = 12, FontFace = theme.FontFace, ZIndex = 1000001, Parent = center })
 
     local barCont = Create("Frame", { Name = "BarContainer", BackgroundTransparency = 1,
         Size = UDim2.new(0.65, 0, 0, 24), Position = UDim2.new(0.175, 0, 0, 188),
-        ZIndex = 103, Parent = center })
+        ZIndex = 1000001, Parent = center })
 
     local loadBarBg = Create("Frame", { Name = "LoadBarBg",
         BackgroundColor3 = LerpColor(theme.Background, theme.ElementBackground, 0.5),
         BackgroundTransparency = 0.3, Size = UDim2.new(1, 0, 0, 6),
         Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5),
-        ZIndex = 103, Parent = barCont })
+        ZIndex = 1000001, Parent = barCont })
     AddCorner(loadBarBg, 3)
     AddStroke(loadBarBg, theme.ElementBorder, 1, 0.6)
 
     local loadBarFill = Create("Frame", { Name = "Fill", BackgroundColor3 = theme.Accent,
-        Size = UDim2.new(0, 0, 1, 0), ZIndex = 104, Parent = loadBarBg })
+        Size = UDim2.new(0, 0, 1, 0), ZIndex = 1000002, Parent = loadBarBg })
     AddCorner(loadBarFill, 3)
     AddGradient(loadBarFill, ColorSequence.new({
         ColorSequenceKeypoint.new(0, theme.GradientAccent1),
@@ -723,20 +711,19 @@ local function CreateFullscreenLoadingScreen(screenGui, settings, theme)
     local percentText = Create("TextLabel", { Name = "Percent", BackgroundTransparency = 1,
         Size = UDim2.new(1, 0, 0, 16), Position = UDim2.new(0, 0, 1, 4),
         Text = "0%", TextColor3 = theme.Accent, TextTransparency = 1,
-        TextSize = 11, FontFace = theme.FontFaceBold, ZIndex = 103, Parent = barCont })
+        TextSize = 11, FontFace = theme.FontFaceBold, ZIndex = 1000001, Parent = barCont })
 
     local versionText = Create("TextLabel", { Name = "Version", BackgroundTransparency = 1,
         Size = UDim2.new(1, 0, 0, 16), Position = UDim2.new(0, 0, 0, 260),
         Text = Release, TextColor3 = theme.TextMuted, TextTransparency = 1,
-        TextSize = 10, FontFace = theme.FontFace, ZIndex = 103, Parent = center })
+        TextSize = 10, FontFace = theme.FontFace, ZIndex = 1000001, Parent = center })
 
     local creditsText = Create("TextLabel", { Name = "Credits", BackgroundTransparency = 1,
         Size = UDim2.new(1, 0, 0, 16), Position = UDim2.new(0, 0, 1, -30),
         Text = "Made with love by Exter Team", TextColor3 = theme.TextMuted,
         TextTransparency = 1, TextSize = 10, FontFace = theme.FontFace,
-        ZIndex = 103, Parent = loadScreen })
+        ZIndex = 1000001, Parent = loadScreen })
 
-    -- Loading animation sequence
     task.spawn(function()
         task.wait(0.2)
         Tween(loadTitle, 0.6, { TextTransparency = 0 })
@@ -830,27 +817,23 @@ function Exter:CreateWindow(settings)
     end
     Exter.ScreenGui = screenGui
 
-    -- Fullscreen Loading Screen
     CreateFullscreenLoadingScreen(screenGui, settings, theme)
 
-    -- Main Frame
     local mainFrame = Create("Frame", { Name = "Main", BackgroundColor3 = theme.Background,
-        Size = UDim2.new(0, 580, 0, 400), Position = UDim2.new(0.5, 0, 0.5, 0),
+        Size = UDim2.new(0, 600, 0, 420), Position = UDim2.new(0.5, 0, 0.5, 0),
         AnchorPoint = Vector2.new(0.5, 0.5), ClipsDescendants = true, Parent = screenGui })
     AddCorner(mainFrame, 14)
     AddStroke(mainFrame, theme.TopbarBorder, 1, 0.4)
     AddShadow(mainFrame, 0.4, 70)
     if theme.GlowEnabled then AddGlow(mainFrame, theme.Accent, 100, 0.85) end
 
-    -- Topbar
     local topbar = Create("Frame", { Name = "Topbar", BackgroundColor3 = theme.Topbar,
-        Size = UDim2.new(1, 0, 0, 46), BorderSizePixel = 0, Parent = mainFrame })
+        Size = UDim2.new(1, 0, 0, 50), BorderSizePixel = 0, Parent = mainFrame })
     Create("Frame", { Name = "CornerRepair", BackgroundColor3 = theme.Topbar,
         Size = UDim2.new(1, 0, 0, 14), Position = UDim2.new(0, 0, 1, -14),
         BorderSizePixel = 0, Parent = topbar })
     AddCorner(topbar, 14)
 
-    -- Topbar gradient accent line
     local topbarAccent = Create("Frame", { Name = "AccentLine", BackgroundColor3 = theme.Accent,
         Size = UDim2.new(1, 0, 0, 2), Position = UDim2.new(0, 0, 1, 0),
         BorderSizePixel = 0, Parent = topbar })
@@ -860,49 +843,47 @@ function Exter:CreateWindow(settings)
         ColorSequenceKeypoint.new(1, theme.GradientAccent1),
     }))
 
-    -- Logo icon
     local topbarLogo = Create("Frame", { Name = "Logo", BackgroundColor3 = theme.Accent,
-        BackgroundTransparency = 0.85, Size = UDim2.new(0, 28, 0, 28),
+        BackgroundTransparency = 0.85, Size = UDim2.new(0, 32, 0, 32),
         Position = UDim2.new(0, 12, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), Parent = topbar })
     AddCorner(topbarLogo, 8)
     Create("TextLabel", { Name = "LogoText", BackgroundTransparency = 1,
         Size = UDim2.new(1, 0, 1, 0), Text = "E", TextColor3 = theme.Accent,
-        TextSize = 16, FontFace = theme.FontFaceBold, Parent = topbarLogo })
+        TextSize = 18, FontFace = theme.FontFaceBold, Parent = topbarLogo })
 
     Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
-        Size = UDim2.new(0.5, 0, 1, 0), Position = UDim2.new(0, 48, 0, 0),
+        Size = UDim2.new(0.5, 0, 1, 0), Position = UDim2.new(0, 54, 0, 0),
         Text = settings.Name or "Exter Library", TextColor3 = theme.TextPrimary,
-        TextSize = 16, FontFace = theme.FontFaceBold, TextXAlignment = Enum.TextXAlignment.Left,
+        TextSize = 17, FontFace = theme.FontFaceBold, TextXAlignment = Enum.TextXAlignment.Left,
         Parent = topbar })
 
     local versionBadge = Create("TextLabel", { Name = "Version", BackgroundColor3 = theme.Accent,
-        BackgroundTransparency = 0.82, Size = UDim2.new(0, 65, 0, 20),
-        Position = UDim2.new(0, 200, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5),
-        Text = "PREMIUM", TextColor3 = theme.Accent, TextSize = 9,
+        BackgroundTransparency = 0.82, Size = UDim2.new(0, 70, 0, 22),
+        Position = UDim2.new(0, 240, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5),
+        Text = "PREMIUM", TextColor3 = theme.Accent, TextSize = 10,
         FontFace = theme.FontFaceBold, Parent = topbar })
     AddCorner(versionBadge, 5)
     AddStroke(versionBadge, theme.Accent, 1, 0.7)
 
-    -- Topbar buttons
     local topbarButtons = Create("Frame", { Name = "Buttons", BackgroundTransparency = 1,
-        Size = UDim2.new(0, 130, 0, 46), Position = UDim2.new(1, -140, 0, 0), Parent = topbar })
-    AddListLayout(topbarButtons, 6, Enum.FillDirection.Horizontal, Enum.HorizontalAlignment.Right, Enum.VerticalAlignment.Center)
+        Size = UDim2.new(0, 140, 0, 50), Position = UDim2.new(1, -150, 0, 0), Parent = topbar })
+    AddListLayout(topbarButtons, 8, Enum.FillDirection.Horizontal, Enum.HorizontalAlignment.Right, Enum.VerticalAlignment.Center)
 
     local themeBtn = Create("TextButton", { Name = "ThemeBtn", BackgroundColor3 = theme.ElementBackground,
-        BackgroundTransparency = 0.4, Size = UDim2.new(0, 30, 0, 30), Text = "T",
-        TextColor3 = theme.TextSecondary, TextSize = 13, FontFace = theme.FontFaceBold,
+        BackgroundTransparency = 0.4, Size = UDim2.new(0, 36, 0, 36), Text = "≈",
+        TextColor3 = theme.TextSecondary, TextSize = 16, FontFace = theme.FontFaceBold,
         AutoButtonColor = false, LayoutOrder = 1, Parent = topbarButtons })
     AddCorner(themeBtn, 8)
 
     local minimizeBtn = Create("TextButton", { Name = "MinimizeBtn", BackgroundColor3 = theme.ElementBackground,
-        BackgroundTransparency = 0.4, Size = UDim2.new(0, 30, 0, 30), Text = "-",
+        BackgroundTransparency = 0.4, Size = UDim2.new(0, 36, 0, 36), Text = "_",
         TextColor3 = theme.TextSecondary, TextSize = 18, FontFace = theme.FontFaceBold,
         AutoButtonColor = false, LayoutOrder = 2, Parent = topbarButtons })
     AddCorner(minimizeBtn, 8)
 
     local hideBtn = Create("TextButton", { Name = "HideBtn", BackgroundColor3 = theme.Error,
-        BackgroundTransparency = 0.65, Size = UDim2.new(0, 30, 0, 30), Text = "X",
-        TextColor3 = theme.TextPrimary, TextSize = 14, FontFace = theme.FontFaceBold,
+        BackgroundTransparency = 0.65, Size = UDim2.new(0, 36, 0, 36), Text = "✕",
+        TextColor3 = theme.TextPrimary, TextSize = 16, FontFace = theme.FontFaceBold,
         AutoButtonColor = false, LayoutOrder = 3, Parent = topbarButtons })
     AddCorner(hideBtn, 8)
 
@@ -915,64 +896,59 @@ function Exter:CreateWindow(settings)
 
     MakeDraggable(topbar, mainFrame)
 
-    -- Sidebar
     local sidebar = Create("Frame", { Name = "Sidebar", BackgroundColor3 = theme.BackgroundSecondary,
-        Size = UDim2.new(0, 150, 1, -48), Position = UDim2.new(0, 0, 0, 48),
+        Size = UDim2.new(0, 160, 1, -50), Position = UDim2.new(0, 0, 0, 50),
         BorderSizePixel = 0, Parent = mainFrame })
     Create("Frame", { Name = "Divider", BackgroundColor3 = theme.DividerColor,
         Size = UDim2.new(0, 1, 1, 0), Position = UDim2.new(1, 0, 0, 0),
         BorderSizePixel = 0, Parent = sidebar })
 
-    -- User info section
     local userSection = Create("Frame", { Name = "UserSection", BackgroundColor3 = theme.Accent,
-        BackgroundTransparency = 0.9, Size = UDim2.new(1, -12, 0, 50),
+        BackgroundTransparency = 0.9, Size = UDim2.new(1, -12, 0, 55),
         Position = UDim2.new(0, 6, 0, 6), Parent = sidebar })
     AddCorner(userSection, 10)
 
     local userAvatar = Create("Frame", { Name = "Avatar", BackgroundColor3 = theme.Accent,
-        BackgroundTransparency = 0.7, Size = UDim2.new(0, 32, 0, 32),
+        BackgroundTransparency = 0.7, Size = UDim2.new(0, 36, 0, 36),
         Position = UDim2.new(0, 8, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), Parent = userSection })
     AddCorner(userAvatar, 999)
     Create("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0),
         Text = string.sub(Player.Name, 1, 1):upper(), TextColor3 = theme.Accent,
-        TextSize = 14, FontFace = theme.FontFaceBold, Parent = userAvatar })
-    Create("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, -52, 0, 16),
-        Position = UDim2.new(0, 46, 0, 10), Text = Player.Name, TextColor3 = theme.TextPrimary,
-        TextSize = 12, FontFace = theme.FontFaceBold, TextXAlignment = Enum.TextXAlignment.Left,
+        TextSize = 16, FontFace = theme.FontFaceBold, Parent = userAvatar })
+    Create("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, -56, 0, 18),
+        Position = UDim2.new(0, 50, 0, 8), Text = Player.Name, TextColor3 = theme.TextPrimary,
+        TextSize = 13, FontFace = theme.FontFaceBold, TextXAlignment = Enum.TextXAlignment.Left,
         TextTruncate = Enum.TextTruncate.AtEnd, Parent = userSection })
-    Create("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, -52, 0, 14),
-        Position = UDim2.new(0, 46, 0, 26), Text = "Premium User", TextColor3 = theme.Success,
-        TextSize = 10, FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
+    Create("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, -56, 0, 16),
+        Position = UDim2.new(0, 50, 0, 28), Text = "Premium User", TextColor3 = theme.Success,
+        TextSize = 11, FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
         Parent = userSection })
 
     local tabListScroll = Create("ScrollingFrame", { Name = "TabList", BackgroundTransparency = 1,
-        Size = UDim2.new(1, -8, 1, -68), Position = UDim2.new(0, 4, 0, 62),
+        Size = UDim2.new(1, -8, 1, -73), Position = UDim2.new(0, 4, 0, 67),
         ScrollBarThickness = 2, ScrollBarImageColor3 = theme.ScrollbarColor,
         ScrollBarImageTransparency = 0.4, CanvasSize = UDim2.new(0, 0, 0, 0),
         AutomaticCanvasSize = Enum.AutomaticSize.Y, BorderSizePixel = 0, Parent = sidebar })
     AddListLayout(tabListScroll, 3)
     AddPadding(tabListScroll, 4, 4, 4, 4)
 
-    -- Content Area
     local contentArea = Create("Frame", { Name = "Content", BackgroundTransparency = 1,
-        Size = UDim2.new(1, -151, 1, -48), Position = UDim2.new(0, 151, 0, 48),
+        Size = UDim2.new(1, -161, 1, -50), Position = UDim2.new(0, 160, 0, 50),
         ClipsDescendants = true, Parent = mainFrame })
 
-    -- Notification Container
     NotificationContainer = Create("Frame", { Name = "Notifications", BackgroundTransparency = 1,
-        Size = UDim2.new(0, 320, 0, 420), Position = UDim2.new(1, -330, 1, -430),
+        Size = UDim2.new(0, 340, 0, 450), Position = UDim2.new(1, -350, 1, -460),
         Parent = screenGui })
     AddListLayout(NotificationContainer, 8, Enum.FillDirection.Vertical, Enum.HorizontalAlignment.Center, Enum.VerticalAlignment.Bottom)
 
-    -- Window state
     local isMinimized = false
     local isHidden = false
-    local originalSize = UDim2.new(0, 580, 0, 400)
+    local originalSize = UDim2.new(0, 600, 0, 420)
 
     minimizeBtn.MouseButton1Click:Connect(function()
         if isMinimized then
             isMinimized = false
-            minimizeBtn.Text = "-"
+            minimizeBtn.Text = "_"
             Tween(mainFrame, 0.45, { Size = originalSize })
             task.delay(0.15, function()
                 sidebar.Visible = true
@@ -980,10 +956,10 @@ function Exter:CreateWindow(settings)
             end)
         else
             isMinimized = true
-            minimizeBtn.Text = "+"
+            minimizeBtn.Text = "□"
             sidebar.Visible = false
             contentArea.Visible = false
-            Tween(mainFrame, 0.45, { Size = UDim2.new(0, 580, 0, 48) })
+            Tween(mainFrame, 0.45, { Size = UDim2.new(0, 600, 0, 50) })
         end
     end)
 
@@ -1002,7 +978,7 @@ function Exter:CreateWindow(settings)
                 mainFrame.Size = UDim2.new(0, 0, 0, 0)
                 mainFrame.BackgroundTransparency = 1
                 if isMinimized then
-                    Tween(mainFrame, 0.45, { Size = UDim2.new(0, 580, 0, 48), BackgroundTransparency = 0 })
+                    Tween(mainFrame, 0.45, { Size = UDim2.new(0, 600, 0, 50), BackgroundTransparency = 0 })
                 else
                     Tween(mainFrame, 0.45, { Size = originalSize, BackgroundTransparency = 0 })
                 end
@@ -1014,17 +990,34 @@ function Exter:CreateWindow(settings)
         end
     end))
 
-    -- Theme cycling
     local themeOrder = { "Dark", "Neon", "Ocean", "Sunset", "Cyberpunk" }
     local currentThemeIndex = 1
     for i, name in ipairs(themeOrder) do
         if name == (settings.Theme or "Dark") then currentThemeIndex = i; break end
     end
 
+    local function ApplyThemeToUI(themeName)
+        if not Themes[themeName] then return end
+        local newTheme = Themes[themeName]
+        Exter.Theme = newTheme
+        
+        mainFrame.BackgroundColor3 = newTheme.Background
+        topbar.BackgroundColor3 = newTheme.Topbar
+        sidebar.BackgroundColor3 = newTheme.BackgroundSecondary
+        topbarAccent.BackgroundColor3 = newTheme.Accent
+        
+        for _, stroke in ipairs(mainFrame:FindDescendantsOfClass("UIStroke")) do
+            if stroke.Parent.Name == "Main" then
+                stroke.Color = newTheme.TopbarBorder
+            end
+        end
+        
+        Exter:Notify({ Title = "Theme Changed", Content = "Switched to " .. themeName, Type = "Success", Duration = 2 })
+    end
+
     themeBtn.MouseButton1Click:Connect(function()
         currentThemeIndex = currentThemeIndex % #themeOrder + 1
-        ApplyTheme(themeOrder[currentThemeIndex])
-        Exter:Notify({ Title = "Theme Changed", Content = "Switched to " .. themeOrder[currentThemeIndex], Type = "Info", Duration = 2 })
+        ApplyThemeToUI(themeOrder[currentThemeIndex])
     end)
 
     -- ═══════════════════════════════════════════════════════
@@ -1037,65 +1030,63 @@ function Exter:CreateWindow(settings)
     local Window = {}
 
     function Window:CreateTab(tabSettings)
-        -- FIX: Handle both string and table input for tabSettings
         if typeof(tabSettings) == "string" then
             tabSettings = { Name = tabSettings }
         end
         local tabName = tabSettings.Name or "Tab"
         local tabIcon = tabSettings.Icon or nil
 
-        local tabBtn = Create("TextButton", { Name = tabName, BackgroundColor3 = theme.TabBackground,
-            BackgroundTransparency = 0.4, Size = UDim2.new(1, 0, 0, 36), Text = "",
+        local tabBtn = Create("TextButton", { Name = tabName, BackgroundColor3 = Exter.Theme.TabBackground,
+            BackgroundTransparency = 0.4, Size = UDim2.new(1, 0, 0, 38), Text = "",
             AutoButtonColor = false, Parent = tabListScroll })
         AddCorner(tabBtn, 10)
 
         if tabIcon then
-            -- FIX: Added missing TextColor3 and FontFace for icon
             Create("TextLabel", { Name = "Icon", BackgroundTransparency = 1,
-                Size = UDim2.new(0, 26, 1, 0), Position = UDim2.new(0, 10, 0, 0),
-                Text = tabIcon, TextColor3 = theme.TabText, TextSize = 15,
-                FontFace = theme.FontFace, Parent = tabBtn })
+                Size = UDim2.new(0, 28, 1, 0), Position = UDim2.new(0, 10, 0, 0),
+                Text = tabIcon, TextColor3 = Exter.Theme.TabText, TextSize = 16,
+                FontFace = Exter.Theme.FontFace, Parent = tabBtn })
         end
 
         local tabTitle = Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
-            Size = UDim2.new(1, tabIcon and -44 or -20, 1, 0),
-            Position = UDim2.new(0, tabIcon and 36 or 12, 0, 0),
-            Text = tabName, TextColor3 = theme.TabText, TextSize = 13,
-            FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
+            Size = UDim2.new(1, tabIcon and -48 or -20, 1, 0),
+            Position = UDim2.new(0, tabIcon and 40 or 12, 0, 0),
+            Text = tabName, TextColor3 = Exter.Theme.TabText, TextSize = 14,
+            FontFace = Exter.Theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
             TextTruncate = Enum.TextTruncate.AtEnd, Parent = tabBtn })
 
         local activeIndicator = Create("Frame", { Name = "ActiveIndicator",
-            BackgroundColor3 = theme.Accent, Size = UDim2.new(0, 3, 0, 0),
+            BackgroundColor3 = Exter.Theme.Accent, Size = UDim2.new(0, 3, 0, 0),
             Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), Parent = tabBtn })
         AddCorner(activeIndicator, 2)
 
         local tabPage = Create("ScrollingFrame", { Name = tabName, BackgroundTransparency = 1,
             Size = UDim2.new(1, 0, 1, 0), ScrollBarThickness = 3,
-            ScrollBarImageColor3 = theme.ScrollbarColor, ScrollBarImageTransparency = 0.2,
+            ScrollBarImageColor3 = Exter.Theme.ScrollbarColor, ScrollBarImageTransparency = 0.2,
             CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y,
             BorderSizePixel = 0, Visible = false, Parent = contentArea })
         AddListLayout(tabPage, 6)
-        AddPadding(tabPage, 10, 12, 10, 12)
+        AddPadding(tabPage, 12, 14, 12, 14)
         tabPages[tabName] = tabPage
 
         local function selectTab()
             for _, otherBtn in ipairs(tabListScroll:GetChildren()) do
                 if otherBtn:IsA("TextButton") then
-                    Tween(otherBtn, 0.3, { BackgroundTransparency = 0.4, BackgroundColor3 = theme.TabBackground })
+                    Tween(otherBtn, 0.3, { BackgroundTransparency = 0.4, BackgroundColor3 = Exter.Theme.TabBackground })
                     local otherTitle = otherBtn:FindFirstChild("Title")
-                    if otherTitle then Tween(otherTitle, 0.3, { TextColor3 = theme.TabText }) end
+                    if otherTitle then Tween(otherTitle, 0.3, { TextColor3 = Exter.Theme.TabText }) end
                     local otherIcon = otherBtn:FindFirstChild("Icon")
-                    if otherIcon then Tween(otherIcon, 0.3, { TextColor3 = theme.TabText }) end
+                    if otherIcon then Tween(otherIcon, 0.3, { TextColor3 = Exter.Theme.TabText }) end
                     local otherInd = otherBtn:FindFirstChild("ActiveIndicator")
                     if otherInd then Tween(otherInd, 0.3, { Size = UDim2.new(0, 3, 0, 0) }) end
                 end
             end
             for _, page in pairs(tabPages) do page.Visible = false end
-            Tween(tabBtn, 0.3, { BackgroundTransparency = 0.05, BackgroundColor3 = LerpColor(theme.TabBackground, theme.Accent, 0.18) })
-            Tween(tabTitle, 0.3, { TextColor3 = theme.TextPrimary })
+            Tween(tabBtn, 0.3, { BackgroundTransparency = 0.05, BackgroundColor3 = LerpColor(Exter.Theme.TabBackground, Exter.Theme.Accent, 0.18) })
+            Tween(tabTitle, 0.3, { TextColor3 = Exter.Theme.TextPrimary })
             local iconLabel = tabBtn:FindFirstChild("Icon")
-            if iconLabel then Tween(iconLabel, 0.3, { TextColor3 = theme.TextPrimary }) end
-            SpringTween(activeIndicator, 0.35, { Size = UDim2.new(0, 3, 0, 20) })
+            if iconLabel then Tween(iconLabel, 0.3, { TextColor3 = Exter.Theme.TextPrimary }) end
+            SpringTween(activeIndicator, 0.35, { Size = UDim2.new(0, 3, 0, 22) })
             tabPage.Visible = true
             currentTab = tabName
         end
@@ -1112,104 +1103,99 @@ function Exter:CreateWindow(settings)
 
         local Tab = {}
 
-        -- Section
         function Tab:CreateSection(sectionName)
             local sectionValue = {}
             local section = Create("Frame", { Name = "Section_" .. sectionName, BackgroundTransparency = 1,
-                Size = UDim2.new(1, 0, 0, 28), Parent = tabPage })
+                Size = UDim2.new(1, 0, 0, 30), Parent = tabPage })
             local sectionTitle = Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
                 Size = UDim2.new(1, -16, 1, 0), Position = UDim2.new(0, 10, 0, 0),
-                Text = string.upper(sectionName), TextColor3 = theme.Accent,
-                TextSize = 10, FontFace = theme.FontFaceBold, TextXAlignment = Enum.TextXAlignment.Left,
+                Text = string.upper(sectionName), TextColor3 = Exter.Theme.Accent,
+                TextSize = 11, FontFace = Exter.Theme.FontFaceBold, TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = section })
-            Create("Frame", { BackgroundColor3 = theme.DividerColor, Size = UDim2.new(1, -16, 0, 1),
+            Create("Frame", { BackgroundColor3 = Exter.Theme.DividerColor, Size = UDim2.new(1, -16, 0, 1),
                 Position = UDim2.new(0, 8, 1, -1), BorderSizePixel = 0, Parent = section })
             function sectionValue:Set(newName) sectionTitle.Text = string.upper(newName) end
             return sectionValue
         end
 
-        -- Label
         function Tab:CreateLabel(labelText)
             local labelValue = {}
-            local label = Create("Frame", { Name = "Label", BackgroundColor3 = theme.ElementBackground,
-                BackgroundTransparency = 0.2, Size = UDim2.new(1, 0, 0, 38), Parent = tabPage })
+            local label = Create("Frame", { Name = "Label", BackgroundColor3 = Exter.Theme.ElementBackground,
+                BackgroundTransparency = 0.2, Size = UDim2.new(1, 0, 0, 40), Parent = tabPage })
             AddCorner(label, 10)
-            AddStroke(label, theme.ElementBorder, 1, 0.4)
+            AddStroke(label, Exter.Theme.ElementBorder, 1, 0.4)
             local labelTitle = Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
                 Size = UDim2.new(1, -24, 1, 0), Position = UDim2.new(0, 14, 0, 0),
-                Text = labelText, TextColor3 = theme.TextSecondary, TextSize = 13,
-                FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left, Parent = label })
+                Text = labelText, TextColor3 = Exter.Theme.TextSecondary, TextSize = 14,
+                FontFace = Exter.Theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left, Parent = label })
             function labelValue:Set(newText) labelTitle.Text = newText end
             return labelValue
         end
 
-        -- Paragraph
         function Tab:CreateParagraph(paragraphSettings)
             local paragraphValue = {}
-            local paragraph = Create("Frame", { Name = "Paragraph", BackgroundColor3 = theme.ElementBackground,
+            local paragraph = Create("Frame", { Name = "Paragraph", BackgroundColor3 = Exter.Theme.ElementBackground,
                 BackgroundTransparency = 0.2, Size = UDim2.new(1, 0, 0, 70),
                 AutomaticSize = Enum.AutomaticSize.Y, Parent = tabPage })
             AddCorner(paragraph, 10)
-            AddStroke(paragraph, theme.ElementBorder, 1, 0.4)
+            AddStroke(paragraph, Exter.Theme.ElementBorder, 1, 0.4)
             AddPadding(paragraph, 12, 14, 12, 14)
-            -- FIX: Add UIListLayout BEFORE children so layout order works correctly
             AddListLayout(paragraph, 6)
             local pTitle = Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
-                Size = UDim2.new(1, 0, 0, 20), Text = paragraphSettings.Title or "Title",
-                TextColor3 = theme.TextPrimary, TextSize = 14, FontFace = theme.FontFaceBold,
+                Size = UDim2.new(1, 0, 0, 22), Text = paragraphSettings.Title or "Title",
+                TextColor3 = Exter.Theme.TextPrimary, TextSize = 15, FontFace = Exter.Theme.FontFaceBold,
                 TextXAlignment = Enum.TextXAlignment.Left, LayoutOrder = 1, Parent = paragraph })
             local pContent = Create("TextLabel", { Name = "Content", BackgroundTransparency = 1,
                 Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
-                Text = paragraphSettings.Content or "Content", TextColor3 = theme.TextSecondary,
-                TextSize = 12, FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
+                Text = paragraphSettings.Content or "Content", TextColor3 = Exter.Theme.TextSecondary,
+                TextSize = 13, FontFace = Exter.Theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
                 TextWrapped = true, LayoutOrder = 2, Parent = paragraph })
             function paragraphValue:Set(s) pTitle.Text = s.Title or pTitle.Text; pContent.Text = s.Content or pContent.Text end
             return paragraphValue
         end
 
-        -- Button
         function Tab:CreateButton(buttonSettings)
             local buttonValue = {}
             local button = Create("Frame", { Name = "Button_" .. (buttonSettings.Name or "Button"),
-                BackgroundColor3 = theme.ElementBackground, BackgroundTransparency = 0.15,
-                Size = UDim2.new(1, 0, 0, 40), Parent = tabPage })
+                BackgroundColor3 = Exter.Theme.ElementBackground, BackgroundTransparency = 0.15,
+                Size = UDim2.new(1, 0, 0, 42), Parent = tabPage })
             AddCorner(button, 10)
-            AddStroke(button, theme.ElementBorder, 1, 0.3)
+            AddStroke(button, Exter.Theme.ElementBorder, 1, 0.3)
             local btnTitle = Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
                 Size = UDim2.new(1, -55, 1, 0), Position = UDim2.new(0, 14, 0, 0),
-                Text = buttonSettings.Name or "Button", TextColor3 = theme.TextPrimary,
-                TextSize = 13, FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
+                Text = buttonSettings.Name or "Button", TextColor3 = Exter.Theme.TextPrimary,
+                TextSize = 14, FontFace = Exter.Theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = button })
             local arrowLabel = Create("TextLabel", { Name = "Arrow", BackgroundTransparency = 1,
                 Size = UDim2.new(0, 24, 1, 0), Position = UDim2.new(1, -32, 0, 0),
-                Text = ">", TextColor3 = theme.Accent, TextSize = 16,
-                FontFace = theme.FontFaceBold, Parent = button })
+                Text = ">", TextColor3 = Exter.Theme.Accent, TextSize = 18,
+                FontFace = Exter.Theme.FontFaceBold, Parent = button })
             local interact = Create("TextButton", { Name = "Interact", BackgroundTransparency = 1,
                 Size = UDim2.new(1, 0, 1, 0), Text = "", ZIndex = 5, Parent = button })
 
             interact.MouseEnter:Connect(function()
-                Tween(button, 0.25, { BackgroundColor3 = theme.ElementBackgroundHover, BackgroundTransparency = 0.05 })
+                Tween(button, 0.25, { BackgroundColor3 = Exter.Theme.ElementBackgroundHover, BackgroundTransparency = 0.05 })
                 local stroke = button:FindFirstChildOfClass("UIStroke")
-                if stroke then Tween(stroke, 0.25, { Color = theme.ElementBorderHover }) end
+                if stroke then Tween(stroke, 0.25, { Color = Exter.Theme.ElementBorderHover }) end
             end)
             interact.MouseLeave:Connect(function()
-                Tween(button, 0.25, { BackgroundColor3 = theme.ElementBackground, BackgroundTransparency = 0.15 })
+                Tween(button, 0.25, { BackgroundColor3 = Exter.Theme.ElementBackground, BackgroundTransparency = 0.15 })
                 local stroke = button:FindFirstChildOfClass("UIStroke")
-                if stroke then Tween(stroke, 0.25, { Color = theme.ElementBorder }) end
+                if stroke then Tween(stroke, 0.25, { Color = Exter.Theme.ElementBorder }) end
             end)
             interact.MouseButton1Click:Connect(function()
                 RippleEffect(button, Mouse.X, Mouse.Y)
                 local success, err = pcall(buttonSettings.Callback)
                 if not success then
-                    Tween(button, 0.3, { BackgroundColor3 = theme.Error })
+                    Tween(button, 0.3, { BackgroundColor3 = Exter.Theme.Error })
                     btnTitle.Text = "Error!"
                     task.wait(0.5)
                     btnTitle.Text = buttonSettings.Name or "Button"
-                    Tween(button, 0.3, { BackgroundColor3 = theme.ElementBackground })
+                    Tween(button, 0.3, { BackgroundColor3 = Exter.Theme.ElementBackground })
                 else
-                    Tween(button, 0.15, { BackgroundColor3 = LerpColor(theme.ElementBackground, theme.Accent, 0.25) })
+                    Tween(button, 0.15, { BackgroundColor3 = LerpColor(Exter.Theme.ElementBackground, Exter.Theme.Accent, 0.25) })
                     task.wait(0.15)
-                    Tween(button, 0.3, { BackgroundColor3 = theme.ElementBackground })
+                    Tween(button, 0.3, { BackgroundColor3 = Exter.Theme.ElementBackground })
                 end
                 SaveConfiguration()
             end)
@@ -1217,51 +1203,50 @@ function Exter:CreateWindow(settings)
             return buttonValue
         end
 
-        -- Toggle
         function Tab:CreateToggle(toggleSettings)
             toggleSettings.Type = "Toggle"
             if toggleSettings.CurrentValue == nil then
                 toggleSettings.CurrentValue = false
             end
             local toggle = Create("Frame", { Name = "Toggle_" .. (toggleSettings.Name or "Toggle"),
-                BackgroundColor3 = theme.ElementBackground, BackgroundTransparency = 0.15,
-                Size = UDim2.new(1, 0, 0, 40), Parent = tabPage })
+                BackgroundColor3 = Exter.Theme.ElementBackground, BackgroundTransparency = 0.15,
+                Size = UDim2.new(1, 0, 0, 42), Parent = tabPage })
             AddCorner(toggle, 10)
-            AddStroke(toggle, theme.ElementBorder, 1, 0.3)
+            AddStroke(toggle, Exter.Theme.ElementBorder, 1, 0.3)
             Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
                 Size = UDim2.new(1, -75, 1, 0), Position = UDim2.new(0, 14, 0, 0),
-                Text = toggleSettings.Name or "Toggle", TextColor3 = theme.TextPrimary,
-                TextSize = 13, FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
+                Text = toggleSettings.Name or "Toggle", TextColor3 = Exter.Theme.TextPrimary,
+                TextSize = 14, FontFace = Exter.Theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = toggle })
             local switchTrack = Create("Frame", { Name = "Switch",
-                BackgroundColor3 = toggleSettings.CurrentValue and theme.ToggleEnabled or theme.ToggleDisabled,
-                Size = UDim2.new(0, 44, 0, 24), Position = UDim2.new(1, -56, 0.5, 0),
+                BackgroundColor3 = toggleSettings.CurrentValue and Exter.Theme.ToggleEnabled or Exter.Theme.ToggleDisabled,
+                Size = UDim2.new(0, 48, 0, 26), Position = UDim2.new(1, -58, 0.5, 0),
                 AnchorPoint = Vector2.new(0, 0.5), Parent = toggle })
-            AddCorner(switchTrack, 12)
-            local switchKnob = Create("Frame", { Name = "Knob", BackgroundColor3 = theme.ToggleKnob,
-                Size = UDim2.new(0, 18, 0, 18),
-                Position = toggleSettings.CurrentValue and UDim2.new(1, -21, 0.5, 0) or UDim2.new(0, 3, 0.5, 0),
+            AddCorner(switchTrack, 13)
+            local switchKnob = Create("Frame", { Name = "Knob", BackgroundColor3 = Exter.Theme.ToggleKnob,
+                Size = UDim2.new(0, 20, 0, 20),
+                Position = toggleSettings.CurrentValue and UDim2.new(1, -23, 0.5, 0) or UDim2.new(0, 3, 0.5, 0),
                 AnchorPoint = Vector2.new(0, 0.5), Parent = switchTrack })
-            AddCorner(switchKnob, 9)
+            AddCorner(switchKnob, 10)
             AddShadow(switchKnob, 0.65, 4)
             local interact = Create("TextButton", { Name = "Interact", BackgroundTransparency = 1,
                 Size = UDim2.new(1, 0, 1, 0), Text = "", ZIndex = 5, Parent = toggle })
 
             local function updateVisual()
                 if toggleSettings.CurrentValue then
-                    Tween(switchTrack, 0.3, { BackgroundColor3 = theme.ToggleEnabled })
-                    SpringTween(switchKnob, 0.35, { Position = UDim2.new(1, -21, 0.5, 0) })
+                    Tween(switchTrack, 0.3, { BackgroundColor3 = Exter.Theme.ToggleEnabled })
+                    SpringTween(switchKnob, 0.35, { Position = UDim2.new(1, -23, 0.5, 0) })
                 else
-                    Tween(switchTrack, 0.3, { BackgroundColor3 = theme.ToggleDisabled })
+                    Tween(switchTrack, 0.3, { BackgroundColor3 = Exter.Theme.ToggleDisabled })
                     SpringTween(switchKnob, 0.35, { Position = UDim2.new(0, 3, 0.5, 0) })
                 end
             end
 
             interact.MouseEnter:Connect(function()
-                Tween(toggle, 0.25, { BackgroundColor3 = theme.ElementBackgroundHover, BackgroundTransparency = 0.05 })
+                Tween(toggle, 0.25, { BackgroundColor3 = Exter.Theme.ElementBackgroundHover, BackgroundTransparency = 0.05 })
             end)
             interact.MouseLeave:Connect(function()
-                Tween(toggle, 0.25, { BackgroundColor3 = theme.ElementBackground, BackgroundTransparency = 0.15 })
+                Tween(toggle, 0.25, { BackgroundColor3 = Exter.Theme.ElementBackground, BackgroundTransparency = 0.15 })
             end)
             interact.MouseButton1Click:Connect(function()
                 toggleSettings.CurrentValue = not toggleSettings.CurrentValue
@@ -1277,52 +1262,50 @@ function Exter:CreateWindow(settings)
             return toggleSettings
         end
 
-        -- Slider
         function Tab:CreateSlider(sliderSettings)
             sliderSettings.Type = "Slider"
             local range = sliderSettings.Range or {0, 100}
             local increment = sliderSettings.Increment or 1
             sliderSettings.CurrentValue = sliderSettings.CurrentValue or range[1]
 
-            -- FIX: Prevent division by zero
             local rangeSpan = range[2] - range[1]
             if rangeSpan == 0 then rangeSpan = 1 end
 
             local slider = Create("Frame", { Name = "Slider_" .. (sliderSettings.Name or "Slider"),
-                BackgroundColor3 = theme.ElementBackground, BackgroundTransparency = 0.15,
-                Size = UDim2.new(1, 0, 0, 54), Parent = tabPage })
+                BackgroundColor3 = Exter.Theme.ElementBackground, BackgroundTransparency = 0.15,
+                Size = UDim2.new(1, 0, 0, 56), Parent = tabPage })
             AddCorner(slider, 10)
-            AddStroke(slider, theme.ElementBorder, 1, 0.3)
+            AddStroke(slider, Exter.Theme.ElementBorder, 1, 0.3)
             Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
-                Size = UDim2.new(0.6, 0, 0, 22), Position = UDim2.new(0, 14, 0, 6),
-                Text = sliderSettings.Name or "Slider", TextColor3 = theme.TextPrimary,
-                TextSize = 13, FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
+                Size = UDim2.new(0.6, 0, 0, 24), Position = UDim2.new(0, 14, 0, 6),
+                Text = sliderSettings.Name or "Slider", TextColor3 = Exter.Theme.TextPrimary,
+                TextSize = 14, FontFace = Exter.Theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = slider })
-            local valueLabel = Create("TextLabel", { Name = "Value", BackgroundColor3 = theme.Accent,
-                BackgroundTransparency = 0.82, Size = UDim2.new(0, 55, 0, 20),
-                Position = UDim2.new(1, -67, 0, 7),
+            local valueLabel = Create("TextLabel", { Name = "Value", BackgroundColor3 = Exter.Theme.Accent,
+                BackgroundTransparency = 0.82, Size = UDim2.new(0, 60, 0, 22),
+                Position = UDim2.new(1, -72, 0, 8),
                 Text = tostring(sliderSettings.CurrentValue) .. (sliderSettings.Suffix and " " .. sliderSettings.Suffix or ""),
-                TextColor3 = theme.Accent, TextSize = 11, FontFace = theme.FontFaceBold, Parent = slider })
+                TextColor3 = Exter.Theme.Accent, TextSize = 12, FontFace = Exter.Theme.FontFaceBold, Parent = slider })
             AddCorner(valueLabel, 6)
 
-            local sliderTrack = Create("Frame", { Name = "Track", BackgroundColor3 = theme.SliderBackground,
-                Size = UDim2.new(1, -28, 0, 8), Position = UDim2.new(0, 14, 0, 36), Parent = slider })
+            local sliderTrack = Create("Frame", { Name = "Track", BackgroundColor3 = Exter.Theme.SliderBackground,
+                Size = UDim2.new(1, -28, 0, 8), Position = UDim2.new(0, 14, 0, 38), Parent = slider })
             AddCorner(sliderTrack, 4)
             local initialPercent = math.clamp((sliderSettings.CurrentValue - range[1]) / rangeSpan, 0, 1)
-            local sliderFill = Create("Frame", { Name = "Fill", BackgroundColor3 = theme.SliderFill,
+            local sliderFill = Create("Frame", { Name = "Fill", BackgroundColor3 = Exter.Theme.SliderFill,
                 Size = UDim2.new(initialPercent, 0, 1, 0), Parent = sliderTrack })
             AddCorner(sliderFill, 4)
             AddGradient(sliderFill, ColorSequence.new({
-                ColorSequenceKeypoint.new(0, theme.GradientAccent1),
-                ColorSequenceKeypoint.new(1, theme.GradientAccent2),
+                ColorSequenceKeypoint.new(0, Exter.Theme.GradientAccent1),
+                ColorSequenceKeypoint.new(1, Exter.Theme.GradientAccent2),
             }))
-            local sliderKnob = Create("Frame", { Name = "Knob", BackgroundColor3 = theme.SliderKnob,
-                Size = UDim2.new(0, 16, 0, 16),
-                Position = UDim2.new(initialPercent, -8, 0.5, 0),
+            local sliderKnob = Create("Frame", { Name = "Knob", BackgroundColor3 = Exter.Theme.SliderKnob,
+                Size = UDim2.new(0, 18, 0, 18),
+                Position = UDim2.new(initialPercent, -9, 0.5, 0),
                 AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3, Parent = sliderTrack })
-            AddCorner(sliderKnob, 8)
+            AddCorner(sliderKnob, 9)
             AddShadow(sliderKnob, 0.5, 8)
-            AddStroke(sliderKnob, theme.Accent, 2, 0.3)
+            AddStroke(sliderKnob, Exter.Theme.Accent, 2, 0.3)
 
             local sliderDragging = false
             local interact = Create("TextButton", { Name = "Interact", BackgroundTransparency = 1,
@@ -1340,7 +1323,7 @@ function Exter:CreateWindow(settings)
                 newValue = tonumber(string.format("%.6f", newValue))
                 local percent = math.clamp((newValue - range[1]) / rangeSpan, 0, 1)
                 Tween(sliderFill, 0.08, { Size = UDim2.new(percent, 0, 1, 0) })
-                Tween(sliderKnob, 0.08, { Position = UDim2.new(percent, -8, 0.5, 0) })
+                Tween(sliderKnob, 0.08, { Position = UDim2.new(percent, -9, 0.5, 0) })
                 valueLabel.Text = tostring(newValue) .. (sliderSettings.Suffix and " " .. sliderSettings.Suffix or "")
                 if sliderSettings.CurrentValue ~= newValue then
                     sliderSettings.CurrentValue = newValue
@@ -1349,7 +1332,6 @@ function Exter:CreateWindow(settings)
                 end
             end
 
-            -- FIX: Single MouseButton1Down handler instead of duplicate
             interact.MouseButton1Down:Connect(function()
                 sliderDragging = true
                 updateSlider(Mouse.X)
@@ -1364,10 +1346,10 @@ function Exter:CreateWindow(settings)
                 if sliderDragging then updateSlider(Mouse.X) end
             end))
             slider.MouseEnter:Connect(function()
-                Tween(slider, 0.25, { BackgroundColor3 = theme.ElementBackgroundHover, BackgroundTransparency = 0.05 })
+                Tween(slider, 0.25, { BackgroundColor3 = Exter.Theme.ElementBackgroundHover, BackgroundTransparency = 0.05 })
             end)
             slider.MouseLeave:Connect(function()
-                Tween(slider, 0.25, { BackgroundColor3 = theme.ElementBackground, BackgroundTransparency = 0.15 })
+                Tween(slider, 0.25, { BackgroundColor3 = Exter.Theme.ElementBackground, BackgroundTransparency = 0.15 })
             end)
 
             function sliderSettings:Set(newValue)
@@ -1375,7 +1357,7 @@ function Exter:CreateWindow(settings)
                 sliderSettings.CurrentValue = newValue
                 local percent = math.clamp((newValue - range[1]) / rangeSpan, 0, 1)
                 Tween(sliderFill, 0.3, { Size = UDim2.new(percent, 0, 1, 0) })
-                Tween(sliderKnob, 0.3, { Position = UDim2.new(percent, -8, 0.5, 0) })
+                Tween(sliderKnob, 0.3, { Position = UDim2.new(percent, -9, 0.5, 0) })
                 valueLabel.Text = tostring(newValue) .. (sliderSettings.Suffix and " " .. sliderSettings.Suffix or "")
                 pcall(sliderSettings.Callback, newValue); SaveConfiguration()
             end
@@ -1383,54 +1365,52 @@ function Exter:CreateWindow(settings)
             return sliderSettings
         end
 
-        -- Input
         function Tab:CreateInput(inputSettings)
             inputSettings.Type = "Input"
             inputSettings.CurrentValue = inputSettings.CurrentValue or ""
             local inputFrame = Create("Frame", { Name = "Input_" .. (inputSettings.Name or "Input"),
-                BackgroundColor3 = theme.ElementBackground, BackgroundTransparency = 0.15,
-                Size = UDim2.new(1, 0, 0, 40), Parent = tabPage })
+                BackgroundColor3 = Exter.Theme.ElementBackground, BackgroundTransparency = 0.15,
+                Size = UDim2.new(1, 0, 0, 42), Parent = tabPage })
             AddCorner(inputFrame, 10)
-            AddStroke(inputFrame, theme.ElementBorder, 1, 0.3)
+            AddStroke(inputFrame, Exter.Theme.ElementBorder, 1, 0.3)
             Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
                 Size = UDim2.new(0.42, 0, 1, 0), Position = UDim2.new(0, 14, 0, 0),
-                Text = inputSettings.Name or "Input", TextColor3 = theme.TextPrimary,
-                TextSize = 13, FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
+                Text = inputSettings.Name or "Input", TextColor3 = Exter.Theme.TextPrimary,
+                TextSize = 14, FontFace = Exter.Theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = inputFrame })
-            local inputBox = Create("TextBox", { Name = "InputBox", BackgroundColor3 = theme.InputBackground,
-                Size = UDim2.new(0.52, -16, 0, 28), Position = UDim2.new(0.48, 4, 0.5, 0),
+            local inputBox = Create("TextBox", { Name = "InputBox", BackgroundColor3 = Exter.Theme.InputBackground,
+                Size = UDim2.new(0.52, -16, 0, 30), Position = UDim2.new(0.48, 4, 0.5, 0),
                 AnchorPoint = Vector2.new(0, 0.5), Text = inputSettings.CurrentValue,
                 PlaceholderText = inputSettings.PlaceholderText or "Type here...",
-                PlaceholderColor3 = theme.PlaceholderText, TextColor3 = theme.TextPrimary,
-                TextSize = 12, FontFace = theme.FontFace, ClearTextOnFocus = false, Parent = inputFrame })
+                PlaceholderColor3 = Exter.Theme.PlaceholderText, TextColor3 = Exter.Theme.TextPrimary,
+                TextSize = 13, FontFace = Exter.Theme.FontFace, ClearTextOnFocus = false, Parent = inputFrame })
             AddCorner(inputBox, 8)
-            AddStroke(inputBox, theme.InputBorder, 1, 0.3)
+            AddStroke(inputBox, Exter.Theme.InputBorder, 1, 0.3)
             AddPadding(inputBox, 0, 10, 0, 10)
 
             inputBox.Focused:Connect(function()
                 local stroke = inputBox:FindFirstChildOfClass("UIStroke")
-                if stroke then Tween(stroke, 0.2, { Color = theme.InputBorderFocus, Transparency = 0 }) end
+                if stroke then Tween(stroke, 0.2, { Color = Exter.Theme.InputBorderFocus, Transparency = 0 }) end
             end)
             inputBox.FocusLost:Connect(function()
                 local stroke = inputBox:FindFirstChildOfClass("UIStroke")
-                if stroke then Tween(stroke, 0.2, { Color = theme.InputBorder, Transparency = 0.3 }) end
+                if stroke then Tween(stroke, 0.2, { Color = Exter.Theme.InputBorder, Transparency = 0.3 }) end
                 inputSettings.CurrentValue = inputBox.Text
                 pcall(inputSettings.Callback, inputBox.Text)
                 if inputSettings.RemoveTextAfterFocusLost then inputBox.Text = "" end
                 SaveConfiguration()
             end)
             inputFrame.MouseEnter:Connect(function()
-                Tween(inputFrame, 0.25, { BackgroundColor3 = theme.ElementBackgroundHover, BackgroundTransparency = 0.05 })
+                Tween(inputFrame, 0.25, { BackgroundColor3 = Exter.Theme.ElementBackgroundHover, BackgroundTransparency = 0.05 })
             end)
             inputFrame.MouseLeave:Connect(function()
-                Tween(inputFrame, 0.25, { BackgroundColor3 = theme.ElementBackground, BackgroundTransparency = 0.15 })
+                Tween(inputFrame, 0.25, { BackgroundColor3 = Exter.Theme.ElementBackground, BackgroundTransparency = 0.15 })
             end)
             function inputSettings:Set(text) inputBox.Text = text; inputSettings.CurrentValue = text end
             if inputSettings.Flag then Exter.Flags[inputSettings.Flag] = inputSettings end
             return inputSettings
         end
 
-        -- Dropdown
         function Tab:CreateDropdown(dropdownSettings)
             dropdownSettings.Type = "Dropdown"
             if typeof(dropdownSettings.CurrentOption) == "string" then
@@ -1440,7 +1420,6 @@ function Exter:CreateWindow(settings)
             if not dropdownSettings.MultipleOptions then
                 dropdownSettings.CurrentOption = {dropdownSettings.CurrentOption[1]}
             end
-            -- FIX: Clean nil values from CurrentOption table
             local cleanedOptions = {}
             for _, opt in ipairs(dropdownSettings.CurrentOption) do
                 if opt ~= nil then
@@ -1452,28 +1431,28 @@ function Exter:CreateWindow(settings)
             local isOpen = false
 
             local dropdown = Create("Frame", { Name = "Dropdown_" .. (dropdownSettings.Name or "Dropdown"),
-                BackgroundColor3 = theme.ElementBackground, BackgroundTransparency = 0.15,
-                Size = UDim2.new(1, 0, 0, 40), ClipsDescendants = true, Parent = tabPage })
+                BackgroundColor3 = Exter.Theme.ElementBackground, BackgroundTransparency = 0.15,
+                Size = UDim2.new(1, 0, 0, 42), ClipsDescendants = true, Parent = tabPage })
             AddCorner(dropdown, 10)
-            AddStroke(dropdown, theme.ElementBorder, 1, 0.3)
+            AddStroke(dropdown, Exter.Theme.ElementBorder, 1, 0.3)
             Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
-                Size = UDim2.new(0.42, 0, 0, 40), Position = UDim2.new(0, 14, 0, 0),
-                Text = dropdownSettings.Name or "Dropdown", TextColor3 = theme.TextPrimary,
-                TextSize = 13, FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
+                Size = UDim2.new(0.42, 0, 0, 42), Position = UDim2.new(0, 14, 0, 0),
+                Text = dropdownSettings.Name or "Dropdown", TextColor3 = Exter.Theme.TextPrimary,
+                TextSize = 14, FontFace = Exter.Theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = dropdown })
             local selectedLabel = Create("TextLabel", { Name = "Selected", BackgroundTransparency = 1,
-                Size = UDim2.new(0.45, -35, 0, 40), Position = UDim2.new(0.5, 0, 0, 0),
+                Size = UDim2.new(0.45, -35, 0, 42), Position = UDim2.new(0.5, 0, 0, 0),
                 Text = #dropdownSettings.CurrentOption > 0 and dropdownSettings.CurrentOption[1] or "None",
-                TextColor3 = theme.TextSecondary, TextSize = 12, FontFace = theme.FontFace,
+                TextColor3 = Exter.Theme.TextSecondary, TextSize = 13, FontFace = Exter.Theme.FontFace,
                 TextXAlignment = Enum.TextXAlignment.Right, TextTruncate = Enum.TextTruncate.AtEnd,
                 Parent = dropdown })
             local arrow = Create("TextLabel", { Name = "Arrow", BackgroundTransparency = 1,
-                Size = UDim2.new(0, 22, 0, 40), Position = UDim2.new(1, -28, 0, 0),
-                Text = "V", TextColor3 = theme.Accent, TextSize = 10, FontFace = theme.FontFaceBold,
+                Size = UDim2.new(0, 22, 0, 42), Position = UDim2.new(1, -28, 0, 0),
+                Text = "V", TextColor3 = Exter.Theme.Accent, TextSize = 11, FontFace = Exter.Theme.FontFaceBold,
                 Rotation = 0, Parent = dropdown })
 
             local optionsContainer = Create("Frame", { Name = "Options", BackgroundTransparency = 1,
-                Size = UDim2.new(1, -14, 0, 0), Position = UDim2.new(0, 7, 0, 46),
+                Size = UDim2.new(1, -14, 0, 0), Position = UDim2.new(0, 7, 0, 48),
                 AutomaticSize = Enum.AutomaticSize.Y, Parent = dropdown })
             AddListLayout(optionsContainer, 3)
 
@@ -1489,23 +1468,23 @@ function Exter:CreateWindow(settings)
             local function createOption(optionName)
                 local isSel = table.find(dropdownSettings.CurrentOption, optionName) ~= nil
                 local optionBtn = Create("TextButton", { Name = optionName,
-                    BackgroundColor3 = isSel and LerpColor(theme.DropdownBackground, theme.Accent, 0.15) or theme.DropdownBackground,
-                    Size = UDim2.new(1, 0, 0, 32), Text = "", AutoButtonColor = false, Parent = optionsContainer })
+                    BackgroundColor3 = isSel and LerpColor(Exter.Theme.DropdownBackground, Exter.Theme.Accent, 0.15) or Exter.Theme.DropdownBackground,
+                    Size = UDim2.new(1, 0, 0, 34), Text = "", AutoButtonColor = false, Parent = optionsContainer })
                 AddCorner(optionBtn, 8)
                 local optTitle = Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
                     Size = UDim2.new(1, -34, 1, 0), Position = UDim2.new(0, 12, 0, 0),
-                    Text = optionName, TextColor3 = isSel and theme.Accent or theme.TextSecondary,
-                    TextSize = 12, FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
+                    Text = optionName, TextColor3 = isSel and Exter.Theme.Accent or Exter.Theme.TextSecondary,
+                    TextSize = 13, FontFace = Exter.Theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
                     Parent = optionBtn })
                 local checkmark = Create("TextLabel", { Name = "Check", BackgroundTransparency = 1,
                     Size = UDim2.new(0, 22, 1, 0), Position = UDim2.new(1, -26, 0, 0),
-                    Text = isSel and "v" or "", TextColor3 = theme.Accent, TextSize = 13,
-                    FontFace = theme.FontFaceBold, Parent = optionBtn })
+                    Text = isSel and "v" or "", TextColor3 = Exter.Theme.Accent, TextSize = 14,
+                    FontFace = Exter.Theme.FontFaceBold, Parent = optionBtn })
 
-                optionBtn.MouseEnter:Connect(function() Tween(optionBtn, 0.15, { BackgroundColor3 = theme.DropdownItemHover }) end)
+                optionBtn.MouseEnter:Connect(function() Tween(optionBtn, 0.15, { BackgroundColor3 = Exter.Theme.DropdownItemHover }) end)
                 optionBtn.MouseLeave:Connect(function()
                     local sel = table.find(dropdownSettings.CurrentOption, optionName) ~= nil
-                    Tween(optionBtn, 0.15, { BackgroundColor3 = sel and LerpColor(theme.DropdownBackground, theme.Accent, 0.15) or theme.DropdownBackground })
+                    Tween(optionBtn, 0.15, { BackgroundColor3 = sel and LerpColor(Exter.Theme.DropdownBackground, Exter.Theme.Accent, 0.15) or Exter.Theme.DropdownBackground })
                 end)
                 optionBtn.MouseButton1Click:Connect(function()
                     if dropdownSettings.MultipleOptions then
@@ -1513,11 +1492,11 @@ function Exter:CreateWindow(settings)
                         if idx then
                             table.remove(dropdownSettings.CurrentOption, idx)
                             checkmark.Text = ""
-                            Tween(optTitle, 0.2, { TextColor3 = theme.TextSecondary })
+                            Tween(optTitle, 0.2, { TextColor3 = Exter.Theme.TextSecondary })
                         else
                             table.insert(dropdownSettings.CurrentOption, optionName)
                             checkmark.Text = "v"
-                            Tween(optTitle, 0.2, { TextColor3 = theme.Accent })
+                            Tween(optTitle, 0.2, { TextColor3 = Exter.Theme.Accent })
                         end
                     else
                         dropdownSettings.CurrentOption = {optionName}
@@ -1527,16 +1506,16 @@ function Exter:CreateWindow(settings)
                                 local cC = child:FindFirstChild("Check")
                                 if child.Name == optionName then
                                     if cC then cC.Text = "v" end
-                                    if cT then Tween(cT, 0.2, { TextColor3 = theme.Accent }) end
+                                    if cT then Tween(cT, 0.2, { TextColor3 = Exter.Theme.Accent }) end
                                 else
                                     if cC then cC.Text = "" end
-                                    if cT then Tween(cT, 0.2, { TextColor3 = theme.TextSecondary }) end
+                                    if cT then Tween(cT, 0.2, { TextColor3 = Exter.Theme.TextSecondary }) end
                                 end
                             end
                         end
                         task.delay(0.15, function()
                             isOpen = false
-                            Tween(dropdown, 0.3, { Size = UDim2.new(1, 0, 0, 40) })
+                            Tween(dropdown, 0.3, { Size = UDim2.new(1, 0, 0, 42) })
                             Tween(arrow, 0.3, { Rotation = 0 })
                         end)
                     end
@@ -1550,28 +1529,26 @@ function Exter:CreateWindow(settings)
             for _, option in ipairs(dropdownSettings.Options or {}) do createOption(option) end
 
             local interact = Create("TextButton", { Name = "Interact", BackgroundTransparency = 1,
-                Size = UDim2.new(1, 0, 0, 40), Text = "", ZIndex = 5, Parent = dropdown })
+                Size = UDim2.new(1, 0, 0, 42), Text = "", ZIndex = 5, Parent = dropdown })
             interact.MouseButton1Click:Connect(function()
                 isOpen = not isOpen
                 if isOpen then
                     local optionCount = #(dropdownSettings.Options or {})
-                    local targetHeight = 40 + 8 + math.min(optionCount, 5) * 35
+                    local targetHeight = 42 + 8 + math.min(optionCount, 5) * 37
                     Tween(dropdown, 0.35, { Size = UDim2.new(1, 0, 0, targetHeight) })
                     Tween(arrow, 0.35, { Rotation = 180 })
                 else
-                    Tween(dropdown, 0.35, { Size = UDim2.new(1, 0, 0, 40) })
+                    Tween(dropdown, 0.35, { Size = UDim2.new(1, 0, 0, 42) })
                     Tween(arrow, 0.35, { Rotation = 0 })
                 end
             end)
 
-            -- FIX: Add Refresh method to update options dynamically
             function dropdownSettings:Refresh(newOptionsList)
                 dropdownSettings.Options = newOptionsList
                 for _, child in ipairs(optionsContainer:GetChildren()) do
                     if child:IsA("TextButton") then child:Destroy() end
                 end
                 for _, option in ipairs(newOptionsList) do createOption(option) end
-                -- Clean current selection to only include valid options
                 local validOptions = {}
                 for _, opt in ipairs(dropdownSettings.CurrentOption) do
                     if table.find(newOptionsList, opt) then
@@ -1592,7 +1569,7 @@ function Exter:CreateWindow(settings)
                         local cT = child:FindFirstChild("Title")
                         local cC = child:FindFirstChild("Check")
                         if cC then cC.Text = sel and "v" or "" end
-                        if cT then cT.TextColor3 = sel and theme.Accent or theme.TextSecondary end
+                        if cT then cT.TextColor3 = sel and Exter.Theme.Accent or Exter.Theme.TextSecondary end
                     end
                 end
                 pcall(dropdownSettings.Callback, newOptions); SaveConfiguration()
@@ -1601,34 +1578,33 @@ function Exter:CreateWindow(settings)
             return dropdownSettings
         end
 
-        -- Keybind
         function Tab:CreateKeybind(keybindSettings)
             keybindSettings.Type = "Keybind"
             keybindSettings.CurrentKeybind = keybindSettings.CurrentKeybind or "E"
             local keybind = Create("Frame", { Name = "Keybind_" .. (keybindSettings.Name or "Keybind"),
-                BackgroundColor3 = theme.ElementBackground, BackgroundTransparency = 0.15,
-                Size = UDim2.new(1, 0, 0, 40), Parent = tabPage })
+                BackgroundColor3 = Exter.Theme.ElementBackground, BackgroundTransparency = 0.15,
+                Size = UDim2.new(1, 0, 0, 42), Parent = tabPage })
             AddCorner(keybind, 10)
-            AddStroke(keybind, theme.ElementBorder, 1, 0.3)
+            AddStroke(keybind, Exter.Theme.ElementBorder, 1, 0.3)
             Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
                 Size = UDim2.new(0.6, 0, 1, 0), Position = UDim2.new(0, 14, 0, 0),
-                Text = keybindSettings.Name or "Keybind", TextColor3 = theme.TextPrimary,
-                TextSize = 13, FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
+                Text = keybindSettings.Name or "Keybind", TextColor3 = Exter.Theme.TextPrimary,
+                TextSize = 14, FontFace = Exter.Theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = keybind })
-            local keybindBox = Create("TextButton", { Name = "KeyBox", BackgroundColor3 = theme.InputBackground,
-                Size = UDim2.new(0, 65, 0, 28), Position = UDim2.new(1, -77, 0.5, 0),
+            local keybindBox = Create("TextButton", { Name = "KeyBox", BackgroundColor3 = Exter.Theme.InputBackground,
+                Size = UDim2.new(0, 70, 0, 30), Position = UDim2.new(1, -82, 0.5, 0),
                 AnchorPoint = Vector2.new(0, 0.5), Text = keybindSettings.CurrentKeybind,
-                TextColor3 = theme.Accent, TextSize = 12, FontFace = theme.FontFaceBold,
+                TextColor3 = Exter.Theme.Accent, TextSize = 13, FontFace = Exter.Theme.FontFaceBold,
                 AutoButtonColor = false, Parent = keybind })
             AddCorner(keybindBox, 8)
-            AddStroke(keybindBox, theme.InputBorder, 1, 0.3)
+            AddStroke(keybindBox, Exter.Theme.InputBorder, 1, 0.3)
 
             local listening = false
             keybindBox.MouseButton1Click:Connect(function()
                 listening = true
                 keybindBox.Text = "..."
                 local stroke = keybindBox:FindFirstChildOfClass("UIStroke")
-                if stroke then Tween(stroke, 0.2, { Color = theme.Accent }) end
+                if stroke then Tween(stroke, 0.2, { Color = Exter.Theme.Accent }) end
             end)
             TrackConnection(UserInputService.InputBegan:Connect(function(input, processed)
                 if listening then
@@ -1637,11 +1613,10 @@ function Exter:CreateWindow(settings)
                         keybindBox.Text = input.KeyCode.Name
                         listening = false
                         local stroke = keybindBox:FindFirstChildOfClass("UIStroke")
-                        if stroke then Tween(stroke, 0.2, { Color = theme.InputBorder }) end
+                        if stroke then Tween(stroke, 0.2, { Color = Exter.Theme.InputBorder }) end
                         SaveConfiguration()
                     end
                 elseif not processed and keybindSettings.CurrentKeybind then
-                    -- FIX: Wrap KeyCode lookup in pcall to handle invalid key names
                     pcall(function()
                         if input.KeyCode == Enum.KeyCode[keybindSettings.CurrentKeybind] then
                             pcall(keybindSettings.Callback)
@@ -1650,10 +1625,10 @@ function Exter:CreateWindow(settings)
                 end
             end))
             keybind.MouseEnter:Connect(function()
-                Tween(keybind, 0.25, { BackgroundColor3 = theme.ElementBackgroundHover, BackgroundTransparency = 0.05 })
+                Tween(keybind, 0.25, { BackgroundColor3 = Exter.Theme.ElementBackgroundHover, BackgroundTransparency = 0.05 })
             end)
             keybind.MouseLeave:Connect(function()
-                Tween(keybind, 0.25, { BackgroundColor3 = theme.ElementBackground, BackgroundTransparency = 0.15 })
+                Tween(keybind, 0.25, { BackgroundColor3 = Exter.Theme.ElementBackground, BackgroundTransparency = 0.15 })
             end)
             function keybindSettings:Set(newKey)
                 keybindSettings.CurrentKeybind = newKey; keybindBox.Text = newKey; SaveConfiguration()
@@ -1662,7 +1637,6 @@ function Exter:CreateWindow(settings)
             return keybindSettings
         end
 
-        -- ColorPicker
         function Tab:CreateColorPicker(cpSettings)
             cpSettings.Type = "ColorPicker"
             cpSettings.Color = cpSettings.Color or Color3.fromRGB(255, 255, 255)
@@ -1670,34 +1644,34 @@ function Exter:CreateWindow(settings)
             local h, s, v = cpSettings.Color:ToHSV()
 
             local cpFrame = Create("Frame", { Name = "ColorPicker_" .. (cpSettings.Name or "ColorPicker"),
-                BackgroundColor3 = theme.ElementBackground, BackgroundTransparency = 0.15,
-                Size = UDim2.new(1, 0, 0, 40), ClipsDescendants = true, Parent = tabPage })
+                BackgroundColor3 = Exter.Theme.ElementBackground, BackgroundTransparency = 0.15,
+                Size = UDim2.new(1, 0, 0, 42), ClipsDescendants = true, Parent = tabPage })
             AddCorner(cpFrame, 10)
-            AddStroke(cpFrame, theme.ElementBorder, 1, 0.3)
+            AddStroke(cpFrame, Exter.Theme.ElementBorder, 1, 0.3)
             Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
-                Size = UDim2.new(0.6, 0, 0, 40), Position = UDim2.new(0, 14, 0, 0),
-                Text = cpSettings.Name or "Color Picker", TextColor3 = theme.TextPrimary,
-                TextSize = 13, FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
+                Size = UDim2.new(0.6, 0, 0, 42), Position = UDim2.new(0, 14, 0, 0),
+                Text = cpSettings.Name or "Color Picker", TextColor3 = Exter.Theme.TextPrimary,
+                TextSize = 14, FontFace = Exter.Theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = cpFrame })
             local colorPreview = Create("Frame", { Name = "Preview", BackgroundColor3 = cpSettings.Color,
-                Size = UDim2.new(0, 30, 0, 24), Position = UDim2.new(1, -42, 0, 8), Parent = cpFrame })
+                Size = UDim2.new(0, 32, 0, 26), Position = UDim2.new(1, -46, 0, 8), Parent = cpFrame })
             AddCorner(colorPreview, 8)
-            AddStroke(colorPreview, theme.ElementBorder, 1, 0.3)
+            AddStroke(colorPreview, Exter.Theme.ElementBorder, 1, 0.3)
 
             local pickerArea = Create("Frame", { Name = "PickerArea", BackgroundTransparency = 1,
-                Size = UDim2.new(1, -16, 0, 120), Position = UDim2.new(0, 8, 0, 46), Parent = cpFrame })
+                Size = UDim2.new(1, -16, 0, 130), Position = UDim2.new(0, 8, 0, 48), Parent = cpFrame })
             local svPicker = Create("ImageLabel", { Name = "SVPicker",
-                BackgroundColor3 = Color3.fromHSV(h, 1, 1), Size = UDim2.new(1, -30, 0, 90),
+                BackgroundColor3 = Color3.fromHSV(h, 1, 1), Size = UDim2.new(1, -32, 0, 100),
                 Image = "rbxassetid://11415645739", Parent = pickerArea })
             AddCorner(svPicker, 6)
             local svPoint = Create("Frame", { Name = "Point", BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                Size = UDim2.new(0, 12, 0, 12), Position = UDim2.new(s, -6, 1 - v, -6),
+                Size = UDim2.new(0, 14, 0, 14), Position = UDim2.new(s, -7, 1 - v, -7),
                 ZIndex = 5, Parent = svPicker })
-            AddCorner(svPoint, 6)
+            AddCorner(svPoint, 7)
             AddStroke(svPoint, Color3.fromRGB(0, 0, 0), 2, 0.3)
 
-            local hueSlider = Create("Frame", { Name = "HueSlider", Size = UDim2.new(0, 18, 0, 90),
-                Position = UDim2.new(1, -20, 0, 0), Parent = pickerArea })
+            local hueSlider = Create("Frame", { Name = "HueSlider", Size = UDim2.new(0, 20, 0, 100),
+                Position = UDim2.new(1, -22, 0, 0), Parent = pickerArea })
             AddCorner(hueSlider, 4)
             AddGradient(hueSlider, ColorSequence.new({
                 ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 1, 1)),
@@ -1709,24 +1683,24 @@ function Exter:CreateWindow(settings)
                 ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1)),
             }), 90)
             local huePoint = Create("Frame", { Name = "HuePoint", BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                Size = UDim2.new(1, 4, 0, 6), Position = UDim2.new(-0.1, 0, h, -3),
+                Size = UDim2.new(1, 4, 0, 8), Position = UDim2.new(-0.1, 0, h, -4),
                 ZIndex = 5, Parent = hueSlider })
             AddCorner(huePoint, 3)
             AddStroke(huePoint, Color3.fromRGB(0, 0, 0), 1, 0.3)
 
-            local hexInput = Create("TextBox", { Name = "HexInput", BackgroundColor3 = theme.InputBackground,
-                Size = UDim2.new(0.5, -4, 0, 22), Position = UDim2.new(0, 0, 0, 96),
+            local hexInput = Create("TextBox", { Name = "HexInput", BackgroundColor3 = Exter.Theme.InputBackground,
+                Size = UDim2.new(0.5, -4, 0, 24), Position = UDim2.new(0, 0, 0, 106),
                 Text = string.format("#%02X%02X%02X", math.floor(cpSettings.Color.R * 255), math.floor(cpSettings.Color.G * 255), math.floor(cpSettings.Color.B * 255)),
-                TextColor3 = theme.TextPrimary, TextSize = 11, FontFace = theme.FontFace,
+                TextColor3 = Exter.Theme.TextPrimary, TextSize = 12, FontFace = Exter.Theme.FontFace,
                 ClearTextOnFocus = false, Parent = pickerArea })
             AddCorner(hexInput, 4)
-            AddStroke(hexInput, theme.InputBorder, 1, 0.5)
+            AddStroke(hexInput, Exter.Theme.InputBorder, 1, 0.5)
 
             local interact = Create("TextButton", { Name = "Interact", BackgroundTransparency = 1,
-                Size = UDim2.new(1, 0, 0, 40), Text = "", ZIndex = 5, Parent = cpFrame })
+                Size = UDim2.new(1, 0, 0, 42), Text = "", ZIndex = 5, Parent = cpFrame })
             interact.MouseButton1Click:Connect(function()
                 isOpen = not isOpen
-                Tween(cpFrame, 0.35, { Size = UDim2.new(1, 0, 0, isOpen and 178 or 40) })
+                Tween(cpFrame, 0.35, { Size = UDim2.new(1, 0, 0, isOpen and 195 or 42) })
             end)
 
             local function updateColor()
@@ -1734,9 +1708,9 @@ function Exter:CreateWindow(settings)
                 cpSettings.Color = color
                 colorPreview.BackgroundColor3 = color
                 svPicker.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
-                svPoint.Position = UDim2.new(s, -6, 1 - v, -6)
+                svPoint.Position = UDim2.new(s, -7, 1 - v, -7)
                 svPoint.BackgroundColor3 = color
-                huePoint.Position = UDim2.new(-0.1, 0, h, -3)
+                huePoint.Position = UDim2.new(-0.1, 0, h, -4)
                 hexInput.Text = string.format("#%02X%02X%02X", math.floor(color.R * 255), math.floor(color.G * 255), math.floor(color.B * 255))
                 pcall(cpSettings.Callback, color); SaveConfiguration()
             end
@@ -1795,7 +1769,6 @@ function Exter:CreateWindow(settings)
         return Tab
     end
 
-    -- Load Configuration
     function Window:LoadConfiguration()
         if ConfigEnabled and ConfigFileName then
             pcall(function()
@@ -1813,7 +1786,6 @@ function Exter:CreateWindow(settings)
 end
 
 function Exter:Destroy()
-    -- FIX: Disconnect all tracked global connections to prevent memory leaks
     for _, conn in ipairs(Exter._connections) do
         pcall(function() conn:Disconnect() end)
     end
