@@ -1140,15 +1140,17 @@ local function EvaluateResponsiveScale()
     local viewport = GetViewportSize()
     local shortest = math.max(480, math.min(viewport.X, viewport.Y))
     local scale = shortest / 900
-    return math.clamp(scale, 0.7, 1.12), viewport
+    -- Keep menu compact so it does not dominate gameplay on bigger screens.
+    return math.clamp(scale, 0.72, 1), viewport
 end
 
 local function BuildWindowLayoutPresets(viewport)
-    local width = math.clamp(math.floor(viewport.X * 0.66), 540, 980)
-    local height = math.clamp(math.floor(viewport.Y * 0.68), 380, 720)
+    -- Gameplay-first layout: smaller by default and easier to keep out of view.
+    local width = math.clamp(math.floor(viewport.X * 0.46), 480, 760)
+    local height = math.clamp(math.floor(viewport.Y * 0.54), 320, 560)
     local compact = viewport.X <= 860 or viewport.Y <= 560
-    local sidebarWidth = compact and 128 or math.clamp(math.floor(width * 0.25), 160, 240)
-    local topbarHeight = compact and 46 or 52
+    local sidebarWidth = compact and 120 or math.clamp(math.floor(width * 0.28), 132, 185)
+    local topbarHeight = compact and 42 or 46
 
     return {
         MainSize = UDim2.fromOffset(width, height),
@@ -1165,10 +1167,11 @@ local function CreateBackdropLayer(parent, theme)
     local dim = Create("Frame", {
         Name = "BackdropDim",
         BackgroundColor3 = Color3.fromRGB(5, 6, 11),
-        BackgroundTransparency = theme.BackdropTransparency or 0.24,
+        BackgroundTransparency = 1,
         BorderSizePixel = 0,
         Size = UDim2.fromScale(1, 1),
         ZIndex = 0,
+        Visible = false,
         Parent = parent,
     })
     AddGradient(dim, ColorSequence.new({
@@ -1181,7 +1184,7 @@ local function CreateBackdropLayer(parent, theme)
         BackgroundTransparency = 1,
         Image = "rbxassetid://9968344227",
         ImageColor3 = theme.TextMuted,
-        ImageTransparency = 0.92,
+        ImageTransparency = 1,
         ScaleType = Enum.ScaleType.Tile,
         TileSize = UDim2.fromOffset(180, 180),
         Size = UDim2.fromScale(1, 1),
@@ -1194,7 +1197,7 @@ local function CreateBackdropLayer(parent, theme)
         BackgroundTransparency = 1,
         Image = "rbxassetid://4576475446",
         ImageColor3 = Color3.fromRGB(0, 0, 0),
-        ImageTransparency = 0.62,
+        ImageTransparency = 1,
         Size = UDim2.fromScale(1, 1),
         ZIndex = 0,
         Parent = dim,
@@ -1209,6 +1212,7 @@ local function CreateAmbientOrbs(parent, theme)
         BackgroundTransparency = 1,
         Size = UDim2.fromScale(1, 1),
         ZIndex = 1,
+        Visible = false,
         Parent = parent,
     })
 
@@ -1335,11 +1339,30 @@ function Exter:CreateWindow(settings)
     local responsiveScale, viewport = EvaluateResponsiveScale()
     local layout = BuildWindowLayoutPresets(viewport)
 
+    local gameplayFriendly = settings.GameplayFriendly ~= false
+    local backdropEffectsEnabled = settings.EnableBackgroundEffects == true
+    local windowTransparency = gameplayFriendly and math.max(theme.WindowTransparency or 0.08, 0.2) or (theme.WindowTransparency or 0.08)
+    local topbarTransparency = gameplayFriendly and math.max(theme.TopbarTransparency or 0.05, 0.2) or (theme.TopbarTransparency or 0.05)
+    local sidebarTransparency = gameplayFriendly and math.max(theme.SidebarTransparency or 0.1, 0.24) or (theme.SidebarTransparency or 0.1)
+
     local backdropDim = CreateBackdropLayer(screenGui, theme)
     local orbLayer = CreateAmbientOrbs(screenGui, theme)
+    if backdropEffectsEnabled and not gameplayFriendly then
+        backdropDim.Visible = true
+        backdropDim.BackgroundTransparency = theme.BackdropTransparency or 0.24
+        local noise = backdropDim:FindFirstChild("Noise")
+        if noise and noise:IsA("ImageLabel") then
+            noise.ImageTransparency = 0.92
+        end
+        local vignette = backdropDim:FindFirstChild("Vignette")
+        if vignette and vignette:IsA("ImageLabel") then
+            vignette.ImageTransparency = 0.62
+        end
+        orbLayer.Visible = true
+    end
 
     local mainFrame = Create("Frame", { Name = "Main", BackgroundColor3 = theme.Background,
-        BackgroundTransparency = theme.WindowTransparency or 0.08,
+        BackgroundTransparency = windowTransparency,
         Size = layout.MainSize, Position = UDim2.new(0.5, 0, 0.5, 0),
         AnchorPoint = Vector2.new(0.5, 0.5), ClipsDescendants = true, Parent = screenGui })
     AddCorner(mainFrame, 14)
@@ -1353,7 +1376,7 @@ function Exter:CreateWindow(settings)
     }), 135)
 
     local topbar = Create("Frame", { Name = "Topbar", BackgroundColor3 = theme.Topbar,
-        BackgroundTransparency = theme.TopbarTransparency or 0.05,
+        BackgroundTransparency = topbarTransparency,
         Size = UDim2.new(1, 0, 0, layout.TopbarHeight), BorderSizePixel = 0, Parent = mainFrame })
     Create("Frame", { Name = "CornerRepair", BackgroundColor3 = theme.Topbar,
         Size = UDim2.new(1, 0, 0, 14), Position = UDim2.new(0, 0, 1, -14),
@@ -1427,7 +1450,7 @@ function Exter:CreateWindow(settings)
     MakeDraggable(topbar, mainFrame)
 
     local sidebar = Create("Frame", { Name = "Sidebar", BackgroundColor3 = theme.BackgroundSecondary,
-        BackgroundTransparency = theme.SidebarTransparency or 0.1,
+        BackgroundTransparency = sidebarTransparency,
         Size = UDim2.new(0, layout.SidebarWidth, 1, -layout.TopbarHeight), Position = UDim2.new(0, 0, 0, layout.TopbarHeight),
         BorderSizePixel = 0, Parent = mainFrame })
     AddGradient(sidebar, ColorSequence.new({
@@ -1518,9 +1541,9 @@ function Exter:CreateWindow(settings)
                 mainFrame.Size = UDim2.new(0, 0, 0, 0)
                 mainFrame.BackgroundTransparency = 1
                 if isMinimized then
-                    Tween(mainFrame, 0.45, { Size = layout.MinimizedSize, BackgroundTransparency = theme.WindowTransparency or 0.08 })
+                    Tween(mainFrame, 0.45, { Size = layout.MinimizedSize, BackgroundTransparency = windowTransparency })
                 else
-                    Tween(mainFrame, 0.45, { Size = originalSize, BackgroundTransparency = theme.WindowTransparency or 0.08 })
+                    Tween(mainFrame, 0.45, { Size = originalSize, BackgroundTransparency = windowTransparency })
                 end
             else
                 isHidden = true
@@ -1575,6 +1598,9 @@ function Exter:CreateWindow(settings)
         local oldTheme = Exter.Theme
         local newTheme = Themes[themeName]
         Exter.Theme = newTheme
+        windowTransparency = gameplayFriendly and math.max(newTheme.WindowTransparency or 0.08, 0.2) or (newTheme.WindowTransparency or 0.08)
+        topbarTransparency = gameplayFriendly and math.max(newTheme.TopbarTransparency or 0.05, 0.2) or (newTheme.TopbarTransparency or 0.05)
+        sidebarTransparency = gameplayFriendly and math.max(newTheme.SidebarTransparency or 0.1, 0.24) or (newTheme.SidebarTransparency or 0.1)
 
         local lookup = BuildThemeColorLookup(oldTheme)
         local roots = { screenGui }
@@ -1607,11 +1633,11 @@ function Exter:CreateWindow(settings)
         end
 
         mainFrame.BackgroundColor3 = newTheme.Background
-        mainFrame.BackgroundTransparency = newTheme.WindowTransparency or 0.08
+        mainFrame.BackgroundTransparency = windowTransparency
         topbar.BackgroundColor3 = newTheme.Topbar
-        topbar.BackgroundTransparency = newTheme.TopbarTransparency or 0.05
+        topbar.BackgroundTransparency = topbarTransparency
         sidebar.BackgroundColor3 = newTheme.BackgroundSecondary
-        sidebar.BackgroundTransparency = newTheme.SidebarTransparency or 0.1
+        sidebar.BackgroundTransparency = sidebarTransparency
         topbarAccent.BackgroundColor3 = newTheme.Accent
         hideBtn.BackgroundColor3 = newTheme.Error
 

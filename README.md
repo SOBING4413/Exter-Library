@@ -138,6 +138,8 @@ Creates the main UI window.
 | `LoadingTitle` | `string` | `"Exter Library"` | Title shown during loading animation |
 | `LoadingSubtitle` | `string` | `"Loading..."` | Subtitle shown during loading animation |
 | `ToggleKey` | `Enum.KeyCode` | `RightControl` | Key to toggle UI visibility |
+| `GameplayFriendly` | `boolean` | `true` | Uses compact sizing + higher UI transparency so gameplay stays visible |
+| `EnableBackgroundEffects` | `boolean` | `false` | Enables cinematic backdrop/orb effects (recommended only when not playing actively) |
 | `ConfigurationSaving` | `table` | `nil` | Configuration saving options (see below) |
 
 **ConfigurationSaving options:**
@@ -154,6 +156,8 @@ local Window = Exter:CreateWindow({
     LoadingTitle = "My Hub",
     LoadingSubtitle = "Loading scripts...",
     ToggleKey = Enum.KeyCode.RightShift,
+    GameplayFriendly = true,
+    EnableBackgroundEffects = false,
     ConfigurationSaving = {
         Enabled = true,
         FileName = "MyHubConfig",
