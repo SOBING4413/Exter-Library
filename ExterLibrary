@@ -1501,7 +1501,7 @@ function Exter:CreateWindow(settings)
         BackgroundTransparency = windowTransparency,
         Size = layout.MainSize, Position = UDim2.new(0.5, 0, 0.5, 0),
         AnchorPoint = Vector2.new(0.5, 0.5), ClipsDescendants = true, Parent = screenGui })
-    AddCorner(mainFrame, 12)
+    AddCorner(mainFrame, 16)
     ApplyGlassSurface(mainFrame, theme, windowTransparency)
     AddStroke(mainFrame, theme.TopbarBorder, 1, 0.4)
     AddShadow(mainFrame, 0.32, 52)
@@ -1517,7 +1517,7 @@ function Exter:CreateWindow(settings)
     Create("Frame", { Name = "CornerRepair", BackgroundColor3 = theme.Topbar,
         Size = UDim2.new(1, 0, 0, 14), Position = UDim2.new(0, 0, 1, -14),
         BorderSizePixel = 0, Parent = topbar })
-    AddCorner(topbar, 12)
+    AddCorner(topbar, 16)
     AddGradient(topbar, ColorSequence.new({
         ColorSequenceKeypoint.new(0, LerpColor(theme.Topbar, theme.Accent, 0.14)),
         ColorSequenceKeypoint.new(1, theme.Topbar),
@@ -1541,45 +1541,44 @@ function Exter:CreateWindow(settings)
         TextSize = 18, FontFace = theme.FontFaceBold, Parent = topbarLogo })
 
     Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
-        Size = UDim2.new(0.5, 0, 1, 0), Position = UDim2.new(0, 54, 0, 0),
+        Size = UDim2.new(0.42, 0, 0, 22), Position = UDim2.new(0, 54, 0, 8),
         Text = settings.Name or "Exter Library", TextColor3 = theme.TextPrimary,
         TextSize = 17, FontFace = theme.FontFaceBold, TextXAlignment = Enum.TextXAlignment.Left,
         Parent = topbar })
-
-    local versionBadge = Create("TextLabel", { Name = "Version", BackgroundColor3 = theme.Accent,
-        BackgroundTransparency = 0.82, Size = UDim2.new(0, 70, 0, 22),
-        Position = UDim2.new(0, 240, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5),
-        Text = "PREMIUM", TextColor3 = theme.Accent, TextSize = 10,
-        FontFace = theme.FontFaceBold, Parent = topbar })
-    AddCorner(versionBadge, 5)
-    AddStroke(versionBadge, theme.Accent, 1, 0.7)
+    local subtitleText = "Script: " .. tostring(usageInfo.Rows[2] and usageInfo.Rows[2].Value or "Unknown")
+    Create("TextLabel", { Name = "Subtitle", BackgroundTransparency = 1,
+        Size = UDim2.new(0.52, 0, 0, 14), Position = UDim2.new(0, 54, 0, 27),
+        Text = subtitleText,
+        TextColor3 = theme.TextMuted, TextSize = 10,
+        FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd, Parent = topbar })
 
     local topbarButtons = Create("Frame", { Name = "Buttons", BackgroundTransparency = 1,
-        Size = UDim2.new(0, 140, 0, 50), Position = UDim2.new(1, -150, 0, 0), Parent = topbar })
-    AddListLayout(topbarButtons, 8, Enum.FillDirection.Horizontal, Enum.HorizontalAlignment.Right, Enum.VerticalAlignment.Center)
+        Size = UDim2.new(0, 132, 0, layout.TopbarHeight), Position = UDim2.new(1, -142, 0, 0), Parent = topbar })
+    AddListLayout(topbarButtons, 6, Enum.FillDirection.Horizontal, Enum.HorizontalAlignment.Right, Enum.VerticalAlignment.Center)
 
     local themeBtn = Create("TextButton", { Name = "ThemeBtn", BackgroundColor3 = theme.ElementBackground,
-        BackgroundTransparency = 0.4, Size = UDim2.new(0, 36, 0, 36), Text = "≈",
+        BackgroundTransparency = 0.52, Size = UDim2.new(0, 34, 0, 34), Text = "≈",
         TextColor3 = theme.TextSecondary, TextSize = 16, FontFace = theme.FontFaceBold,
         AutoButtonColor = false, LayoutOrder = 1, Parent = topbarButtons })
-    AddCorner(themeBtn, 8)
+    AddCorner(themeBtn, 10)
 
     local minimizeBtn = Create("TextButton", { Name = "MinimizeBtn", BackgroundColor3 = theme.ElementBackground,
-        BackgroundTransparency = 0.4, Size = UDim2.new(0, 36, 0, 36), Text = "_",
+        BackgroundTransparency = 0.52, Size = UDim2.new(0, 34, 0, 34), Text = "—",
         TextColor3 = theme.TextSecondary, TextSize = 18, FontFace = theme.FontFaceBold,
         AutoButtonColor = false, LayoutOrder = 2, Parent = topbarButtons })
-    AddCorner(minimizeBtn, 8)
+    AddCorner(minimizeBtn, 10)
 
     local hideBtn = Create("TextButton", { Name = "HideBtn", BackgroundColor3 = theme.Error,
-        BackgroundTransparency = 0.65, Size = UDim2.new(0, 36, 0, 36), Text = "✕",
+        BackgroundTransparency = 0.58, Size = UDim2.new(0, 34, 0, 34), Text = "✕",
         TextColor3 = theme.TextPrimary, TextSize = 16, FontFace = theme.FontFaceBold,
         AutoButtonColor = false, LayoutOrder = 3, Parent = topbarButtons })
-    AddCorner(hideBtn, 8)
+    AddCorner(hideBtn, 10)
 
     for _, btn in ipairs(topbarButtons:GetChildren()) do
         if btn:IsA("TextButton") then
-            btn.MouseEnter:Connect(function() Tween(btn, 0.2, { BackgroundTransparency = 0.15 }) end)
-            btn.MouseLeave:Connect(function() Tween(btn, 0.2, { BackgroundTransparency = 0.4 }) end)
+            local baseTransparency = btn.BackgroundTransparency
+            btn.MouseEnter:Connect(function() Tween(btn, 0.2, { BackgroundTransparency = math.max(0.12, baseTransparency - 0.24) }) end)
+            btn.MouseLeave:Connect(function() Tween(btn, 0.2, { BackgroundTransparency = baseTransparency }) end)
         end
     end
 
@@ -1597,13 +1596,13 @@ function Exter:CreateWindow(settings)
         Size = UDim2.new(0, 1, 1, 0), Position = UDim2.new(1, 0, 0, 0),
         BorderSizePixel = 0, Parent = sidebar })
 
-    local userSection = Create("Frame", { Name = "UserSection", BackgroundColor3 = theme.Accent,
-        BackgroundTransparency = 0.9, Size = UDim2.new(1, -12, 0, 55),
+    local userSection = Create("Frame", { Name = "UserSection", BackgroundColor3 = theme.ElementBackground,
+        BackgroundTransparency = 0.28, Size = UDim2.new(1, -12, 0, 52),
         Position = UDim2.new(0, 6, 0, 6), Parent = sidebar })
     AddCorner(userSection, 10)
     AddGradient(userSection, ColorSequence.new({
-        ColorSequenceKeypoint.new(0, LerpColor(theme.Accent, theme.GradientAccent1, 0.2)),
-        ColorSequenceKeypoint.new(1, LerpColor(theme.Accent, theme.GradientAccent2, 0.3)),
+        ColorSequenceKeypoint.new(0, LerpColor(theme.ElementBackground, theme.Accent, 0.12)),
+        ColorSequenceKeypoint.new(1, LerpColor(theme.ElementBackground, theme.BackgroundSecondary, 0.55)),
     }), 30)
 
     local userAvatar = Create("Frame", { Name = "Avatar", BackgroundColor3 = theme.Accent,
@@ -1618,12 +1617,12 @@ function Exter:CreateWindow(settings)
         TextSize = 13, FontFace = theme.FontFaceBold, TextXAlignment = Enum.TextXAlignment.Left,
         TextTruncate = Enum.TextTruncate.AtEnd, Parent = userSection })
     Create("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, -56, 0, 16),
-        Position = UDim2.new(0, 50, 0, 28), Text = "Premium User", TextColor3 = theme.Success,
-        TextSize = 11, FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
+        Position = UDim2.new(0, 50, 0, 28), Text = "Connected", TextColor3 = theme.TextSecondary,
+        TextSize = 10, FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
         Parent = userSection })
 
     local tabListScroll = Create("ScrollingFrame", { Name = "TabList", BackgroundTransparency = 1,
-        Size = UDim2.new(1, -8, 1, -74), Position = UDim2.new(0, 4, 0, 70),
+        Size = UDim2.new(1, -8, 1, -66), Position = UDim2.new(0, 4, 0, 62),
         ScrollBarThickness = 2, ScrollBarImageColor3 = theme.ScrollbarColor,
         ScrollBarImageTransparency = 0.4, CanvasSize = UDim2.new(0, 0, 0, 0),
         AutomaticCanvasSize = Enum.AutomaticSize.Y, BorderSizePixel = 0, Parent = sidebar })
@@ -1637,19 +1636,23 @@ function Exter:CreateWindow(settings)
     local infoCard = Create("Frame", { Name = "UsageInfoTable", BackgroundColor3 = theme.ElementBackground,
         BackgroundTransparency = math.clamp((theme.ElementTransparency or 0.2) + 0.2, 0.3, 0.72), Size = UDim2.new(1, -16, 0, layout.Compact and 126 or 148),
         Position = UDim2.new(0, 8, 0, 8), Parent = contentArea })
-    AddCorner(infoCard, 10)
-    AddStroke(infoCard, theme.ElementBorder, 1, 0.35)
+    AddCorner(infoCard, 12)
+    AddStroke(infoCard, theme.ElementBorder, 1, 0.28)
     AddGradient(infoCard, ColorSequence.new({
-        ColorSequenceKeypoint.new(0, LerpColor(theme.ElementBackground, theme.Accent, 0.12)),
+        ColorSequenceKeypoint.new(0, LerpColor(theme.ElementBackground, theme.Accent, 0.08)),
         ColorSequenceKeypoint.new(1, theme.ElementBackground),
     }), 90)
 
+    local infoHeaderLine = Create("Frame", { Name = "HeaderLine", BackgroundColor3 = theme.Accent,
+        BackgroundTransparency = 0.25, Size = UDim2.new(0, 3, 0, 18), Position = UDim2.new(0, 8, 0, 8), Parent = infoCard })
+    AddCorner(infoHeaderLine, 2)
+
     Create("TextLabel", { Name = "InfoTitle", BackgroundTransparency = 1,
-        Size = UDim2.new(1, -14, 0, 20), Position = UDim2.new(0, 8, 0, 6),
-        Text = usageInfo.Title, TextColor3 = theme.TextPrimary, TextSize = 13,
+        Size = UDim2.new(1, -26, 0, 20), Position = UDim2.new(0, 16, 0, 6),
+        Text = usageInfo.Title, TextColor3 = theme.TextPrimary, TextSize = 14,
         FontFace = theme.FontFaceBold, TextXAlignment = Enum.TextXAlignment.Left, Parent = infoCard })
     Create("TextLabel", { Name = "InfoSubtitle", BackgroundTransparency = 1,
-        Size = UDim2.new(1, -14, 0, 16), Position = UDim2.new(0, 8, 0, 27),
+        Size = UDim2.new(1, -14, 0, 16), Position = UDim2.new(0, 8, 0, 28),
         Text = usageInfo.Subtitle .. " | Wajib: " .. table.concat(usageInfo.Required, ", "), TextColor3 = theme.TextMuted, TextSize = 11,
         FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd, Parent = infoCard })
 
@@ -1777,11 +1780,10 @@ function Exter:CreateWindow(settings)
         NotificationContainer.Size = UDim2.fromOffset(layout.NotificationWidth, layout.NotificationHeight)
         NotificationContainer.Position = UDim2.new(1, -(layout.NotificationWidth + 10), 1, -(layout.NotificationHeight + 10))
 
-        versionBadge.Visible = not layout.Compact
-        topbarButtons.Size = UDim2.new(0, layout.Compact and 126 or 140, 0, layout.TopbarHeight)
-        topbarButtons.Position = UDim2.new(1, layout.Compact and -134 or -150, 0, 0)
-        tabListScroll.Size = UDim2.new(1, -8, 1, -74)
-        tabListScroll.Position = UDim2.new(0, 4, 0, 70)
+        topbarButtons.Size = UDim2.new(0, layout.Compact and 120 or 132, 0, layout.TopbarHeight)
+        topbarButtons.Position = UDim2.new(1, layout.Compact and -128 or -142, 0, 0)
+        tabListScroll.Size = UDim2.new(1, -8, 1, -66)
+        tabListScroll.Position = UDim2.new(0, 4, 0, 62)
         infoCard.Size = UDim2.new(1, -16, 0, layout.Compact and 126 or 148)
         tabContentTopPadding = infoCard.Size.Y.Offset + 14
         tabContentHolder.Size = UDim2.new(1, 0, 1, -tabContentTopPadding)
@@ -1886,21 +1888,25 @@ function Exter:CreateWindow(settings)
         local tabIcon = tabSettings.Icon or nil
 
         local tabBtn = Create("TextButton", { Name = tabName, BackgroundColor3 = Exter.Theme.TabBackground,
-            BackgroundTransparency = Exter.Theme.ElementTransparency or 0.2, Size = UDim2.new(1, 0, 0, 38), Text = "",
+            BackgroundTransparency = math.clamp((Exter.Theme.ElementTransparency or 0.2) + 0.08, 0.22, 0.5), Size = UDim2.new(1, 0, 0, 40), Text = "",
             AutoButtonColor = false, Parent = tabListScroll })
-        AddCorner(tabBtn, 10)
+        AddCorner(tabBtn, 11)
+        local tabMarker = Create("Frame", { Name = "Marker", BackgroundColor3 = Exter.Theme.Accent,
+            BackgroundTransparency = 0.2, Size = UDim2.new(0, 3, 0, 14),
+            Position = UDim2.new(0, 8, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), Parent = tabBtn })
+        AddCorner(tabMarker, 2)
 
         if tabIcon then
             Create("TextLabel", { Name = "Icon", BackgroundTransparency = 1,
-                Size = UDim2.new(0, 28, 1, 0), Position = UDim2.new(0, 10, 0, 0),
+                Size = UDim2.new(0, 28, 1, 0), Position = UDim2.new(0, 14, 0, 0),
                 Text = tabIcon, TextColor3 = Exter.Theme.TabText, TextSize = 16,
                 FontFace = Exter.Theme.FontFace, Parent = tabBtn })
         end
 
         local tabTitle = Create("TextLabel", { Name = "Title", BackgroundTransparency = 1,
-            Size = UDim2.new(1, tabIcon and -48 or -20, 1, 0),
-            Position = UDim2.new(0, tabIcon and 40 or 12, 0, 0),
-            Text = tabName, TextColor3 = Exter.Theme.TabText, TextSize = 14,
+            Size = UDim2.new(1, tabIcon and -58 or -24, 1, 0),
+            Position = UDim2.new(0, tabIcon and 46 or 16, 0, 0),
+            Text = tabName, TextColor3 = Exter.Theme.TabText, TextSize = 13,
             FontFace = Exter.Theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
             TextTruncate = Enum.TextTruncate.AtEnd, Parent = tabBtn })
 
