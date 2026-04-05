@@ -157,6 +157,55 @@ local Notifications = Exter.Notifications
 
 local SelectedTheme = ExterLibrary.Theme.Default
 
+local LayoutSettings = {
+	WindowWidth = 640,
+	WindowHeight = 475,
+	MinimisedWidth = 495,
+	TopbarHeight = 45,
+	SidebarWidth = 150,
+	SidebarPadding = 10,
+	BodyTopOffset = 55,
+	BodyBottomPadding = 10,
+	MenuTransparency = 0,
+	TopbarTransparency = 0.6,
+	MainTransparency = 0.6,
+}
+
+local function GetBodySize()
+	return UDim2.new(1, -(LayoutSettings.SidebarWidth + (LayoutSettings.SidebarPadding * 3)), 1, -(LayoutSettings.BodyTopOffset + LayoutSettings.BodyBottomPadding))
+end
+
+local function GetBodyPosition()
+	return UDim2.new(0, LayoutSettings.SidebarWidth + (LayoutSettings.SidebarPadding * 2), 0, LayoutSettings.BodyTopOffset)
+end
+
+local function ApplySidebarLayout()
+	local bodySize = GetBodySize()
+	local bodyPosition = GetBodyPosition()
+
+	TabList.Position = UDim2.new(0, LayoutSettings.SidebarPadding, 0, LayoutSettings.BodyTopOffset)
+	TabList.Size = UDim2.new(0, LayoutSettings.SidebarWidth, 1, -(LayoutSettings.BodyTopOffset + LayoutSettings.BodyBottomPadding))
+	TabList.ClipsDescendants = true
+
+	local tabListLayout = TabList:FindFirstChildOfClass("UIListLayout")
+	if tabListLayout then
+		tabListLayout.FillDirection = Enum.FillDirection.Vertical
+		tabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		tabListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+		tabListLayout.Padding = UDim.new(0, 8)
+		tabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	end
+
+	Elements.Position = bodyPosition
+	Elements.Size = bodySize
+
+	for _, tab in ipairs(TabList:GetChildren()) do
+		if tab:IsA("Frame") and tab.Name ~= "Template" and tab.Name ~= "Placeholder" then
+			tab.Size = UDim2.new(1, 0, 0, 34)
+		end
+	end
+end
+
 function ChangeTheme(ThemeName)
 	SelectedTheme = ExterLibrary.Theme[ThemeName]
 	for _, obj in ipairs(Exter:GetDescendants()) do
@@ -493,7 +542,7 @@ function ExterLibrary:Notify(NotificationSettings)
 			blurlight.FocusDistance = 51.6
 			blurlight.InFocusRadius = 50
 			blurlight.NearIntensity = 1
-			game:GetService("Debris"):AddItem(script,0)
+			game:GetService("Debris"):AddItem(blurlight, 15)
 		end
 
 		Notification.Actions.Template.Visible = false
@@ -624,8 +673,8 @@ end
 function Hide()
 	Debounce = true
 	ExterLibrary:Notify({Title = "Interface Hidden", Content = "The interface has been hidden, you can unhide the interface by tapping K", Duration = 7})
-	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 470, 0, 400)}):Play()
-	TweenService:Create(Main.Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 470, 0, 45)}):Play()
+	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, LayoutSettings.WindowWidth - 30, 0, LayoutSettings.WindowHeight - 75)}):Play()
+	TweenService:Create(Main.Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, LayoutSettings.WindowWidth - 30, 0, LayoutSettings.TopbarHeight)}):Play()
 	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
 	TweenService:Create(Main.Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
 	TweenService:Create(Main.Topbar.Divider, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
@@ -678,13 +727,14 @@ function Unhide()
 	Debounce = true
 	Main.Position = UDim2.new(0.5, 0, 0.5, 0)
 	Main.Visible = true
-	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 500, 0, 475)}):Play()
-	TweenService:Create(Main.Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 500, 0, 45)}):Play()
+	ApplySidebarLayout()
+	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, LayoutSettings.WindowWidth, 0, LayoutSettings.WindowHeight)}):Play()
+	TweenService:Create(Main.Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, LayoutSettings.WindowWidth, 0, LayoutSettings.TopbarHeight)}):Play()
 	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {ImageTransparency = 0.4}):Play()
-	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = 0}):Play()
-	TweenService:Create(Main.Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = 0}):Play()
-	TweenService:Create(Main.Topbar.Divider, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = 0}):Play()
-	TweenService:Create(Main.Topbar.CornerRepair, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = 0}):Play()
+	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = LayoutSettings.MainTransparency}):Play()
+	TweenService:Create(Main.Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = LayoutSettings.TopbarTransparency}):Play()
+	TweenService:Create(Main.Topbar.Divider, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.35}):Play()
+	TweenService:Create(Main.Topbar.CornerRepair, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = LayoutSettings.TopbarTransparency}):Play()
 	TweenService:Create(Main.Topbar.Title, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
 	if Minimised then
 		spawn(Maximise)
@@ -746,11 +796,12 @@ function Maximise()
 
 	TweenService:Create(Topbar.UIStroke, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Transparency = 1}):Play()
 	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {ImageTransparency = 0.4}):Play()
-	TweenService:Create(Topbar.CornerRepair, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = 0}):Play()
+	TweenService:Create(Topbar.CornerRepair, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = LayoutSettings.TopbarTransparency}):Play()
 	TweenService:Create(Topbar.Divider, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = 0}):Play()
-	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 500, 0, 475)}):Play()
-	TweenService:Create(Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 500, 0, 45)}):Play()
+	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, LayoutSettings.WindowWidth, 0, LayoutSettings.WindowHeight)}):Play()
+	TweenService:Create(Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, LayoutSettings.WindowWidth, 0, LayoutSettings.TopbarHeight)}):Play()
 	TabList.Visible = true
+	ApplySidebarLayout()
 	wait(0.2)
 
 	Elements.Visible = true
@@ -846,8 +897,8 @@ function Minimise()
 	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
 	TweenService:Create(Topbar.CornerRepair, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
 	TweenService:Create(Topbar.Divider, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
-	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 495, 0, 45)}):Play()
-	TweenService:Create(Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 495, 0, 45)}):Play()
+	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, LayoutSettings.MinimisedWidth, 0, LayoutSettings.TopbarHeight)}):Play()
+	TweenService:Create(Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, LayoutSettings.MinimisedWidth, 0, LayoutSettings.TopbarHeight)}):Play()
 
 	wait(0.3)
 
@@ -861,7 +912,8 @@ end
 function ExterLibrary:CreateWindow(Settings)
 	local Passthrough = false
 	Topbar.Title.Text = Settings.Name
-	Main.Size = UDim2.new(0, 450, 0, 260)
+	Main.Size = UDim2.new(0, 470, 0, 260)
+	ApplySidebarLayout()
 	Main.Visible = true
 	Main.BackgroundTransparency = 1
 	LoadingFrame.Title.TextTransparency = 1
@@ -1132,7 +1184,7 @@ function ExterLibrary:CreateWindow(Settings)
 	Notifications.Visible = true
 	Exter.Enabled = true
 	wait(0.5)
-	TweenService:Create(Main, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {BackgroundTransparency = 0}):Play()
+	TweenService:Create(Main, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {BackgroundTransparency = LayoutSettings.MainTransparency}):Play()
 	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {ImageTransparency = 0.55}):Play()
 	wait(0.1)
 	TweenService:Create(LoadingFrame.Title, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
@@ -1157,7 +1209,7 @@ function ExterLibrary:CreateWindow(Settings)
 		TabButton.Title.Text = Name
 		TabButton.Parent = TabList
 		TabButton.Title.TextWrapped = false
-		TabButton.Size = UDim2.new(0, TabButton.Title.TextBounds.X + 30, 0, 30)
+		TabButton.Size = UDim2.new(1, 0, 0, 34)
 
 		if Image then
 			TabButton.Title.AnchorPoint = Vector2.new(0, 0.5)
@@ -1165,7 +1217,7 @@ function ExterLibrary:CreateWindow(Settings)
 			TabButton.Image.Image = "rbxassetid://"..Image
 			TabButton.Image.Visible = true
 			TabButton.Title.TextXAlignment = Enum.TextXAlignment.Left
-			TabButton.Size = UDim2.new(0, TabButton.Title.TextBounds.X + 46, 0, 30)
+			TabButton.Size = UDim2.new(1, 0, 0, 34)
 		end
 
 		TabButton.BackgroundTransparency = 1
@@ -1248,10 +1300,11 @@ function ExterLibrary:CreateWindow(Settings)
 				end
 			end
 			if Elements.UIPageLayout.CurrentPage ~= TabPage then
-				TweenService:Create(Elements, TweenInfo.new(1, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 460,0, 330)}):Play()
+				local bodySize = GetBodySize()
+				TweenService:Create(Elements, TweenInfo.new(0.35, Enum.EasingStyle.Quint), {Size = UDim2.new(bodySize.X.Scale, bodySize.X.Offset - 10, bodySize.Y.Scale, bodySize.Y.Offset - 12)}):Play()
 				Elements.UIPageLayout:JumpTo(TabPage)
-				wait(0.2)
-				TweenService:Create(Elements, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 475,0, 366)}):Play()
+				wait(0.12)
+				TweenService:Create(Elements, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {Size = bodySize}):Play()
 			end
 
 		end)
@@ -1435,7 +1488,8 @@ function ExterLibrary:CreateWindow(Settings)
 					ColorPicker.HexInput.InputBox.Text = hex 
 				end
 				pcall(function()ColorPickerSettings.Callback(Color3.fromHSV(h,s,v))end)
-				local r,g,b = math.floor((h*255)+0.5),math.floor((s*255)+0.5),math.floor((v*255)+0.5)
+				local colorFromHSV = Color3.fromHSV(h, s, v)
+				local r,g,b = math.floor((colorFromHSV.R * 255)+0.5),math.floor((colorFromHSV.G * 255)+0.5),math.floor((colorFromHSV.B * 255)+0.5)
 				ColorPickerSettings.Color = Color3.fromRGB(r,g,b)
 				SaveConfiguration()
 			end)
@@ -1454,7 +1508,8 @@ function ExterLibrary:CreateWindow(Settings)
 				else 
 					box.Text = tostring(save)
 				end
-				local r,g,b = math.floor((h*255)+0.5),math.floor((s*255)+0.5),math.floor((v*255)+0.5)
+				local colorFromHSV = Color3.fromHSV(h, s, v)
+				local r,g,b = math.floor((colorFromHSV.R * 255)+0.5),math.floor((colorFromHSV.G * 255)+0.5),math.floor((colorFromHSV.B * 255)+0.5)
 				ColorPickerSettings.Color = Color3.fromRGB(r,g,b)
 				SaveConfiguration()
 			end
@@ -2363,13 +2418,14 @@ function ExterLibrary:CreateWindow(Settings)
 	end
 
 	Elements.Visible = true
+	ApplySidebarLayout()
 
 	wait(0.7)
 	TweenService:Create(LoadingFrame.Title, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play()
 	TweenService:Create(LoadingFrame.Subtitle, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play()
 	TweenService:Create(LoadingFrame.Version, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play()
 	wait(0.2)
-	TweenService:Create(Main, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 500, 0, 475)}):Play()
+	TweenService:Create(Main, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {Size = UDim2.new(0, LayoutSettings.WindowWidth, 0, LayoutSettings.WindowHeight)}):Play()
 	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {ImageTransparency = 0.4}):Play()
 
 	Topbar.BackgroundTransparency = 1
@@ -2382,8 +2438,9 @@ function ExterLibrary:CreateWindow(Settings)
 
 	wait(0.5)
 	Topbar.Visible = true
-	TweenService:Create(Topbar, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {BackgroundTransparency = 0}):Play()
-	TweenService:Create(Topbar.CornerRepair, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {BackgroundTransparency = 0}):Play()
+	ApplySidebarLayout()
+	TweenService:Create(Topbar, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {BackgroundTransparency = LayoutSettings.TopbarTransparency}):Play()
+	TweenService:Create(Topbar.CornerRepair, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {BackgroundTransparency = LayoutSettings.TopbarTransparency}):Play()
 	wait(0.1)
 	TweenService:Create(Topbar.Divider, TweenInfo.new(1, Enum.EasingStyle.Quint), {Size = UDim2.new(1, 0, 0, 1)}):Play()
 	wait(0.1)
