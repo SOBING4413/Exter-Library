@@ -844,6 +844,104 @@ local function MakeDraggable(dragHandle, targetFrame)
     end))
 end
 
+local function MakeResizable(targetFrame, constraints, onResize)
+    local hitSize = 10
+    local handles = {
+        { Name = "ResizeTop", Direction = "Top", Size = UDim2.new(1, -20, 0, hitSize), Position = UDim2.new(0, 10, 0, 0), AnchorPoint = Vector2.new(0, 0) },
+        { Name = "ResizeBottom", Direction = "Bottom", Size = UDim2.new(1, -20, 0, hitSize), Position = UDim2.new(0, 10, 1, 0), AnchorPoint = Vector2.new(0, 1) },
+        { Name = "ResizeLeft", Direction = "Left", Size = UDim2.new(0, hitSize, 1, -20), Position = UDim2.new(0, 0, 0, 10), AnchorPoint = Vector2.new(0, 0) },
+        { Name = "ResizeRight", Direction = "Right", Size = UDim2.new(0, hitSize, 1, -20), Position = UDim2.new(1, 0, 0, 10), AnchorPoint = Vector2.new(1, 0) },
+        { Name = "ResizeTopLeft", Direction = "TopLeft", Size = UDim2.fromOffset(hitSize + 4, hitSize + 4), Position = UDim2.new(0, 0, 0, 0), AnchorPoint = Vector2.new(0, 0) },
+        { Name = "ResizeTopRight", Direction = "TopRight", Size = UDim2.fromOffset(hitSize + 4, hitSize + 4), Position = UDim2.new(1, 0, 0, 0), AnchorPoint = Vector2.new(1, 0) },
+        { Name = "ResizeBottomLeft", Direction = "BottomLeft", Size = UDim2.fromOffset(hitSize + 4, hitSize + 4), Position = UDim2.new(0, 0, 1, 0), AnchorPoint = Vector2.new(0, 1) },
+        { Name = "ResizeBottomRight", Direction = "BottomRight", Size = UDim2.fromOffset(hitSize + 4, hitSize + 4), Position = UDim2.new(1, 0, 1, 0), AnchorPoint = Vector2.new(1, 1) },
+    }
+
+    local resizing = false
+    local activeDirection = nil
+    local dragStart = nil
+    local startSize = nil
+    local startPos = nil
+
+    local function beginResize(input, direction)
+        if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then
+            return
+        end
+        resizing = true
+        activeDirection = direction
+        dragStart = input.Position
+        startSize = targetFrame.AbsoluteSize
+        startPos = targetFrame.Position
+    end
+
+    for _, handle in ipairs(handles) do
+        local resizeHandle = Create("TextButton", {
+            Name = handle.Name,
+            Size = handle.Size,
+            Position = handle.Position,
+            AnchorPoint = handle.AnchorPoint,
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Text = "",
+            AutoButtonColor = false,
+            ZIndex = 50,
+            Parent = targetFrame,
+        })
+        resizeHandle.InputBegan:Connect(function(input)
+            beginResize(input, handle.Direction)
+        end)
+    end
+
+    TrackConnection(UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            resizing = false
+            activeDirection = nil
+        end
+    end))
+
+    TrackConnection(UserInputService.InputChanged:Connect(function(input)
+        if not resizing or not dragStart or not activeDirection then
+            return
+        end
+        if input.UserInputType ~= Enum.UserInputType.MouseMovement and input.UserInputType ~= Enum.UserInputType.Touch then
+            return
+        end
+
+        local delta = input.Position - dragStart
+        local minWidth = constraints.MinWidth or 520
+        local minHeight = constraints.MinHeight or 360
+        local maxWidth = constraints.MaxWidth or 1200
+        local maxHeight = constraints.MaxHeight or 820
+        local newWidth = startSize.X
+        local newHeight = startSize.Y
+        local newPosX = startPos.X.Offset
+        local newPosY = startPos.Y.Offset
+
+        if string.find(activeDirection, "Right") then
+            newWidth = math.clamp(startSize.X + delta.X, minWidth, maxWidth)
+        end
+        if string.find(activeDirection, "Left") then
+            local wantedWidth = math.clamp(startSize.X - delta.X, minWidth, maxWidth)
+            newPosX = startPos.X.Offset + (startSize.X - wantedWidth)
+            newWidth = wantedWidth
+        end
+        if string.find(activeDirection, "Bottom") then
+            newHeight = math.clamp(startSize.Y + delta.Y, minHeight, maxHeight)
+        end
+        if string.find(activeDirection, "Top") then
+            local wantedHeight = math.clamp(startSize.Y - delta.Y, minHeight, maxHeight)
+            newPosY = startPos.Y.Offset + (startSize.Y - wantedHeight)
+            newHeight = wantedHeight
+        end
+
+        targetFrame.Size = UDim2.fromOffset(newWidth, newHeight)
+        targetFrame.Position = UDim2.new(startPos.X.Scale, newPosX, startPos.Y.Scale, newPosY)
+        if onResize then
+            onResize(newWidth, newHeight)
+        end
+    end))
+end
+
 -- ═══════════════════════════════════════════════════════════
 -- NOTIFICATION SYSTEM
 -- ═══════════════════════════════════════════════════════════
@@ -1140,16 +1238,16 @@ local function EvaluateResponsiveScale()
     local viewport = GetViewportSize()
     local shortest = math.max(480, math.min(viewport.X, viewport.Y))
     local scale = shortest / 900
-    -- Keep menu compact so it does not dominate gameplay on bigger screens.
-    return math.clamp(scale, 0.62, 0.9), viewport
+    -- Keep menu readable across devices and avoid tiny text.
+    return math.clamp(scale, 0.78, 1.05), viewport
 end
 
 local function BuildWindowLayoutPresets(viewport)
-    -- Compact-first layout: keeps HUD and world visibility clear.
-    local width = math.clamp(math.floor(viewport.X * 0.38), 420, 640)
-    local height = math.clamp(math.floor(viewport.Y * 0.46), 290, 470)
+    -- Balanced layout: readable by default while still gameplay-friendly.
+    local width = math.clamp(math.floor(viewport.X * 0.52), 620, 980)
+    local height = math.clamp(math.floor(viewport.Y * 0.62), 420, 720)
     local compact = viewport.X <= 860 or viewport.Y <= 560
-    local sidebarWidth = compact and 112 or math.clamp(math.floor(width * 0.27), 118, 156)
+    local sidebarWidth = compact and 142 or math.clamp(math.floor(width * 0.26), 155, 230)
     local topbarHeight = compact and 38 or 42
 
     return {
@@ -1524,44 +1622,8 @@ function Exter:CreateWindow(settings)
         TextSize = 11, FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left,
         Parent = userSection })
 
-    local infoCard = Create("Frame", { Name = "UsageInfoTable", BackgroundColor3 = theme.ElementBackground,
-        BackgroundTransparency = math.clamp((theme.ElementTransparency or 0.2) + 0.2, 0.3, 0.72), Size = UDim2.new(1, -12, 0, 130),
-        Position = UDim2.new(0, 6, 0, 66), Parent = sidebar })
-    AddCorner(infoCard, 9)
-    AddStroke(infoCard, theme.ElementBorder, 1, 0.35)
-    AddGradient(infoCard, ColorSequence.new({
-        ColorSequenceKeypoint.new(0, LerpColor(theme.ElementBackground, theme.Accent, 0.12)),
-        ColorSequenceKeypoint.new(1, theme.ElementBackground),
-    }), 90)
-
-    Create("TextLabel", { Name = "InfoTitle", BackgroundTransparency = 1,
-        Size = UDim2.new(1, -14, 0, 18), Position = UDim2.new(0, 8, 0, 5),
-        Text = usageInfo.Title, TextColor3 = theme.TextPrimary, TextSize = 12,
-        FontFace = theme.FontFaceBold, TextXAlignment = Enum.TextXAlignment.Left, Parent = infoCard })
-    Create("TextLabel", { Name = "InfoSubtitle", BackgroundTransparency = 1,
-        Size = UDim2.new(1, -14, 0, 14), Position = UDim2.new(0, 8, 0, 22),
-        Text = usageInfo.Subtitle .. " | Wajib: " .. table.concat(usageInfo.Required, ", "), TextColor3 = theme.TextMuted, TextSize = 10,
-        FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left, Parent = infoCard })
-
-    local infoRows = Create("Frame", { Name = "Rows", BackgroundTransparency = 1,
-        Size = UDim2.new(1, -12, 1, -42), Position = UDim2.new(0, 6, 0, 36), Parent = infoCard })
-    AddListLayout(infoRows, 2)
-
-    for rowIndex, row in ipairs(usageInfo.Rows) do
-        local rowFrame = Create("Frame", { Name = "Row" .. rowIndex, BackgroundColor3 = theme.InputBackground,
-            BackgroundTransparency = math.clamp((theme.ElementTransparency or 0.18) + 0.26, 0.35, 0.8), Size = UDim2.new(1, 0, 0, 20),
-            Parent = infoRows })
-        AddCorner(rowFrame, 6)
-        Create("TextLabel", { Name = "Key", BackgroundTransparency = 1, Size = UDim2.new(0.44, -6, 1, 0),
-            Position = UDim2.new(0, 6, 0, 0), Text = row.Key, TextColor3 = theme.TextSecondary, TextSize = 10,
-            FontFace = theme.FontFaceBold, TextXAlignment = Enum.TextXAlignment.Left, Parent = rowFrame })
-        Create("TextLabel", { Name = "Value", BackgroundTransparency = 1, Size = UDim2.new(0.56, -6, 1, 0),
-            Position = UDim2.new(0.44, 0, 0, 0), Text = row.Value, TextColor3 = theme.TextPrimary, TextSize = 10,
-            FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Right, TextTruncate = Enum.TextTruncate.AtEnd, Parent = rowFrame })
-    end
-
     local tabListScroll = Create("ScrollingFrame", { Name = "TabList", BackgroundTransparency = 1,
-        Size = UDim2.new(1, -8, 1, -203), Position = UDim2.new(0, 4, 0, 199),
+        Size = UDim2.new(1, -8, 1, -74), Position = UDim2.new(0, 4, 0, 70),
         ScrollBarThickness = 2, ScrollBarImageColor3 = theme.ScrollbarColor,
         ScrollBarImageTransparency = 0.4, CanvasSize = UDim2.new(0, 0, 0, 0),
         AutomaticCanvasSize = Enum.AutomaticSize.Y, BorderSizePixel = 0, Parent = sidebar })
@@ -1572,6 +1634,51 @@ function Exter:CreateWindow(settings)
         Size = UDim2.new(1, -(layout.SidebarWidth + 1), 1, -layout.TopbarHeight), Position = UDim2.new(0, layout.SidebarWidth, 0, layout.TopbarHeight),
         ClipsDescendants = true, Parent = mainFrame })
 
+    local infoCard = Create("Frame", { Name = "UsageInfoTable", BackgroundColor3 = theme.ElementBackground,
+        BackgroundTransparency = math.clamp((theme.ElementTransparency or 0.2) + 0.2, 0.3, 0.72), Size = UDim2.new(1, -16, 0, layout.Compact and 126 or 148),
+        Position = UDim2.new(0, 8, 0, 8), Parent = contentArea })
+    AddCorner(infoCard, 10)
+    AddStroke(infoCard, theme.ElementBorder, 1, 0.35)
+    AddGradient(infoCard, ColorSequence.new({
+        ColorSequenceKeypoint.new(0, LerpColor(theme.ElementBackground, theme.Accent, 0.12)),
+        ColorSequenceKeypoint.new(1, theme.ElementBackground),
+    }), 90)
+
+    Create("TextLabel", { Name = "InfoTitle", BackgroundTransparency = 1,
+        Size = UDim2.new(1, -14, 0, 20), Position = UDim2.new(0, 8, 0, 6),
+        Text = usageInfo.Title, TextColor3 = theme.TextPrimary, TextSize = 13,
+        FontFace = theme.FontFaceBold, TextXAlignment = Enum.TextXAlignment.Left, Parent = infoCard })
+    Create("TextLabel", { Name = "InfoSubtitle", BackgroundTransparency = 1,
+        Size = UDim2.new(1, -14, 0, 16), Position = UDim2.new(0, 8, 0, 27),
+        Text = usageInfo.Subtitle .. " | Wajib: " .. table.concat(usageInfo.Required, ", "), TextColor3 = theme.TextMuted, TextSize = 11,
+        FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd, Parent = infoCard })
+
+    local infoRows = Create("ScrollingFrame", { Name = "Rows", BackgroundTransparency = 1,
+        Size = UDim2.new(1, -12, 1, -48), Position = UDim2.new(0, 6, 0, 42), Parent = infoCard,
+        ScrollBarThickness = 2, ScrollBarImageColor3 = theme.ScrollbarColor,
+        ScrollBarImageTransparency = 0.4, CanvasSize = UDim2.new(0, 0, 0, 0),
+        AutomaticCanvasSize = Enum.AutomaticSize.Y, BorderSizePixel = 0 })
+    AddListLayout(infoRows, 3)
+    AddPadding(infoRows, 2, 2, 2, 2)
+
+    for rowIndex, row in ipairs(usageInfo.Rows) do
+        local rowFrame = Create("Frame", { Name = "Row" .. rowIndex, BackgroundColor3 = theme.InputBackground,
+            BackgroundTransparency = math.clamp((theme.ElementTransparency or 0.18) + 0.22, 0.32, 0.75), Size = UDim2.new(1, 0, 0, 24),
+            Parent = infoRows })
+        AddCorner(rowFrame, 7)
+        Create("TextLabel", { Name = "Key", BackgroundTransparency = 1, Size = UDim2.new(0.36, -6, 1, 0),
+            Position = UDim2.new(0, 8, 0, 0), Text = row.Key, TextColor3 = theme.TextSecondary, TextSize = 11,
+            FontFace = theme.FontFaceBold, TextXAlignment = Enum.TextXAlignment.Left, Parent = rowFrame })
+        Create("TextLabel", { Name = "Value", BackgroundTransparency = 1, Size = UDim2.new(0.64, -10, 1, 0),
+            Position = UDim2.new(0.36, 4, 0, 0), Text = row.Value, TextColor3 = theme.TextPrimary, TextSize = 11,
+            FontFace = theme.FontFace, TextXAlignment = Enum.TextXAlignment.Right, TextTruncate = Enum.TextTruncate.AtEnd, Parent = rowFrame })
+    end
+
+    local tabContentTopPadding = infoCard.Size.Y.Offset + 14
+    local tabContentHolder = Create("Frame", { Name = "TabContentHolder", BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 1, -tabContentTopPadding), Position = UDim2.new(0, 0, 0, tabContentTopPadding),
+        ClipsDescendants = true, Parent = contentArea })
+
     NotificationContainer = Create("Frame", { Name = "Notifications", BackgroundTransparency = 1,
         Size = UDim2.fromOffset(layout.NotificationWidth, layout.NotificationHeight),
         Position = UDim2.new(1, -(layout.NotificationWidth + 10), 1, -(layout.NotificationHeight + 10)),
@@ -1581,6 +1688,9 @@ function Exter:CreateWindow(settings)
     local isMinimized = false
     local isHidden = false
     local originalSize = layout.MainSize
+    local function GetMinimizedSize()
+        return UDim2.fromOffset(originalSize.X.Offset, layout.TopbarHeight)
+    end
 
     minimizeBtn.MouseButton1Click:Connect(function()
         if isMinimized then
@@ -1596,7 +1706,7 @@ function Exter:CreateWindow(settings)
             minimizeBtn.Text = "□"
             sidebar.Visible = false
             contentArea.Visible = false
-            Tween(mainFrame, 0.45, { Size = layout.MinimizedSize })
+            Tween(mainFrame, 0.45, { Size = GetMinimizedSize() })
         end
     end)
 
@@ -1615,7 +1725,7 @@ function Exter:CreateWindow(settings)
                 mainFrame.Size = UDim2.new(0, 0, 0, 0)
                 mainFrame.BackgroundTransparency = 1
                 if isMinimized then
-                    Tween(mainFrame, 0.45, { Size = layout.MinimizedSize, BackgroundTransparency = windowTransparency })
+                    Tween(mainFrame, 0.45, { Size = GetMinimizedSize(), BackgroundTransparency = windowTransparency })
                 else
                     Tween(mainFrame, 0.45, { Size = originalSize, BackgroundTransparency = windowTransparency })
                 end
@@ -1633,16 +1743,29 @@ function Exter:CreateWindow(settings)
         Parent = mainFrame,
     })
 
+    local resizingByUser = false
+    MakeResizable(mainFrame, {
+        MinWidth = 560,
+        MinHeight = 390,
+        MaxWidth = math.max(900, math.floor(viewport.X * 0.94)),
+        MaxHeight = math.max(620, math.floor(viewport.Y * 0.9)),
+    }, function(newWidth, newHeight)
+        resizingByUser = true
+        originalSize = UDim2.fromOffset(newWidth, newHeight)
+    end)
+
     local function ReflowResponsiveLayout()
         local latestScale, latestViewport = EvaluateResponsiveScale()
         responsiveScale = latestScale
         uiScale.Scale = responsiveScale
         layout = BuildWindowLayoutPresets(latestViewport)
         if not isMinimized then
-            originalSize = layout.MainSize
+            if not resizingByUser then
+                originalSize = layout.MainSize
+            end
             mainFrame.Size = originalSize
         else
-            mainFrame.Size = layout.MinimizedSize
+            mainFrame.Size = GetMinimizedSize()
         end
 
         topbar.Size = UDim2.new(1, 0, 0, layout.TopbarHeight)
@@ -1657,9 +1780,12 @@ function Exter:CreateWindow(settings)
         versionBadge.Visible = not layout.Compact
         topbarButtons.Size = UDim2.new(0, layout.Compact and 126 or 140, 0, layout.TopbarHeight)
         topbarButtons.Position = UDim2.new(1, layout.Compact and -134 or -150, 0, 0)
-        infoCard.Size = UDim2.new(1, -12, 0, layout.Compact and 118 or 130)
-        tabListScroll.Size = UDim2.new(1, -8, 1, -(infoCard.Size.Y.Offset + 77))
-        tabListScroll.Position = UDim2.new(0, 4, 0, infoCard.Size.Y.Offset + 73)
+        tabListScroll.Size = UDim2.new(1, -8, 1, -74)
+        tabListScroll.Position = UDim2.new(0, 4, 0, 70)
+        infoCard.Size = UDim2.new(1, -16, 0, layout.Compact and 126 or 148)
+        tabContentTopPadding = infoCard.Size.Y.Offset + 14
+        tabContentHolder.Size = UDim2.new(1, 0, 1, -tabContentTopPadding)
+        tabContentHolder.Position = UDim2.new(0, 0, 0, tabContentTopPadding)
     end
 
     TrackConnection(screenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(ReflowResponsiveLayout))
@@ -1787,7 +1913,7 @@ function Exter:CreateWindow(settings)
             Size = UDim2.new(1, 0, 1, 0), ScrollBarThickness = 3,
             ScrollBarImageColor3 = Exter.Theme.ScrollbarColor, ScrollBarImageTransparency = 0.2,
             CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y,
-            BorderSizePixel = 0, Visible = false, Parent = contentArea })
+            BorderSizePixel = 0, Visible = false, Parent = tabContentHolder })
         AddListLayout(tabPage, 6)
         AddPadding(tabPage, 12, 14, 12, 14)
         tabPages[tabName] = tabPage
