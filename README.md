@@ -12,7 +12,7 @@ Exter Library adalah Roblox GUI library yang bisa dipakai secara universal (miri
 > Ganti URL di bawah ke raw file yang kamu host sendiri (GitHub raw / CDN kamu).
 
 ```lua
-local ExterLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/SOBING4413/Exter-Library/refs/heads/main/ExterLibrary"))()
+local ExterLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/SOBING4413/Exter-Library/main/ExterLibrary"))()
 
 local Window = ExterLibrary:Window({
     Name = "Exter Demo",
@@ -47,7 +47,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 maka di Exter Library cukup:
 
 ```lua
-local RayfieldStyle = loadstring(game:HttpGet("https://raw.githubusercontent.com/USERNAME/REPO/BRANCH/Exter-Library"))()
+local RayfieldStyle = loadstring(game:HttpGet("https://raw.githubusercontent.com/SOBING4413/Exter-Library/main/ExterLibrary"))()
 ```
 
 Karena file sekarang mengembalikan API publik library (alias `ExterLibrary`), jadi bebas dinamain variabel apa pun di sisi user script.
