@@ -31,7 +31,7 @@ end
 
 -- Credits To Latte Softworks And qweery for Lucide And Material Icons Respectively.
 local IconModule = {
-	Lucide = nil,
+	Lucide = {},
 	Material = {
 		["perm_media"] = "http://www.roblox.com/asset/?id=6031215982";
 		["sticky_note_2"] = "http://www.roblox.com/asset/?id=6031265972";
@@ -1651,7 +1651,7 @@ local function BlurModule(Frame)
 		end
 		local continue = IsNotNaN(camera:ScreenPointToRay(0,0).Origin.x)
 		while not continue do
-			RunService.RenderStepped:wait()
+			RunService.RenderStepped:Wait()
 			continue = IsNotNaN(camera:ScreenPointToRay(0,0).Origin.x)
 		end
 	end
@@ -2148,7 +2148,7 @@ function Sobing:CreateWindow(WindowSettings)
 		Subtitle = "",
 		LogoID = "6031097225",
 		LoadingEnabled = true,
-		LoadingTitle = "Sobing Interface Suite",
+		LoadingTitle = "Exter Library",
 		LoadingSubtitle = "by Exter Interactive",
 
 		ConfigSettings = {},
@@ -2200,7 +2200,7 @@ function Sobing:CreateWindow(WindowSettings)
 
 	LoadingFrame.Frame.Frame.Title.Text = WindowSettings.LoadingTitle
 	LoadingFrame.Frame.Frame.Subtitle.Text = WindowSettings.LoadingSubtitle
-	LoadingFrame.Version.Text = LoadingFrame.Frame.Frame.Title.Text == "Sobing Interface Suite" and Release or "Sobing UI"
+	LoadingFrame.Version.Text = LoadingFrame.Frame.Frame.Title.Text == "Exter Library" and Release or "Exter UI"
 
 	Navigation.Player.icon.ImageLabel.Image = Players:GetUserThumbnailAsync(Players.LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
 	Navigation.Player.Namez.Text = Players.LocalPlayer.DisplayName
@@ -2372,7 +2372,7 @@ function Sobing:CreateWindow(WindowSettings)
 		task.wait(0.05)
 		TweenService:Create(LoadingFrame.Frame.Frame.Subtitle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
 		TweenService:Create(LoadingFrame.Version, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
-		wait(0.3)
+		task.wait(0.3)
 		TweenService:Create(LoadingFrame, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
 	end
 
@@ -2384,7 +2384,7 @@ function Sobing:CreateWindow(WindowSettings)
 	TweenService:Create(Navigation.Player.icon.ImageLabel, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
 	TweenService:Create(Navigation.Player.icon.UIStroke, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Transparency = 0}):Play()
 	TweenService:Create(Main.Line, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
-	wait(0.4)
+	task.wait(0.4)
 	LoadingFrame.Visible = false
 
 	Draggable(Dragger, Main)
@@ -2451,7 +2451,7 @@ function Sobing:CreateWindow(WindowSettings)
 
 		HomeTabPage.detailsholder.dashboard.Client.Title.Text = (isStudio and "Debugging (Studio)" or identifyexecutor()) or "Your Executor Does Not Support identifyexecutor."
 		for i,v in pairs(HomeTabSettings.SupportedExecutors) do
-			if isStudio then HomeTabPage.detailsholder.dashboard.Client.Subtitle.Text = "Sobing Interface Suite - Debugging Mode" break end
+			if isStudio then HomeTabPage.detailsholder.dashboard.Client.Subtitle.Text = "Exter Library - Debugging Mode" break end
 			if v == identifyexecutor() then
 				HomeTabPage.detailsholder.dashboard.Client.Subtitle.Text = "Your Executor Supports This Script."
 				break
@@ -2730,15 +2730,15 @@ function Sobing:CreateWindow(WindowSettings)
 						TweenService:Create(Button, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 						TweenService:Create(Button.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 						Button.Title.Text = "Callback Error"
-						print("Sobing Interface Suite | "..ButtonSettings.Name.." Callback Error " ..tostring(Response))
-						wait(0.5)
+						print("Exter Library | "..ButtonSettings.Name.." Callback Error " ..tostring(Response))
+						task.wait(0.5)
 						Button.Title.Text = ButtonSettings.Name
 						TweenService:Create(Button, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 						TweenService:Create(Button, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
 						TweenService:Create(Button.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
 					else
 						tween(Button.UIStroke, {Color = Color3.fromRGB(136, 131, 163)})
-						wait(0.2)
+						task.wait(0.2)
 						if ButtonV.Hover then
 							tween(Button.UIStroke, {Color = Color3.fromRGB(87, 84, 104)})
 						else
@@ -2994,8 +2994,8 @@ function Sobing:CreateWindow(WindowSettings)
 									TweenService:Create(Slider, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 									TweenService:Create(Slider.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 									Slider.Title.Text = "Callback Error"
-									print("Sobing Interface Suite | "..SliderSettings.Name.." Callback Error " ..tostring(Response))
-									wait(0.5)
+									print("Exter Library | "..SliderSettings.Name.." Callback Error " ..tostring(Response))
+									task.wait(0.5)
 									Slider.Title.Text = SliderSettings.Name
 									TweenService:Create(Slider, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 									TweenService:Create(Slider, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -3027,8 +3027,8 @@ function Sobing:CreateWindow(WindowSettings)
 						TweenService:Create(Slider, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 						TweenService:Create(Slider.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 						Slider.Title.Text = "Callback Error"
-						print("Sobing Interface Suite | "..SliderSettings.Name.." Callback Error " ..tostring(Response))
-						wait(0.5)
+						print("Exter Library | "..SliderSettings.Name.." Callback Error " ..tostring(Response))
+						task.wait(0.5)
 						Slider.Title.Text = SliderSettings.Name
 						TweenService:Create(Slider, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 						TweenService:Create(Slider, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(30, 33, 40)}):Play()
@@ -3172,8 +3172,8 @@ function Sobing:CreateWindow(WindowSettings)
 						TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 						TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 						Toggle.Title.Text = "Callback Error"
-						print("Sobing Interface Suite | "..ToggleSettings.Name.." Callback Error " ..tostring(Response))
-						wait(0.5)
+						print("Exter Library | "..ToggleSettings.Name.." Callback Error " ..tostring(Response))
+						task.wait(0.5)
 						Toggle.Title.Text = ToggleSettings.Name
 						TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 						TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -3199,8 +3199,8 @@ function Sobing:CreateWindow(WindowSettings)
 						TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 						TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 						Toggle.Title.Text = "Callback Error"
-						print("Sobing Interface Suite | "..ToggleSettings.Name.." Callback Error " ..tostring(Response))
-						wait(0.5)
+						print("Exter Library | "..ToggleSettings.Name.." Callback Error " ..tostring(Response))
+						task.wait(0.5)
 						Toggle.Title.Text = ToggleSettings.Name
 						TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 						TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -3243,8 +3243,8 @@ function Sobing:CreateWindow(WindowSettings)
 						TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 						TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
 						Toggle.Title.Text = "Callback Error"
-						print("Sobing Interface Suite | "..ToggleSettings.Name.." Callback Error " ..tostring(Response))
-						wait(0.5)
+						print("Exter Library | "..ToggleSettings.Name.." Callback Error " ..tostring(Response))
+						task.wait(0.5)
 						Toggle.Title.Text = ToggleSettings.Name
 						TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 						TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -3365,8 +3365,8 @@ function Sobing:CreateWindow(WindowSettings)
 								TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 								TweenService:Create(Bind.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 								Bind.Title.Text = "Callback Error"
-								print("Sobing Interface Suite | "..BindSettings.Name.." Callback Error " ..tostring(Response))
-								wait(0.5)
+								print("Exter Library | "..BindSettings.Name.." Callback Error " ..tostring(Response))
+								task.wait(0.5)
 								Bind.Title.Text = BindSettings.Name
 								TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 								TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -3394,15 +3394,15 @@ function Sobing:CreateWindow(WindowSettings)
 								TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 								TweenService:Create(Bind.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 								Bind.Title.Text = "Callback Error"
-								print("Sobing Interface Suite | "..BindSettings.Name.." Callback Error " ..tostring(Response))
-								wait(0.5)
+								print("Exter Library | "..BindSettings.Name.." Callback Error " ..tostring(Response))
+								task.wait(0.5)
 								Bind.Title.Text = BindSettings.Name
 								TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 								TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
 								TweenService:Create(Bind.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
 							end
 						else
-							wait(0.1)
+							task.wait(0.1)
 							if Held then
 								local Loop; Loop = RunService.Stepped:Connect(function()
 									if not Held then
@@ -3414,8 +3414,8 @@ function Sobing:CreateWindow(WindowSettings)
 											TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 											TweenService:Create(Bind.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 											Bind.Title.Text = "Callback Error"
-											print("Sobing Interface Suite | "..BindSettings.Name.." Callback Error " ..tostring(Response))
-											wait(0.5)
+											print("Exter Library | "..BindSettings.Name.." Callback Error " ..tostring(Response))
+											task.wait(0.5)
 											Bind.Title.Text = BindSettings.Name
 											TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 											TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -3431,8 +3431,8 @@ function Sobing:CreateWindow(WindowSettings)
 											TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 											TweenService:Create(Bind.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 											Bind.Title.Text = "Callback Error"
-											print("Sobing Interface Suite | "..BindSettings.Name.." Callback Error " ..tostring(Response))
-											wait(0.5)
+											print("Exter Library | "..BindSettings.Name.." Callback Error " ..tostring(Response))
+											task.wait(0.5)
 											Bind.Title.Text = BindSettings.Name
 											TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 											TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -3561,8 +3561,8 @@ function Sobing:CreateWindow(WindowSettings)
 								TweenService:Create(Input, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 								TweenService:Create(Input.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 								Input.Title.Text = "Callback Error"
-								print("Sobing Interface Suite | "..InputSettings.Name.." Callback Error " ..tostring(Response))
-								wait(0.5)
+								print("Exter Library | "..InputSettings.Name.." Callback Error " ..tostring(Response))
+								task.wait(0.5)
 								Input.Title.Text = InputSettings.Name
 								TweenService:Create(Input, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 								TweenService:Create(Input, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -3602,8 +3602,8 @@ function Sobing:CreateWindow(WindowSettings)
 							TweenService:Create(Input, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 							TweenService:Create(Input.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 							Input.Title.Text = "Callback Error"
-							print("Sobing Interface Suite | "..InputSettings.Name.." Callback Error " ..tostring(Response))
-							wait(0.5)
+							print("Exter Library | "..InputSettings.Name.." Callback Error " ..tostring(Response))
+							task.wait(0.5)
 							Input.Title.Text = InputSettings.Name
 							TweenService:Create(Input, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 							TweenService:Create(Input, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -3722,8 +3722,8 @@ function Sobing:CreateWindow(WindowSettings)
 						TweenService:Create(Dropdown, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 						TweenService:Create(Dropdown.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 						Dropdown.Title.Text = "Callback Error"
-						print("Sobing Interface Suite | "..DropdownSettings.Name.." Callback Error " ..tostring(Response))
-						wait(0.5)
+						print("Exter Library | "..DropdownSettings.Name.." Callback Error " ..tostring(Response))
+						task.wait(0.5)
 						Dropdown.Title.Text = DropdownSettings.Name
 						TweenService:Create(Dropdown, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 						TweenService:Create(Dropdown, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -4063,8 +4063,8 @@ function Sobing:CreateWindow(WindowSettings)
 						TweenService:Create(ColorPicker, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 						TweenService:Create(ColorPicker.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 						ColorPicker.Title.Text = "Callback Error"
-						print("Sobing Interface Suite | "..ColorPickerSettings.Name.." Callback Error " ..tostring(Response))
-						wait(0.5)
+						print("Exter Library | "..ColorPickerSettings.Name.." Callback Error " ..tostring(Response))
+						task.wait(0.5)
 						ColorPicker.Title.Text = ColorPickerSettings.Name
 						TweenService:Create(ColorPicker, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 						TweenService:Create(ColorPicker, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -4322,15 +4322,15 @@ function Sobing:CreateWindow(WindowSettings)
 					TweenService:Create(Button, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 					TweenService:Create(Button.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 					Button.Title.Text = "Callback Error"
-					print("Sobing Interface Suite | "..ButtonSettings.Name.." Callback Error " ..tostring(Response))
-					wait(0.5)
+					print("Exter Library | "..ButtonSettings.Name.." Callback Error " ..tostring(Response))
+					task.wait(0.5)
 					Button.Title.Text = ButtonSettings.Name
 					TweenService:Create(Button, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 					TweenService:Create(Button, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
 					TweenService:Create(Button.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
 				else
 					tween(Button.UIStroke, {Color = Color3.fromRGB(136, 131, 163)})
-					wait(0.2)
+					task.wait(0.2)
 					if ButtonV.Hover then
 						tween(Button.UIStroke, {Color = Color3.fromRGB(87, 84, 104)})
 					else
@@ -4583,8 +4583,8 @@ function Sobing:CreateWindow(WindowSettings)
 								TweenService:Create(Slider, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 								TweenService:Create(Slider.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 								Slider.Title.Text = "Callback Error"
-								print("Sobing Interface Suite | "..SliderSettings.Name.." Callback Error " ..tostring(Response))
-								wait(0.5)
+								print("Exter Library | "..SliderSettings.Name.." Callback Error " ..tostring(Response))
+								task.wait(0.5)
 								Slider.Title.Text = SliderSettings.Name
 								TweenService:Create(Slider, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 								TweenService:Create(Slider, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -4616,8 +4616,8 @@ function Sobing:CreateWindow(WindowSettings)
 					TweenService:Create(Slider, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 					TweenService:Create(Slider.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 					Slider.Title.Text = "Callback Error"
-					print("Sobing Interface Suite | "..SliderSettings.Name.." Callback Error " ..tostring(Response))
-					wait(0.5)
+					print("Exter Library | "..SliderSettings.Name.." Callback Error " ..tostring(Response))
+					task.wait(0.5)
 					Slider.Title.Text = SliderSettings.Name
 					TweenService:Create(Slider, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 					TweenService:Create(Slider, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(30, 33, 40)}):Play()
@@ -4760,8 +4760,8 @@ function Sobing:CreateWindow(WindowSettings)
 					TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 					Toggle.Title.Text = "Callback Error"
-					print("Sobing Interface Suite | "..ToggleSettings.Name.." Callback Error " ..tostring(Response))
-					wait(0.5)
+					print("Exter Library | "..ToggleSettings.Name.." Callback Error " ..tostring(Response))
+					task.wait(0.5)
 					Toggle.Title.Text = ToggleSettings.Name
 					TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 					TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -4787,8 +4787,8 @@ function Sobing:CreateWindow(WindowSettings)
 					TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 					Toggle.Title.Text = "Callback Error"
-					print("Sobing Interface Suite | "..ToggleSettings.Name.." Callback Error " ..tostring(Response))
-					wait(0.5)
+					print("Exter Library | "..ToggleSettings.Name.." Callback Error " ..tostring(Response))
+					task.wait(0.5)
 					Toggle.Title.Text = ToggleSettings.Name
 					TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 					TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -4831,8 +4831,8 @@ function Sobing:CreateWindow(WindowSettings)
 					TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
 					Toggle.Title.Text = "Callback Error"
-					print("Sobing Interface Suite | "..ToggleSettings.Name.." Callback Error " ..tostring(Response))
-					wait(0.5)
+					print("Exter Library | "..ToggleSettings.Name.." Callback Error " ..tostring(Response))
+					task.wait(0.5)
 					Toggle.Title.Text = ToggleSettings.Name
 					TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 					TweenService:Create(Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -4952,8 +4952,8 @@ function Sobing:CreateWindow(WindowSettings)
 							TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 							TweenService:Create(Bind.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 							Bind.Title.Text = "Callback Error"
-							print("Sobing Interface Suite | "..BindSettings.Name.." Callback Error " ..tostring(Response))
-							wait(0.5)
+							print("Exter Library | "..BindSettings.Name.." Callback Error " ..tostring(Response))
+							task.wait(0.5)
 							Bind.Title.Text = BindSettings.Name
 							TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 							TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -4981,15 +4981,15 @@ function Sobing:CreateWindow(WindowSettings)
 							TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 							TweenService:Create(Bind.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 							Bind.Title.Text = "Callback Error"
-							print("Sobing Interface Suite | "..BindSettings.Name.." Callback Error " ..tostring(Response))
-							wait(0.5)
+							print("Exter Library | "..BindSettings.Name.." Callback Error " ..tostring(Response))
+							task.wait(0.5)
 							Bind.Title.Text = BindSettings.Name
 							TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 							TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
 							TweenService:Create(Bind.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
 						end
 					else
-						wait(0.1)
+						task.wait(0.1)
 						if Held then
 							local Loop; Loop = RunService.Stepped:Connect(function()
 								if not Held then
@@ -5001,8 +5001,8 @@ function Sobing:CreateWindow(WindowSettings)
 										TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 										TweenService:Create(Bind.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 										Bind.Title.Text = "Callback Error"
-										print("Sobing Interface Suite | "..BindSettings.Name.." Callback Error " ..tostring(Response))
-										wait(0.5)
+										print("Exter Library | "..BindSettings.Name.." Callback Error " ..tostring(Response))
+										task.wait(0.5)
 										Bind.Title.Text = BindSettings.Name
 										TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 										TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -5018,8 +5018,8 @@ function Sobing:CreateWindow(WindowSettings)
 										TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 										TweenService:Create(Bind.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 										Bind.Title.Text = "Callback Error"
-										print("Sobing Interface Suite | "..BindSettings.Name.." Callback Error " ..tostring(Response))
-										wait(0.5)
+										print("Exter Library | "..BindSettings.Name.." Callback Error " ..tostring(Response))
+										task.wait(0.5)
 										Bind.Title.Text = BindSettings.Name
 										TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 										TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -5179,15 +5179,15 @@ function Sobing:CreateWindow(WindowSettings)
 							TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 							TweenService:Create(Bind.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 							Bind.Title.Text = "Callback Error"
-							print("Sobing Interface Suite | "..BindSettings.Name.." Callback Error " ..tostring(Response))
-							wait(0.5)
+							print("Exter Library | "..BindSettings.Name.." Callback Error " ..tostring(Response))
+							task.wait(0.5)
 							Bind.Title.Text = BindSettings.Name
 							TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 							TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
 							TweenService:Create(Bind.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
 						end
 					else
-						wait(0.1)
+						task.wait(0.1)
 						if Held then
 							local Loop; Loop = RunService.Stepped:Connect(function()
 								if not Held then
@@ -5199,8 +5199,8 @@ function Sobing:CreateWindow(WindowSettings)
 										TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 										TweenService:Create(Bind.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 										Bind.Title.Text = "Callback Error"
-										print("Sobing Interface Suite | "..BindSettings.Name.." Callback Error " ..tostring(Response))
-										wait(0.5)
+										print("Exter Library | "..BindSettings.Name.." Callback Error " ..tostring(Response))
+										task.wait(0.5)
 										Bind.Title.Text = BindSettings.Name
 										TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 										TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -5216,8 +5216,8 @@ function Sobing:CreateWindow(WindowSettings)
 										TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 										TweenService:Create(Bind.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 										Bind.Title.Text = "Callback Error"
-										print("Sobing Interface Suite | "..BindSettings.Name.." Callback Error " ..tostring(Response))
-										wait(0.5)
+										print("Exter Library | "..BindSettings.Name.." Callback Error " ..tostring(Response))
+										task.wait(0.5)
 										Bind.Title.Text = BindSettings.Name
 										TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 										TweenService:Create(Bind, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -5341,8 +5341,8 @@ function Sobing:CreateWindow(WindowSettings)
 							TweenService:Create(Input, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 							TweenService:Create(Input.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 							Input.Title.Text = "Callback Error"
-							print("Sobing Interface Suite | "..InputSettings.Name.." Callback Error " ..tostring(Response))
-							wait(0.5)
+							print("Exter Library | "..InputSettings.Name.." Callback Error " ..tostring(Response))
+							task.wait(0.5)
 							Input.Title.Text = InputSettings.Name
 							TweenService:Create(Input, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 							TweenService:Create(Input, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -5382,8 +5382,8 @@ function Sobing:CreateWindow(WindowSettings)
 						TweenService:Create(Input, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 						TweenService:Create(Input.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 						Input.Title.Text = "Callback Error"
-						print("Sobing Interface Suite | "..InputSettings.Name.." Callback Error " ..tostring(Response))
-						wait(0.5)
+						print("Exter Library | "..InputSettings.Name.." Callback Error " ..tostring(Response))
+						task.wait(0.5)
 						Input.Title.Text = InputSettings.Name
 						TweenService:Create(Input, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 						TweenService:Create(Input, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -5501,8 +5501,8 @@ function Sobing:CreateWindow(WindowSettings)
 					TweenService:Create(Dropdown, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 					TweenService:Create(Dropdown.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 					Dropdown.Title.Text = "Callback Error"
-					print("Sobing Interface Suite | "..DropdownSettings.Name.." Callback Error " ..tostring(Response))
-					wait(0.5)
+					print("Exter Library | "..DropdownSettings.Name.." Callback Error " ..tostring(Response))
+					task.wait(0.5)
 					Dropdown.Title.Text = DropdownSettings.Name
 					TweenService:Create(Dropdown, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 					TweenService:Create(Dropdown, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()
@@ -5841,8 +5841,8 @@ function Sobing:CreateWindow(WindowSettings)
 					TweenService:Create(ColorPicker, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 					TweenService:Create(ColorPicker.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 					ColorPicker.Title.Text = "Callback Error"
-					print("Sobing Interface Suite | "..ColorPickerSettings.Name.." Callback Error " ..tostring(Response))
-					wait(0.5)
+					print("Exter Library | "..ColorPickerSettings.Name.." Callback Error " ..tostring(Response))
+					task.wait(0.5)
 					ColorPicker.Title.Text = ColorPickerSettings.Name
 					TweenService:Create(ColorPicker, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
 					TweenService:Create(ColorPicker, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(32, 30, 38)}):Play()

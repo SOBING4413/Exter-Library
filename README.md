@@ -1,48 +1,98 @@
 # Exter Library
 
-Exter Library is loaded directly from GitHub with `loadstring` and uses a published Roblox UI asset at runtime.
+Modern UI library untuk Roblox scripting.
 
-## Installation
+## 📦 Installation
 
 ```lua
-local ExterLibrary = loadstring(game:HttpService():GetAsync(
-    "https://raw.githubusercontent.com/SOBING4413/Exter-Library/main/ExterLibrary.lua"
-))()
+local Exter = loadstring(game:HttpGet("https://raw.githubusercontent.com/SOBING4413/Exter-Library/main/ExterLibrary.lua"))()
+```
 
-local Window = ExterLibrary:CreateWindow({
-    Name = "My Script",
+## 🚀 Quick Start
 
+```lua
+local Exter = loadstring(game:HttpGet("https://raw.githubusercontent.com/SOBING4413/Exter-Library/main/ExterLibrary.lua"))()
+
+local Window = Exter:CreateWindow({
+    Name = "My Hub",
+    Subtitle = "v1.0",
+    Bind = Enum.KeyCode.K,
     ConfigSettings = {
-        ConfigFolder = "MyScript",
-        RootFolder = "MyScriptConfigs"
+        ConfigFolder = "MyHub",
+        RootFolder = "ExterConfigs"
     }
 })
 
-local Tab = Window:CreateTab({
-    Name = "Main",
-    Icon = "home"
-})
+local Tab = Window:CreateTab({ Name = "Main", Icon = "home" })
+Tab:CreateButton({ Name = "Print Hello", Callback = function() print("Hello World!") end })
+```
 
-Tab:CreateButton({
-    Name = "Test Button",
+## 📚 API Ringkas
 
-    Callback = function()
-        print("Clicked!")
-    end
+### Window
+- `CreateWindow(settings)`
+- `Destroy()`
+
+### Tab Elements
+- `CreateButton`
+- `CreateToggle`
+- `CreateSlider`
+- `CreateDropdown`
+- `CreateInput`
+- `CreateColorPicker`
+- `CreateBind`
+- `CreateLabel`
+- `CreateParagraph`
+- `CreateSection`
+- `BuildConfigSection`
+- `BuildThemeSection`
+
+### Notification
+```lua
+Exter:Notification({
+    Title = "Welcome",
+    Content = "Script loaded successfully!",
+    Icon = "check_circle",
+    ImageSource = "Material",
+    Duration = 5
 })
+```
+
+## 🎨 Theme
+
+```lua
+Exter.ThemeGradient = ColorSequence.new{
+    ColorSequenceKeypoint.new(0.00, Color3.fromRGB(117, 164, 206)),
+    ColorSequenceKeypoint.new(0.50, Color3.fromRGB(123, 201, 201)),
+    ColorSequenceKeypoint.new(1.00, Color3.fromRGB(224, 138, 175))
+}
+```
+
+## 💾 Config
+
+```lua
+Exter:SaveConfig("MyConfig")
+Exter:LoadConfig("MyConfig")
+Exter:LoadAutoloadConfig()
+local list = Exter:RefreshConfigList()
 ```
 
 ## Runtime Dependency
 
-This version uses `game:GetObjects("rbxassetid://86467455075715")` to load the full ScreenGui template.
+Library ini memuat template UI lewat asset published berikut:
 
-- ✅ Public users can run with only `loadstring(...)`.
-- ⚠️ The UI still depends on that published Roblox asset being available.
+`rbxassetid://86467455075715`
+
+Jika asset tidak tersedia/termoderasi, UI tidak dapat dibuat.
+
+## Examples
+
+- `examples/basic_example.lua`
+- `examples/all_elements.lua`
 
 ## Executor Compatibility
 
-GUI parent fallback order:
-
+Urutan fallback parent GUI:
 1. `syn.protect_gui` + `CoreGui`
 2. `gethui()`
 3. `CoreGui`
