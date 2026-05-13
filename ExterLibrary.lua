@@ -1836,6 +1836,26 @@ end
 
 
 
+
+local function ApplyMobileOptimization(windowFrame)
+	if not windowFrame or not UserInputService.TouchEnabled then
+		return
+	end
+
+	windowFrame.BackgroundTransparency = math.max(windowFrame.BackgroundTransparency, 0.25)
+	if windowFrame.Parent and windowFrame.Parent:FindFirstChild("ShadowHolder") then
+		windowFrame.Parent.ShadowHolder.Visible = false
+	end
+
+	for _, ui in ipairs(windowFrame:GetDescendants()) do
+		if ui:IsA("ImageLabel") and string.find(string.lower(ui.Name), "shadow") then
+			ui.Visible = false
+		elseif ui:IsA("UIStroke") then
+			ui.Transparency = math.clamp(ui.Transparency + 0.15, 0, 1)
+		end
+	end
+end
+
 local function ApplyPremiumVisuals(windowFrame)
 	if not windowFrame or not windowFrame:IsA("Frame") then
 		return
@@ -2086,7 +2106,9 @@ function Sobing:Notification(data) -- action e.g open messages
 		newNotification.Parent = Notifications
 		newNotification.LayoutOrder = #Notifications:GetChildren()
 		newNotification.Visible = false
-		BlurModule(newNotification)
+		if not UserInputService.TouchEnabled then
+			BlurModule(newNotification)
+		end
 
 		-- Set Data
 		newNotification.Title.Text = data.Title
@@ -2221,6 +2243,8 @@ function Sobing:CreateWindow(WindowSettings)
 		LoadingTitle = "Exter Library",
 		LoadingSubtitle = "by Exter Interactive",
 		PremiumEffects = true,
+		MobileOptimization = true,
+		BlurEnabled = true,
 
 		ConfigSettings = {},
 
@@ -2265,6 +2289,9 @@ function Sobing:CreateWindow(WindowSettings)
 		ApplyPremiumVisuals(Main)
 	end
 	ApplyGlobalTheme(Main)
+	if WindowSettings.MobileOptimization then
+		ApplyMobileOptimization(Main)
+	end
 	LoadingFrame.Frame.Frame.Title.TextTransparency = 1
 	LoadingFrame.Frame.Frame.Subtitle.TextTransparency = 1
 	LoadingFrame.Version.TextTransparency = 1
@@ -2304,7 +2331,9 @@ function Sobing:CreateWindow(WindowSettings)
 		ApplyGlobalTheme(Main)
 	end)
 
-	BlurModule(Main)
+	if WindowSettings.BlurEnabled and not UserInputService.TouchEnabled then
+		BlurModule(Main)
+	end
 
 	if WindowSettings.KeySystem then
 		local KeySettings = WindowSettings.KeySettings

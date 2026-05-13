@@ -10,6 +10,7 @@ Professional Roblox UI Library focused on smooth animations, modern theming, and
 - Config Save/Load/Autoload helpers.
 - Mobile support and window hide/minimize controls.
 - Optional premium visual layer (`PremiumEffects = true`) for richer title styling.
+- Mobile performance mode (`MobileOptimization`, `BlurEnabled`) for smoother Android usage.
 - Executor GUI parent fallback (`syn.protect_gui`, `gethui`, `CoreGui`).
 
 ## Installation
@@ -29,6 +30,8 @@ local Window = Exter:CreateWindow({
     Bind = Enum.KeyCode.K,
     LoadingTitle = "Exter Library",
     PremiumEffects = true,
+    MobileOptimization = true,
+    BlurEnabled = false, -- recommended for Android
     ConfigSettings = {
         ConfigFolder = "MyHub",
         RootFolder = "ExterConfigs"
@@ -69,8 +72,8 @@ If a Lucide icon fails to load or icon name is missing, Exter automatically fall
 
 | Role | Name |
 |---|---|
-| Founder & Lead Engineer | Sobing4413 |
-| Developer & Research | Who Am I  |
+| Created By | Sobing4413 |
+| Who Am I | Sobing4413 |
 | Organization | Exter Interactive |
 
 ## Runtime Dependency
