@@ -2,6 +2,10 @@ local Release = "Beta Tester"
 
 local Sobing = { Folder = "Sobing", Options = {}, ThemeGradient = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(117, 164, 206)), ColorSequenceKeypoint.new(0.50, Color3.fromRGB(123, 201, 201)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(224, 138, 175))} }
 
+-- Public API aliases so this library can be shared with any script style.
+local ExterLibrary = Sobing
+local Library = Sobing
+
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
@@ -6594,4 +6598,4 @@ function Sobing:Destroy()
 	SobingUI:Destroy()
 end
 
-return Sobing
+return ExterLibrary
