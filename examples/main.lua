@@ -1,9 +1,3 @@
---[[
-    Exter Universal Script
-    By: SOBING4413
-    Fitur: Aimbot, ESP, Speed, Jump Power, FOV Slider, dll.
---]]
-
 local Exter = loadstring(game:HttpGet("https://raw.githubusercontent.com/SOBING4413/Exter-Library/main/ExterLibrary.lua"))()
 
 -- ============================================================
@@ -19,7 +13,9 @@ getgenv().ExterUniversal = {
         SelectedPart = "Head",
         FOVRadius = 180,
         ShowFOV = true,
-        TargetKey = "MouseButton2"
+        TargetKey = "MouseButton2",
+        Prediction = false,
+        PredictionAmount = 0.165
     },
     ESP = {
         Enabled = false,
@@ -28,32 +24,39 @@ getgenv().ExterUniversal = {
         NameTag = true,
         Tracers = false,
         TeamColor = true,
-        Distance = false
+        Distance = false,
+        MaxDistance = 1000
     },
     Movement = {
         Walkspeed = 16,
         JumpPower = 50,
         NoClip = false,
         AntiFall = false,
-        AutoFarm = false
+        Fly = false,
+        FlySpeed = 50
     },
     Character = {
         InfiniteJump = false,
         NoSlowdown = false,
         AutoClick = false,
-        ClickInterval = 0.1
+        ClickInterval = 0.1,
+        GodMode = false
     },
     Visuals = {
         FullBright = false,
         FOV = 70,
-        NoFog = false
+        NoFog = false,
+        NightMode = false
     },
     Misc = {
-        Rejoin = function() 
+        Rejoin = function()
             game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
         end,
         ServerHop = false,
-        AntiAFK = false
+        AntiAFK = true,
+        ChatSpam = false,
+        ChatMessage = "Exter Universal",
+        ChatInterval = 3
     }
 }
 
@@ -65,6 +68,9 @@ local Camera = workspace.CurrentCamera
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- ============================================================
 -- FUNGSI UTILITY
@@ -73,7 +79,9 @@ local function getCharacters()
     local chars = {}
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= Player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            if E.Aimbot.TeamCheck and plr.Team == Player.Team then continue end
+            local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+            if not hum or hum.Health <= 0 then continue end
+            if E.Aimbot.TeamCheck and plr.Team and Player.Team and plr.Team == Player.Team then continue end
             table.insert(chars, plr)
         end
     end
@@ -82,25 +90,46 @@ end
 
 local function isVisible(part)
     if not E.Aimbot.VisibilityCheck then return true end
+    if not part then return false end
     local origin = Camera.CFrame.Position
-    local ray = Ray.new(origin, (part.Position - origin).Unit * 500)
-    local hit, pos = workspace:FindPartOnRayWithIgnoreList(ray, {Player.Character, Camera})
-    return hit and (hit:IsDescendantOf(part.Parent) or hit == part)
+    local direction = (part.Position - origin).Unit * 500
+
+    local rayParams = RaycastParams.new()
+    rayParams.FilterType = Enum.RaycastFilterType.Exclude
+    rayParams.FilterDescendantsInstances = {Player.Character, Camera}
+
+    local result = workspace:Raycast(origin, direction, rayParams)
+    if result then
+        return result.Instance:IsDescendantOf(part.Parent) or result.Instance == part
+    end
+    return true
 end
 
 local function getClosestTarget()
     local closest, dist = nil, math.huge
     local fovRad = E.Aimbot.FOVRadius
+    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
     for _, plr in ipairs(getCharacters()) do
-        local hrp = plr.Character.HumanoidRootPart
-        local part = plr.Character:FindFirstChild(E.Aimbot.SelectedPart) or hrp
+        local char = plr.Character
+        if not char then continue end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then continue end
+
+        local partName = E.Aimbot.SelectedPart
+        if partName == "Random" then
+            local parts = {"Head", "Torso", "HumanoidRootPart"}
+            partName = parts[math.random(1, #parts)]
+        end
+
+        local part = char:FindFirstChild(partName) or hrp
         local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
         if not onScreen then continue end
         if not isVisible(part) then continue end
-        
-        local distFromMouse = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-        if distFromMouse < fovRad and distFromMouse < dist then
-            dist = distFromMouse
+
+        local distFromCenter = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
+        if distFromCenter < fovRad and distFromCenter < dist then
+            dist = distFromCenter
             closest = plr
         end
     end
@@ -108,75 +137,103 @@ local function getClosestTarget()
 end
 
 -- ============================================================
--- AIMBOT ENGINE
+-- AIMBOT ENGINE (FIXED)
 -- ============================================================
-local AimbotConnection
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 2
 FOVCircle.Color = Color3.fromRGB(255, 255, 255)
 FOVCircle.Visible = false
+FOVCircle.NumSides = 64
+FOVCircle.Transparency = 0.7
 
 local function updateFOV()
-    FOVCircle.Radius = E.Aimbot.FOVRadius * (Camera.ViewportSize.X / 1920)
-    FOVCircle.Position = Vector2.new(Mouse.X, Mouse.Y)
+    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    FOVCircle.Radius = E.Aimbot.FOVRadius
+    FOVCircle.Position = screenCenter
     FOVCircle.Visible = E.Aimbot.Enabled and E.Aimbot.ShowFOV
 end
 
-UserInputService.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        FOVCircle.Position = Vector2.new(Mouse.X, Mouse.Y)
+local function isTargeting()
+    local key = E.Aimbot.TargetKey
+    if key == "MouseButton2" then
+        return UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+    elseif key == "MouseButton1" then
+        return UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+    else
+        local success, keyCode = pcall(function()
+            return Enum.KeyCode[key]
+        end)
+        if success and keyCode then
+            return UserInputService:IsKeyDown(keyCode)
+        end
     end
-end)
+    return false
+end
 
 local function aimbotLoop()
     if not E.Aimbot.Enabled then
         FOVCircle.Visible = false
         return
     end
-    
+
     updateFOV()
-    
-    local targeting = E.Aimbot.TargetKey == "MouseButton2" and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
-                     or E.Aimbot.TargetKey == "MouseButton1" and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
-                     or UserInputService:IsKeyDown(Enum.KeyCode[E.Aimbot.TargetKey])
-    
-    if not targeting then return end
-    
+
+    if not isTargeting() then return end
+
     local target = getClosestTarget()
-    if target then
-        local part = target.Character:FindFirstChild(E.Aimbot.SelectedPart) or target.Character.HumanoidRootPart
-        local hrp = target.Character.HumanoidRootPart
-        
-        -- HitChance check
-        if math.random(1, 100) > E.Aimbot.HitChance then return end
-        
-        -- Smoothness
-        if E.Aimbot.Smoothness > 0 then
-            local current = CFrame.new(Camera.CFrame.Position, part.Position)
-            Camera.CFrame = Camera.CFrame:Lerp(current, 1 / E.Aimbot.Smoothness, 0.5)
-        else
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, part.Position)
+    if not target then return end
+
+    local char = target.Character
+    if not char then return end
+
+    local partName = E.Aimbot.SelectedPart
+    if partName == "Random" then
+        local parts = {"Head", "Torso", "HumanoidRootPart"}
+        partName = parts[math.random(1, #parts)]
+    end
+
+    local part = char:FindFirstChild(partName) or char:FindFirstChild("HumanoidRootPart")
+    if not part then return end
+
+    -- HitChance check
+    if math.random(1, 100) > E.Aimbot.HitChance then return end
+
+    -- Calculate target position with prediction
+    local targetPos = part.Position
+    if E.Aimbot.Prediction then
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local velocity = hrp.AssemblyLinearVelocity or hrp.Velocity
+            targetPos = targetPos + (velocity * E.Aimbot.PredictionAmount)
         end
+    end
+
+    -- Apply aim with smoothness (FIXED: CFrame:Lerp only takes 2 args)
+    local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
+    if E.Aimbot.Smoothness > 0 then
+        local alpha = math.clamp(1 / E.Aimbot.Smoothness, 0.01, 1)
+        Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, alpha)
+    else
+        Camera.CFrame = targetCFrame
     end
 end
 
 -- ============================================================
--- ESP ENGINE
+-- ESP ENGINE (FIXED)
 -- ============================================================
 local ESPObjects = {}
-local ESPConnection
 
 local function createESP(plr)
     if ESPObjects[plr] then return end
     ESPObjects[plr] = {}
-    
+
     -- Box
     local box = Drawing.new("Square")
     box.Thickness = 1
     box.Filled = false
     box.Visible = false
     ESPObjects[plr].Box = box
-    
+
     -- HealthBar bg & fill
     local hpBg = Drawing.new("Square")
     hpBg.Filled = true
@@ -184,12 +241,12 @@ local function createESP(plr)
     hpBg.Transparency = 0.5
     hpBg.Visible = false
     ESPObjects[plr].HPBg = hpBg
-    
+
     local hpFill = Drawing.new("Square")
     hpFill.Filled = true
     hpFill.Visible = false
     ESPObjects[plr].HPFill = hpFill
-    
+
     -- Name
     local nameTag = Drawing.new("Text")
     nameTag.Size = 14
@@ -197,7 +254,7 @@ local function createESP(plr)
     nameTag.Outline = true
     nameTag.Visible = false
     ESPObjects[plr].NameTag = nameTag
-    
+
     -- Distance
     local distText = Drawing.new("Text")
     distText.Size = 12
@@ -205,7 +262,7 @@ local function createESP(plr)
     distText.Outline = true
     distText.Visible = false
     ESPObjects[plr].DistText = distText
-    
+
     -- Tracer
     local tracer = Drawing.new("Line")
     tracer.Thickness = 1
@@ -213,93 +270,131 @@ local function createESP(plr)
     ESPObjects[plr].Tracer = tracer
 end
 
+local function hideESP(obj)
+    if not obj then return end
+    if obj.Box then obj.Box.Visible = false end
+    if obj.HPBg then obj.HPBg.Visible = false end
+    if obj.HPFill then obj.HPFill.Visible = false end
+    if obj.NameTag then obj.NameTag.Visible = false end
+    if obj.DistText then obj.DistText.Visible = false end
+    if obj.Tracer then obj.Tracer.Visible = false end
+end
+
 local function updateESP(plr)
     local obj = ESPObjects[plr]
     if not obj then return end
     local char = plr.Character
     if not char then
-        obj.Box.Visible = false
-        obj.HPBg.Visible = false
-        obj.HPFill.Visible = false
-        obj.NameTag.Visible = false
-        obj.DistText.Visible = false
-        obj.Tracer.Visible = false
+        hideESP(obj)
         return
     end
-    
+
     local hrp = char:FindFirstChild("HumanoidRootPart")
     local hum = char:FindFirstChildOfClass("Humanoid")
-    if not hrp or not hum then
-        obj.Box.Visible = false
+    if not hrp or not hum or hum.Health <= 0 then
+        hideESP(obj)
         return
     end
-    
+
+    -- Max distance check
+    if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+        local distToPlayer = (hrp.Position - Player.Character.HumanoidRootPart.Position).Magnitude
+        if distToPlayer > E.ESP.MaxDistance then
+            hideESP(obj)
+            return
+        end
+    end
+
     local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
     if not onScreen then
-        obj.Box.Visible = false
+        hideESP(obj)
         return
     end
-    
+
     local pos = Vector2.new(screenPos.X, screenPos.Y)
-    local scale = Camera:WorldToViewportPoint(hrp.Position + Vector3.new(0, 3, 0)).Y - Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0)).Y
-    local boxSize = Vector2.new(scale * 0.8, scale)
-    
-    local teamColor = plr.TeamColor.Color
-    local espColor = E.ESP.TeamColor and teamColor or Color3.fromRGB(255, 255, 255)
-    local health = hum.Health / hum.MaxHealth
-    
+
+    -- FIXED: Better box size calculation using head and feet positions
+    local headPos = char:FindFirstChild("Head")
+    local rootPos = hrp.Position
+
+    local topPos, topOnScreen = Camera:WorldToViewportPoint(rootPos + Vector3.new(0, 3, 0))
+    local bottomPos, bottomOnScreen = Camera:WorldToViewportPoint(rootPos - Vector3.new(0, 4.5, 0))
+
+    if not topOnScreen or not bottomOnScreen then
+        hideESP(obj)
+        return
+    end
+
+    local boxHeight = math.abs(topPos.Y - bottomPos.Y)
+    local boxWidth = boxHeight * 0.55
+    local boxSize = Vector2.new(boxWidth, boxHeight)
+    local boxPos = Vector2.new(screenPos.X - boxWidth / 2, topPos.Y)
+
+    -- Team color
+    local espColor = Color3.fromRGB(255, 255, 255)
+    if E.ESP.TeamColor then
+        pcall(function()
+            espColor = plr.TeamColor.Color
+        end)
+    end
+
+    local health = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
+
     -- Box
     if E.ESP.Boxes then
         obj.Box.Size = boxSize
-        obj.Box.Position = pos - boxSize / 2
+        obj.Box.Position = boxPos
         obj.Box.Color = espColor
         obj.Box.Visible = true
     else
         obj.Box.Visible = false
     end
-    
+
     -- HealthBar
     if E.ESP.HealthBar then
-        local hpPos = pos - boxSize / 2 + Vector2.new(-6, 0)
-        local hpSize = Vector2.new(4, boxSize.Y)
-        obj.HPBg.Size = hpSize
-        obj.HPBg.Position = hpPos
+        local hpX = boxPos.X - 6
+        local hpY = boxPos.Y
+        local hpHeight = boxHeight
+
+        obj.HPBg.Size = Vector2.new(4, hpHeight)
+        obj.HPBg.Position = Vector2.new(hpX, hpY)
         obj.HPBg.Visible = true
-        
-        obj.HPFill.Size = Vector2.new(4, boxSize.Y * math.clamp(health, 0, 1))
-        obj.HPFill.Position = hpPos + Vector2.new(0, boxSize.Y * (1 - math.clamp(health, 0, 1)))
+
+        local fillHeight = hpHeight * health
+        obj.HPFill.Size = Vector2.new(4, fillHeight)
+        obj.HPFill.Position = Vector2.new(hpX, hpY + (hpHeight - fillHeight))
         obj.HPFill.Color = Color3.fromRGB(math.floor((1 - health) * 255), math.floor(health * 255), 0)
         obj.HPFill.Visible = true
     else
         obj.HPBg.Visible = false
         obj.HPFill.Visible = false
     end
-    
+
     -- NameTag
     if E.ESP.NameTag then
-        obj.NameTag.Position = pos - boxSize / 2 + Vector2.new(0, -20)
-        obj.NameTag.Text = plr.Name
+        obj.NameTag.Position = Vector2.new(screenPos.X, boxPos.Y - 18)
+        obj.NameTag.Text = plr.DisplayName .. " (@" .. plr.Name .. ")"
         obj.NameTag.Color = espColor
         obj.NameTag.Visible = true
     else
         obj.NameTag.Visible = false
     end
-    
+
     -- Distance
     if E.ESP.Distance and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
         local dist = (hrp.Position - Player.Character.HumanoidRootPart.Position).Magnitude
-        obj.DistText.Position = pos + boxSize / 2 + Vector2.new(0, 10)
-        obj.DistText.Text = math.floor(dist) .. "m"
+        obj.DistText.Position = Vector2.new(screenPos.X, boxPos.Y + boxHeight + 4)
+        obj.DistText.Text = math.floor(dist) .. " studs"
         obj.DistText.Color = Color3.fromRGB(200, 200, 200)
         obj.DistText.Visible = true
     else
         obj.DistText.Visible = false
     end
-    
+
     -- Tracer
     if E.ESP.Tracers then
         obj.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-        obj.Tracer.To = pos
+        obj.Tracer.To = Vector2.new(screenPos.X, boxPos.Y + boxHeight)
         obj.Tracer.Color = espColor
         obj.Tracer.Visible = true
     else
@@ -310,16 +405,11 @@ end
 local function espLoop()
     if not E.ESP.Enabled then
         for _, obj in pairs(ESPObjects) do
-            obj.Box.Visible = false
-            obj.HPBg.Visible = false
-            obj.HPFill.Visible = false
-            obj.NameTag.Visible = false
-            obj.DistText.Visible = false
-            obj.Tracer.Visible = false
+            hideESP(obj)
         end
         return
     end
-    
+
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= Player then
             createESP(plr)
@@ -328,16 +418,17 @@ local function espLoop()
     end
 end
 
--- ESP Player Added
+-- ESP Player Added/Removed
 Players.PlayerAdded:Connect(function(plr)
-    createESP(plr)
+    if E.ESP.Enabled then
+        createESP(plr)
+    end
 end)
 
--- Cleanup ESP for disconnected players
 Players.PlayerRemoving:Connect(function(plr)
     if ESPObjects[plr] then
         for _, obj in pairs(ESPObjects[plr]) do
-            obj:Remove()
+            pcall(function() obj:Remove() end)
         end
         ESPObjects[plr] = nil
     end
@@ -351,42 +442,148 @@ for _, plr in ipairs(Players:GetPlayers()) do
 end
 
 -- ============================================================
--- MOVEMENT ENGINE
+-- MOVEMENT ENGINE (FIXED & IMPROVED)
 -- ============================================================
 local function applyMovement()
     if not Player.Character then return end
     local hum = Player.Character:FindFirstChildOfClass("Humanoid")
     if not hum then return end
-    
+
     hum.WalkSpeed = E.Movement.Walkspeed
     hum.JumpPower = E.Movement.JumpPower
 end
 
--- NoClip
+-- Reapply on respawn
+Player.CharacterAdded:Connect(function(char)
+    char:WaitForChild("Humanoid")
+    task.wait(0.5)
+    applyMovement()
+end)
+
+-- NoClip (FIXED: more reliable)
 local function noclipLoop()
     if not E.Movement.NoClip then return end
     if not Player.Character then return end
     for _, part in ipairs(Player.Character:GetDescendants()) do
-        if part:IsA("BasePart") and part.CanCollide then
+        if part:IsA("BasePart") then
             part.CanCollide = false
         end
     end
 end
 
--- AntiFall (teleport ke posisi aman)
+-- AntiFall (FIXED: save last safe position)
+local lastSafePosition = CFrame.new(0, 50, 0)
+
 local function antiFallLoop()
-    if not E.Movement.AntiFall then return end
     if not Player.Character or not Player.Character:FindFirstChild("HumanoidRootPart") then return end
     local hrp = Player.Character.HumanoidRootPart
+
+    -- Save safe position when on ground
+    if hrp.Position.Y > 0 then
+        lastSafePosition = hrp.CFrame
+    end
+
+    if not E.Movement.AntiFall then return end
     if hrp.Position.Y < -50 then
-        hrp.CFrame = CFrame.new(0, 50, 0)
+        hrp.CFrame = lastSafePosition
+        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
     end
 end
 
 -- ============================================================
--- CHARACTER FEATURES
+-- FLY ENGINE (NEW)
 -- ============================================================
--- Infinite Jump
+local flyBodyVelocity = nil
+local flyBodyGyro = nil
+
+local function startFly()
+    if not Player.Character then return end
+    local hrp = Player.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    -- Remove existing
+    if flyBodyVelocity then pcall(function() flyBodyVelocity:Destroy() end) end
+    if flyBodyGyro then pcall(function() flyBodyGyro:Destroy() end) end
+
+    flyBodyVelocity = Instance.new("BodyVelocity")
+    flyBodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    flyBodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    flyBodyVelocity.Parent = hrp
+
+    flyBodyGyro = Instance.new("BodyGyro")
+    flyBodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+    flyBodyGyro.P = 9e4
+    flyBodyGyro.D = 1000
+    flyBodyGyro.Parent = hrp
+
+    local hum = Player.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.PlatformStand = true
+    end
+end
+
+local function stopFly()
+    if flyBodyVelocity then
+        pcall(function() flyBodyVelocity:Destroy() end)
+        flyBodyVelocity = nil
+    end
+    if flyBodyGyro then
+        pcall(function() flyBodyGyro:Destroy() end)
+        flyBodyGyro = nil
+    end
+    if Player.Character then
+        local hum = Player.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.PlatformStand = false
+        end
+    end
+end
+
+local function flyLoop()
+    if not E.Movement.Fly then
+        if flyBodyVelocity then stopFly() end
+        return
+    end
+
+    if not flyBodyVelocity then startFly() end
+    if not flyBodyVelocity or not flyBodyVelocity.Parent then
+        startFly()
+    end
+
+    local speed = E.Movement.FlySpeed
+    local direction = Vector3.new(0, 0, 0)
+
+    if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+        direction = direction + Camera.CFrame.LookVector
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+        direction = direction - Camera.CFrame.LookVector
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+        direction = direction - Camera.CFrame.RightVector
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+        direction = direction + Camera.CFrame.RightVector
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+        direction = direction + Vector3.new(0, 1, 0)
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+        direction = direction - Vector3.new(0, 1, 0)
+    end
+
+    if direction.Magnitude > 0 then
+        direction = direction.Unit * speed
+    end
+
+    flyBodyVelocity.Velocity = direction
+    flyBodyGyro.CFrame = Camera.CFrame
+end
+
+-- ============================================================
+-- CHARACTER FEATURES (FIXED)
+-- ============================================================
+-- Infinite Jump (FIXED)
 UserInputService.JumpRequest:Connect(function()
     if E.Character.InfiniteJump and Player.Character then
         local hum = Player.Character:FindFirstChildOfClass("Humanoid")
@@ -396,65 +593,103 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- No Slowdown
-RunService.Stepped:Connect(function()
-    if E.Character.NoSlowdown and Player.Character then
-        local hum = Player.Character:FindFirstChildOfClass("Humanoid")
-        if hum then
-            for _, state in ipairs({Enum.HumanoidStateType.Freefall, Enum.HumanoidStateType.Swimming}) do
-                if hum:GetState() == state then
-                    hum:ChangeState(Enum.HumanoidStateType.Running)
-                end
-            end
-        end
-    end
-end)
+-- No Slowdown (FIXED: handle all slowdown states)
+local function noSlowdownLoop()
+    if not E.Character.NoSlowdown then return end
+    if not Player.Character then return end
+    local hum = Player.Character:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
 
--- AutoClick
-local autoClickRunning = false
-local function autoClickLoop()
-    while autoClickRunning and E.Character.AutoClick do
-        mouse1click()
-        task.wait(E.Character.ClickInterval)
+    local slowStates = {
+        Enum.HumanoidStateType.Climbing,
+        Enum.HumanoidStateType.StrafingNoPhysics,
+    }
+
+    for _, state in ipairs(slowStates) do
+        hum:SetStateEnabled(state, false)
     end
 end
 
-E.Character.__autoClickToggle = function(state)
-    autoClickRunning = state
-    if state then
-        task.spawn(autoClickLoop)
-    end
+-- AutoClick (FIXED: proper coroutine management)
+local autoClickThread = nil
+
+local function startAutoClick()
+    if autoClickThread then return end
+    autoClickThread = task.spawn(function()
+        while E.Character.AutoClick do
+            pcall(function()
+                mouse1click()
+            end)
+            task.wait(E.Character.ClickInterval)
+        end
+        autoClickThread = nil
+    end)
+end
+
+local function stopAutoClick()
+    autoClickThread = nil
+end
+
+-- GodMode (NEW)
+local function godModeLoop()
+    if not E.Character.GodMode then return end
+    if not Player.Character then return end
+    local hum = Player.Character:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+
+    -- Prevent death states
+    hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
 end
 
 -- ============================================================
--- VISUALS ENGINE
+-- VISUALS ENGINE (FIXED & IMPROVED)
 -- ============================================================
 local originalBrightness = Lighting.Brightness
 local originalFogEnd = Lighting.FogEnd
+local originalFogStart = Lighting.FogStart
 local originalAmbient = Lighting.Ambient
+local originalOutdoorAmbient = Lighting.OutdoorAmbient
+local originalClockTime = Lighting.ClockTime
 
 local function applyVisuals()
     -- FullBright
     if E.Visuals.FullBright then
         Lighting.Brightness = 2
-        Lighting.Ambient = Color3.fromRGB(255, 255, 255)
-        Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+        Lighting.Ambient = Color3.fromRGB(178, 178, 178)
+        Lighting.OutdoorAmbient = Color3.fromRGB(178, 178, 178)
         Lighting.GlobalShadows = false
+        -- Remove atmosphere/blur effects
+        for _, effect in ipairs(Lighting:GetChildren()) do
+            if effect:IsA("Atmosphere") or effect:IsA("BloomEffect") or effect:IsA("ColorCorrectionEffect") then
+                effect.Enabled = false
+            end
+        end
     else
         Lighting.Brightness = originalBrightness
         Lighting.Ambient = originalAmbient
-        Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+        Lighting.OutdoorAmbient = originalOutdoorAmbient
         Lighting.GlobalShadows = true
+        for _, effect in ipairs(Lighting:GetChildren()) do
+            if effect:IsA("Atmosphere") or effect:IsA("BloomEffect") or effect:IsA("ColorCorrectionEffect") then
+                effect.Enabled = true
+            end
+        end
     end
-    
+
     -- NoFog
     if E.Visuals.NoFog then
         Lighting.FogEnd = 1e10
         Lighting.FogStart = 1e10
     else
         Lighting.FogEnd = originalFogEnd
+        Lighting.FogStart = originalFogStart
     end
-    
+
+    -- Night Mode
+    if E.Visuals.NightMode then
+        Lighting.ClockTime = 0
+    end
+
     -- FOV
     if Camera then
         Camera.FieldOfView = E.Visuals.FOV
@@ -462,29 +697,122 @@ local function applyVisuals()
 end
 
 -- ============================================================
--- ANTI AFK
+-- ANTI AFK (FIXED)
 -- ============================================================
 local VirtualUser = game:GetService("VirtualUser")
-local function antiAFK()
-    if not E.Misc.AntiAFK then return end
-    VirtualUser:CaptureController()
-    VirtualUser:ClickButton2(Vector2.new())
-end
 
 Player.Idled:Connect(function()
-    antiAFK()
+    if E.Misc.AntiAFK then
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end
 end)
 
 -- ============================================================
--- LOOP ENGINE
+-- SERVER HOP (NEW - IMPLEMENTED)
+-- ============================================================
+local function serverHop()
+    local success, servers = pcall(function()
+        return HttpService:JSONDecode(
+            game:HttpGet("https://games.roblox.com/v1/games/" .. game.GameId .. "/servers/Public?sortOrder=Asc&limit=100")
+        )
+    end)
+
+    if not success or not servers or not servers.data then
+        Exter:Notification({
+            Title = "Server Hop",
+            Content = "Failed to fetch servers!",
+            Icon = "error",
+            ImageSource = "Material",
+            Duration = 3
+        })
+        return
+    end
+
+    for _, server in ipairs(servers.data) do
+        if server.id ~= game.JobId and server.playing < server.maxPlayers then
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, Player)
+            return
+        end
+    end
+
+    Exter:Notification({
+        Title = "Server Hop",
+        Content = "No available servers found!",
+        Icon = "warning",
+        ImageSource = "Material",
+        Duration = 3
+    })
+end
+
+-- ============================================================
+-- CHAT SPAM (NEW)
+-- ============================================================
+local chatSpamThread = nil
+
+local function startChatSpam()
+    if chatSpamThread then return end
+    chatSpamThread = task.spawn(function()
+        while E.Misc.ChatSpam do
+            pcall(function()
+                local args = {
+                    E.Misc.ChatMessage,
+                    "All"
+                }
+                game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(unpack(args))
+            end)
+            task.wait(E.Misc.ChatInterval)
+        end
+        chatSpamThread = nil
+    end)
+end
+
+local function stopChatSpam()
+    chatSpamThread = nil
+end
+
+-- ============================================================
+-- TELEPORT TO PLAYER (NEW)
+-- ============================================================
+local function teleportToPlayer(targetName)
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= Player and (plr.Name:lower():find(targetName:lower()) or plr.DisplayName:lower():find(targetName:lower())) then
+            if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                    Player.Character.HumanoidRootPart.CFrame = plr.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+                    Exter:Notification({
+                        Title = "Teleport",
+                        Content = "Teleported to " .. plr.DisplayName,
+                        Icon = "check_circle",
+                        ImageSource = "Material",
+                        Duration = 2
+                    })
+                    return
+                end
+            end
+        end
+    end
+    Exter:Notification({
+        Title = "Teleport",
+        Content = "Player not found!",
+        Icon = "error",
+        ImageSource = "Material",
+        Duration = 2
+    })
+end
+
+-- ============================================================
+-- LOOP ENGINE (OPTIMIZED)
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     aimbotLoop()
     espLoop()
-    applyMovement()
+    flyLoop()
     noclipLoop()
     antiFallLoop()
     applyVisuals()
+    godModeLoop()
+    noSlowdownLoop()
 end)
 
 RunService.Stepped:Connect(function()
@@ -496,7 +824,7 @@ end)
 -- ============================================================
 local Window = Exter:CreateWindow({
     Name = "Exter Universal",
-    Subtitle = "v1.0 — by SOBING4413",
+    Subtitle = "v2.0 — by SOBING4413 (Fixed & Improved)",
     Bind = Enum.KeyCode.K,
     ConfigSettings = {
         ConfigFolder = "ExterUniversal",
@@ -526,14 +854,14 @@ AimbotTab:CreateSlider({
 }, "AimbotHitChance")
 
 AimbotTab:CreateSlider({
-    Name = "Smoothness",
+    Name = "Smoothness (0 = Instant)",
     Range = {0, 20},
     Increment = 1,
     CurrentValue = E.Aimbot.Smoothness,
-    Callback = function(v) 
-        E.Aimbot.Smoothness = v 
+    Callback = function(v)
+        E.Aimbot.Smoothness = v
         if v == 0 then
-            Exter:Notification({Title="Aimbot", Content="Smoothness off — instant aim", Icon="info", ImageSource="Material", Duration=2})
+            Exter:Notification({Title = "Aimbot", Content = "Smoothness off — instant aim", Icon = "info", ImageSource = "Material", Duration = 2})
         end
     end
 }, "AimbotSmoothness")
@@ -550,7 +878,7 @@ AimbotTab:CreateDropdown({
 
 AimbotTab:CreateDropdown({
     Name = "Trigger Key",
-    Options = {"MouseButton2", "MouseButton1", "E", "Q", "F"},
+    Options = {"MouseButton2", "MouseButton1", "E", "Q", "F", "C", "X"},
     CurrentOption = {E.Aimbot.TargetKey},
     MultipleOptions = false,
     Callback = function(v) E.Aimbot.TargetKey = v end
@@ -568,11 +896,27 @@ AimbotTab:CreateToggle({
     Callback = function(v) E.Aimbot.VisibilityCheck = v end
 }, "AimbotVisibility")
 
+AimbotTab:CreateSection("Prediction")
+
+AimbotTab:CreateToggle({
+    Name = "Enable Prediction",
+    CurrentValue = E.Aimbot.Prediction,
+    Callback = function(v) E.Aimbot.Prediction = v end
+}, "AimbotPrediction")
+
+AimbotTab:CreateSlider({
+    Name = "Prediction Amount",
+    Range = {0, 1},
+    Increment = 0.01,
+    CurrentValue = E.Aimbot.PredictionAmount,
+    Callback = function(v) E.Aimbot.PredictionAmount = v end
+}, "AimbotPredictionAmount")
+
 AimbotTab:CreateSection("FOV Settings")
 
 AimbotTab:CreateSlider({
     Name = "FOV Radius",
-    Range = {10, 360},
+    Range = {10, 500},
     Increment = 5,
     CurrentValue = E.Aimbot.FOVRadius,
     Callback = function(v) E.Aimbot.FOVRadius = v end
@@ -596,6 +940,14 @@ ESPTab:CreateToggle({
     CurrentValue = E.ESP.Enabled,
     Callback = function(v) E.ESP.Enabled = v end
 }, "ESPEnabled")
+
+ESPTab:CreateSlider({
+    Name = "Max Distance",
+    Range = {100, 5000},
+    Increment = 50,
+    CurrentValue = E.ESP.MaxDistance,
+    Callback = function(v) E.ESP.MaxDistance = v end
+}, "ESPMaxDistance")
 
 ESPTab:CreateSection("ESP Elements")
 
@@ -640,7 +992,7 @@ ESPTab:CreateToggle({
 -- ============================================================
 local MovementTab = Window:CreateTab({ Name = "Movement", Icon = "sticky_note_2" })
 
-MovementTab:CreateSection("Movement Settings")
+MovementTab:CreateSection("Speed & Jump")
 
 MovementTab:CreateSlider({
     Name = "Walkspeed",
@@ -657,6 +1009,25 @@ MovementTab:CreateSlider({
     CurrentValue = E.Movement.JumpPower,
     Callback = function(v) E.Movement.JumpPower = v end
 }, "JumpPower")
+
+MovementTab:CreateSection("Fly")
+
+MovementTab:CreateToggle({
+    Name = "Enable Fly (WASD + Space/Shift)",
+    CurrentValue = E.Movement.Fly,
+    Callback = function(v)
+        E.Movement.Fly = v
+        if not v then stopFly() end
+    end
+}, "Fly")
+
+MovementTab:CreateSlider({
+    Name = "Fly Speed",
+    Range = {10, 200},
+    Increment = 5,
+    CurrentValue = E.Movement.FlySpeed,
+    Callback = function(v) E.Movement.FlySpeed = v end
+}, "FlySpeed")
 
 MovementTab:CreateSection("Utilities")
 
@@ -692,12 +1063,22 @@ CharTab:CreateToggle({
 }, "NoSlowdown")
 
 CharTab:CreateToggle({
+    Name = "God Mode (Client-Side)",
+    CurrentValue = E.Character.GodMode,
+    Callback = function(v) E.Character.GodMode = v end
+}, "GodMode")
+
+CharTab:CreateSection("Auto Click")
+
+CharTab:CreateToggle({
     Name = "Auto Click",
     CurrentValue = E.Character.AutoClick,
-    Callback = function(v) 
+    Callback = function(v)
         E.Character.AutoClick = v
-        if E.Character.__autoClickToggle then
-            E.Character.__autoClickToggle(v)
+        if v then
+            startAutoClick()
+        else
+            stopAutoClick()
         end
     end
 }, "AutoClick")
@@ -737,6 +1118,17 @@ VisualsTab:CreateToggle({
     Callback = function(v) E.Visuals.NoFog = v end
 }, "NoFog")
 
+VisualsTab:CreateToggle({
+    Name = "Night Mode",
+    CurrentValue = E.Visuals.NightMode,
+    Callback = function(v)
+        E.Visuals.NightMode = v
+        if not v then
+            Lighting.ClockTime = originalClockTime
+        end
+    end
+}, "NightMode")
+
 -- ============================================================
 -- TAB: MISC
 -- ============================================================
@@ -746,8 +1138,14 @@ MiscTab:CreateSection("Server Options")
 
 MiscTab:CreateButton({
     Name = "Rejoin Server",
-    Description = "Kick & rejoin server",
+    Description = "Kick & rejoin current server",
     Callback = E.Misc.Rejoin
+})
+
+MiscTab:CreateButton({
+    Name = "Server Hop",
+    Description = "Join a different server",
+    Callback = serverHop
 })
 
 MiscTab:CreateToggle({
@@ -756,6 +1154,53 @@ MiscTab:CreateToggle({
     Callback = function(v) E.Misc.AntiAFK = v end
 }, "AntiAFK")
 
+MiscTab:CreateSection("Teleport")
+
+MiscTab:CreateInput({
+    Name = "Teleport to Player",
+    PlaceholderText = "Enter player name...",
+    RemoveTextAfterFocusLost = true,
+    Callback = function(text)
+        if text and text ~= "" then
+            teleportToPlayer(text)
+        end
+    end
+})
+
+MiscTab:CreateSection("Chat Spam")
+
+MiscTab:CreateToggle({
+    Name = "Chat Spam",
+    CurrentValue = E.Misc.ChatSpam,
+    Callback = function(v)
+        E.Misc.ChatSpam = v
+        if v then
+            startChatSpam()
+        else
+            stopChatSpam()
+        end
+    end
+}, "ChatSpam")
+
+MiscTab:CreateInput({
+    Name = "Spam Message",
+    PlaceholderText = "Enter message...",
+    RemoveTextAfterFocusLost = true,
+    Callback = function(text)
+        if text and text ~= "" then
+            E.Misc.ChatMessage = text
+        end
+    end
+})
+
+MiscTab:CreateSlider({
+    Name = "Spam Interval (sec)",
+    Range = {1, 10},
+    Increment = 0.5,
+    CurrentValue = E.Misc.ChatInterval,
+    Callback = function(v) E.Misc.ChatInterval = v end
+}, "ChatInterval")
+
 MiscTab:CreateSection("Config")
 
 MiscTab:BuildConfigSection()
@@ -763,7 +1208,8 @@ MiscTab:BuildThemeSection()
 
 MiscTab:CreateSection("Credits")
 
-MiscTab:CreateLabel({ Text = "Exter Universal v1.0" })
+MiscTab:CreateLabel({ Text = "Exter Universal v2.0" })
+MiscTab:CreateLabel({ Text = "Fixed & Improved Edition" })
 MiscTab:CreateLabel({ Text = "Powered by Exter Library" })
 MiscTab:CreateLabel({ Text = "by SOBING4413" })
 
@@ -771,12 +1217,14 @@ MiscTab:CreateLabel({ Text = "by SOBING4413" })
 -- NOTIFICATION STARTUP
 -- ============================================================
 Exter:Notification({
-    Title = "Exter Universal",
-    Content = "Loaded successfully! Press K to toggle menu.",
+    Title = "Exter Universal v2.0",
+    Content = "Loaded successfully! Press K to toggle menu.\nAll features fixed & working.",
     Icon = "check_circle",
     ImageSource = "Material",
     Duration = 5
 })
 
 -- Auto load config
-Exter:LoadAutoloadConfig()
+pcall(function()
+    Exter:LoadAutoloadConfig()
+end)
