@@ -1832,16 +1832,18 @@ local function ResolveGuiParent()
 end
 
 local function LoadInterfaceTemplate()
-	if isStudio then
-		return script.Parent:WaitForChild("Sobing UI")
-	end
-
 	local ok, assets = pcall(game.GetObjects, game, "rbxassetid://86467455075715")
 	if ok and assets and assets[1] then
 		return assets[1]
 	end
 
-	error("[ExterLibrary] Failed to load UI template asset (rbxassetid://86467455075715). Please ensure the asset is available.")
+	-- Legacy Studio fallback for contributors editing the UI file locally.
+	if isStudio and script.Parent:FindFirstChild("Sobing UI") then
+		warn("[ExterLibrary] Falling back to local Studio template because remote asset failed to load.")
+		return script.Parent:FindFirstChild("Sobing UI")
+	end
+
+	error("[ExterLibrary] Failed to load UI template asset (rbxassetid://86467455075715). This library requires the published UI asset to run.")
 end
 
 SobingUI = LoadInterfaceTemplate()

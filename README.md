@@ -1,45 +1,48 @@
 # Exter Library
 
-Standalone Roblox UI library by SOBING.
+Exter Library is loaded directly from GitHub with `loadstring` and uses a published Roblox UI asset at runtime.
 
-## Load from GitHub
-
-```lua
-local Exter = loadstring(game:HttpGet("https://raw.githubusercontent.com/SOBING4413/Exter-Library/main/ExterLibrary.lua"))()
-```
-
-## Basic Usage
+## Installation
 
 ```lua
-local Exter = loadstring(game:HttpGet("https://raw.githubusercontent.com/SOBING4413/Exter-Library/main/ExterLibrary.lua"))()
+local ExterLibrary = loadstring(game:HttpService():GetAsync(
+    "https://raw.githubusercontent.com/SOBING4413/Exter-Library/main/ExterLibrary.lua"
+))()
 
-local Window = Exter:CreateWindow({
-    Name = "My Script Hub",
-    Subtitle = "Example",
-    LoadingTitle = "Loading..."
+local Window = ExterLibrary:CreateWindow({
+    Name = "My Script",
+
+    ConfigSettings = {
+        ConfigFolder = "MyScript",
+        RootFolder = "MyScriptConfigs"
+    }
 })
 
-local MainTab = Window:CreateTab({
+local Tab = Window:CreateTab({
     Name = "Main",
     Icon = "home"
 })
 
-MainTab:CreateButton({
-    Name = "Print Hello",
+Tab:CreateButton({
+    Name = "Test Button",
+
     Callback = function()
-        print("Hello!")
+        print("Clicked!")
     end
 })
 ```
 
+## Runtime Dependency
+
+This version uses `game:GetObjects("rbxassetid://86467455075715")` to load the full ScreenGui template.
+
+- ✅ Public users can run with only `loadstring(...)`.
+- ⚠️ The UI still depends on that published Roblox asset being available.
+
 ## Executor Compatibility
 
-The library now chooses GUI parent with fallback logic:
+GUI parent fallback order:
 
-- `syn.protect_gui` + `CoreGui`
-- `gethui()`
-- `CoreGui`
-
-## Notes
-
-The current version still loads the template asset `rbxassetid://86467455075715` at runtime. Keep this asset available.
+1. `syn.protect_gui` + `CoreGui`
+2. `gethui()`
+3. `CoreGui`
