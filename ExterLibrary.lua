@@ -1829,6 +1829,21 @@ local function unpackt(array : table)
 	return val
 end
 
+
+local function StyleAvatarImage(imageLabel)
+	if not imageLabel or not imageLabel:IsA("ImageLabel") then
+		return
+	end
+
+	imageLabel.BackgroundTransparency = 1
+	imageLabel.ScaleType = Enum.ScaleType.Crop
+	imageLabel.ClipsDescendants = true
+
+	local corner = imageLabel:FindFirstChildOfClass("UICorner") or Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(1, 0)
+	corner.Parent = imageLabel
+end
+
 -- Interface Management
 local function ResolveGuiParent()
 	if syn and syn.protect_gui then
@@ -2215,6 +2230,7 @@ function Sobing:CreateWindow(WindowSettings)
 		return Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
 	end)
 	Navigation.Player.icon.ImageLabel.Image = okThumb and thumb or "rbxasset://textures/ui/GuiImagePlaceholder.png"
+	StyleAvatarImage(Navigation.Player.icon.ImageLabel)
 
 	Navigation.Player.Namez.Text = (Player.DisplayName and #Player.DisplayName > 0) and Player.DisplayName or Player.Name
 	Navigation.Player.TextLabel.Text = "@" .. Player.Name
@@ -2462,6 +2478,7 @@ function Sobing:CreateWindow(WindowSettings)
 			return Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
 		end)
 		HomeTabPage.icon.ImageLabel.Image = okProfile and profileThumb or "rbxasset://textures/ui/GuiImagePlaceholder.png"
+		StyleAvatarImage(HomeTabPage.icon.ImageLabel)
 		HomeTabPage.player.Text.Text = "Hello, " .. ((Player.DisplayName and #Player.DisplayName > 0) and Player.DisplayName or Player.Name)
 		HomeTabPage.player.user.Text = Players.LocalPlayer.Name .. " - ".. WindowSettings.Name
 
