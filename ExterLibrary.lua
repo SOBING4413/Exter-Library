@@ -1,6 +1,11 @@
 local Release = "Beta Tester"
 
 local Sobing = { Folder = "Sobing", Options = {}, ThemeGradient = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(117, 164, 206)), ColorSequenceKeypoint.new(0.50, Color3.fromRGB(123, 201, 201)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(224, 138, 175))} }
+Sobing.Credits = {
+	{ Role = "Created By", Name = "Sobing4413" },
+	{ Role = "Who Am I", Name = "Sobing4413" },
+	{ Role = "Organization", Name = "Exter Interactive" }
+}
 
 -- Public API aliases so this library can be shared with any script style.
 local ExterLibrary = Sobing
@@ -1869,6 +1874,22 @@ local function StyleAvatarImage(imageLabel)
 	corner.Parent = imageLabel
 end
 
+
+local function ApplyGlobalTheme(root)
+	if not root then return end
+	local accent = Sobing.ThemeGradient.Keypoints[1].Value
+
+	for _, ui in ipairs(root:GetDescendants()) do
+		if ui:IsA("UIStroke") then
+			ui.Color = accent
+		elseif ui:IsA("TextLabel") and (ui.Name == "Title" or ui.Name == "subtitle" or ui.Name == "Namez") then
+			ui.TextColor3 = Color3.fromRGB(245, 245, 255)
+		elseif ui:IsA("ImageLabel") and ui.Name == "ImageLabel" and ui.Parent and ui.Parent.Name ~= "icon" then
+			ui.ImageColor3 = accent
+		end
+	end
+end
+
 -- Interface Management
 local function ResolveGuiParent()
 	if syn and syn.protect_gui then
@@ -2243,6 +2264,7 @@ function Sobing:CreateWindow(WindowSettings)
 	if WindowSettings.PremiumEffects then
 		ApplyPremiumVisuals(Main)
 	end
+	ApplyGlobalTheme(Main)
 	LoadingFrame.Frame.Frame.Title.TextTransparency = 1
 	LoadingFrame.Frame.Frame.Subtitle.TextTransparency = 1
 	LoadingFrame.Version.TextTransparency = 1
@@ -2278,6 +2300,9 @@ function Sobing:CreateWindow(WindowSettings)
 	LoadingFrame.Visible = true
 
 	SobingUI.Enabled = true
+	SobingUI.ThemeRemote:GetPropertyChangedSignal("Value"):Connect(function()
+		ApplyGlobalTheme(Main)
+	end)
 
 	BlurModule(Main)
 
@@ -2510,6 +2535,9 @@ function Sobing:CreateWindow(WindowSettings)
 		StyleAvatarImage(HomeTabPage.icon.ImageLabel)
 		HomeTabPage.player.Text.Text = "Hello, " .. ((Player.DisplayName and #Player.DisplayName > 0) and Player.DisplayName or Player.Name)
 		HomeTabPage.player.user.Text = Players.LocalPlayer.Name .. " - ".. WindowSettings.Name
+		if HomeTabPage:FindFirstChild("Credits") and HomeTabPage.Credits:FindFirstChild("Text") then
+			HomeTabPage.Credits.Text.Text = "Created By Sobing4413 | Who Am I: Sobing4413 | Organization: Exter Interactive"
+		end
 
 		HomeTabPage.detailsholder.dashboard.Client.Title.Text = (isStudio and "Debugging (Studio)" or identifyexecutor()) or "Your Executor Does Not Support identifyexecutor."
 		for i,v in pairs(HomeTabSettings.SupportedExecutors) do

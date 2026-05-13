@@ -6,6 +6,7 @@ Professional Roblox UI Library focused on smooth animations, modern theming, and
 - Complete UI elements: Button, Toggle, Slider, Dropdown, Input, ColorPicker, Bind, Label, Paragraph, Section.
 - Built-in Notification system.
 - Theme gradient system + presets.
+- Global theme sync (accent applied across menu strokes/icons, not only theme panel).
 - Config Save/Load/Autoload helpers.
 - Mobile support and window hide/minimize controls.
 - Optional premium visual layer (`PremiumEffects = true`) for richer title styling.
@@ -62,6 +63,15 @@ Main:CreateToggle({
 
 ### Icon Fallback Behavior
 If a Lucide icon fails to load or icon name is missing, Exter automatically falls back to a Material help icon.
+
+
+## Credits
+
+| Role | Name |
+|---|---|
+| Created By | Sobing4413 |
+| Who Am I | Sobing4413 |
+| Organization | Exter Interactive |
 
 ## Runtime Dependency
 
