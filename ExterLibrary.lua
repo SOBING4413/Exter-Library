@@ -1535,20 +1535,30 @@ local PresetGradients = {
 	Blossom = {Color3.fromRGB(255, 165, 243), Color3.fromRGB(213, 129, 231), Color3.fromRGB(170, 92, 218)},
 }
 
+local LucideCache
+
 local function GetIcon(icon, source)
 	if source == "Custom" then
 		return "rbxassetid://" .. icon
 	elseif source == "Lucide" then
-		-- full credit to latte softworks :)
-		local iconData = not isStudio and game:HttpGet("https://raw.githubusercontent.com/latte-soft/lucide-roblox/refs/heads/master/lib/Icons.luau")
-		local icons = isStudio and IconModule.Lucide or loadstring(iconData)()
-		if not isStudio then
+		if not LucideCache and not isStudio then
+			local ok, result = pcall(function()
+				local iconData = game:HttpGet("https://raw.githubusercontent.com/latte-soft/lucide-roblox/refs/heads/master/lib/Icons.luau")
+				return loadstring(iconData)()
+			end)
+			if ok then
+				LucideCache = result
+			end
+		end
+
+		local icons = isStudio and IconModule.Lucide or LucideCache
+		if icons and icons['48px'] then
 			icon = string.match(string.lower(icon), "^%s*(.*)%s*$") :: string
 			local sizedicons = icons['48px']
 
 			local r = sizedicons[icon]
 			if not r then
-				error("Lucide Icons: Failed to find icon by the name of \"" .. icon .. "\.", 2)
+				return IconModule.Material.help
 			end
 
 			local rirs = r[2]
@@ -1568,9 +1578,8 @@ local function GetIcon(icon, source)
 			}
 
 			return asset
-		else
-			return "rbxassetid://10723434557"
 		end
+		return IconModule.Material.help
 	else	
 		if icon ~= nil and IconModule[source] then
 			local sourceicon = IconModule[source]
@@ -2202,9 +2211,13 @@ function Sobing:CreateWindow(WindowSettings)
 	LoadingFrame.Frame.Frame.Subtitle.Text = WindowSettings.LoadingSubtitle
 	LoadingFrame.Version.Text = LoadingFrame.Frame.Frame.Title.Text == "Exter Library" and Release or "Exter UI"
 
-	Navigation.Player.icon.ImageLabel.Image = Players:GetUserThumbnailAsync(Players.LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
-	Navigation.Player.Namez.Text = Players.LocalPlayer.DisplayName
-	Navigation.Player.TextLabel.Text = Players.LocalPlayer.Name
+	local okThumb, thumb = pcall(function()
+		return Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
+	end)
+	Navigation.Player.icon.ImageLabel.Image = okThumb and thumb or "rbxasset://textures/ui/GuiImagePlaceholder.png"
+
+	Navigation.Player.Namez.Text = (Player.DisplayName and #Player.DisplayName > 0) and Player.DisplayName or Player.Name
+	Navigation.Player.TextLabel.Text = "@" .. Player.Name
 
 	for i,v in pairs(Main.Controls:GetChildren()) do
 		v.Visible = false
@@ -2445,8 +2458,11 @@ function Sobing:CreateWindow(WindowSettings)
 		end)
 
 
-		HomeTabPage.icon.ImageLabel.Image = Players:GetUserThumbnailAsync(Players.LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
-		HomeTabPage.player.Text.Text = "Hello, " .. Players.LocalPlayer.DisplayName
+		local okProfile, profileThumb = pcall(function()
+			return Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+		end)
+		HomeTabPage.icon.ImageLabel.Image = okProfile and profileThumb or "rbxasset://textures/ui/GuiImagePlaceholder.png"
+		HomeTabPage.player.Text.Text = "Hello, " .. ((Player.DisplayName and #Player.DisplayName > 0) and Player.DisplayName or Player.Name)
 		HomeTabPage.player.user.Text = Players.LocalPlayer.Name .. " - ".. WindowSettings.Name
 
 		HomeTabPage.detailsholder.dashboard.Client.Title.Text = (isStudio and "Debugging (Studio)" or identifyexecutor()) or "Your Executor Does Not Support identifyexecutor."
