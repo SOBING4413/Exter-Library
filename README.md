@@ -12,7 +12,7 @@ Exter Library adalah Roblox GUI library yang bisa dipakai secara universal (miri
 > Ganti URL di bawah ke raw file yang kamu host sendiri (GitHub raw / CDN kamu).
 
 ```lua
-local ExterLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/USERNAME/REPO/BRANCH/Exter-Library"))()
+local ExterLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/SOBING4413/Exter-Library/refs/heads/main/ExterLibrary"))()
 
 local Window = ExterLibrary:Window({
     Name = "Exter Demo",
