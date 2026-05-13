@@ -69,8 +69,8 @@ If a Lucide icon fails to load or icon name is missing, Exter automatically fall
 
 | Role | Name |
 |---|---|
-| Created By | Sobing4413 |
-| Who Am I | Sobing4413 |
+| Founder & Lead Engineer | Sobing4413 |
+| Developer & Research | Who Am I  |
 | Organization | Exter Interactive |
 
 ## Runtime Dependency
