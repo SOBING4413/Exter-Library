@@ -10,6 +10,8 @@ Professional Roblox UI Library focused on smooth animations, modern theming, and
 - Config Save/Load/Autoload helpers.
 - Mobile support and window hide/minimize controls.
 - Optional premium visual layer (`PremiumEffects = true`) for richer title styling.
+- Smoother transition engine (Quint easing + adaptive animation multiplier).
+- Premium notification style (gradient card + icon pop animation).
 - Mobile performance mode (`MobileOptimization`, `BlurEnabled`) for smoother Android usage.
 - Executor GUI parent fallback (`syn.protect_gui`, `gethui`, `CoreGui`).
 
@@ -73,6 +75,7 @@ If a Lucide icon fails to load or icon name is missing, Exter automatically fall
 | Role | Name |
 |---|---|
 | Created By | Sobing4413 |
+| Who Am I | Sobing4413 |
 | Organization | Exter Interactive |
 
 ## Runtime Dependency

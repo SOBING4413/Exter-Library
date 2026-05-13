@@ -1526,7 +1526,12 @@ local IconModule = {
 
 -- Other Variables
 local request = (syn and syn.request) or (http and http.request) or http_request or nil
-local tweeninfo = TweenInfo.new(0.3, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
+local ANIMATION_MULTIPLIER = UserInputService.TouchEnabled and 0.85 or 1
+local tweeninfo = TweenInfo.new(0.3 * ANIMATION_MULTIPLIER, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
+local function SmoothTweenInfo(time, style, direction, repeatCount, reverses, delayTime)
+	return TweenInfo.new((time or 0.3) * ANIMATION_MULTIPLIER, style or Enum.EasingStyle.Quint, direction or Enum.EasingDirection.Out, repeatCount or 0, reverses or false, delayTime or 0)
+end
 local PresetGradients = {
 	["Nightlight (Classic)"] = {Color3.fromRGB(147, 255, 239), Color3.fromRGB(201,211,233), Color3.fromRGB(255, 167, 227)},
 	["Nightlight (Neo)"] = {Color3.fromRGB(117, 164, 206), Color3.fromRGB(123, 201, 201), Color3.fromRGB(224, 138, 175)},
@@ -1965,10 +1970,10 @@ local function Hide(Window, bind, notif)
 	end
 	for _, tabbtn in ipairs(Window.Navigation.Tabs:GetChildren()) do
 		if tabbtn.ClassName == "Frame" and tabbtn.Name ~= "InActive Template" then
-			TweenService:Create(tabbtn, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
-			TweenService:Create(tabbtn.ImageLabel, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
-			TweenService:Create(tabbtn.DropShadowHolder.DropShadow, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
-			TweenService:Create(tabbtn.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
+			TweenService:Create(tabbtn, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
+			TweenService:Create(tabbtn.ImageLabel, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
+			TweenService:Create(tabbtn.DropShadowHolder.DropShadow, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
+			TweenService:Create(tabbtn.UIStroke, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {Transparency = 1}):Play()
 		end
 	end
 
@@ -2115,6 +2120,15 @@ function Sobing:Notification(data) -- action e.g open messages
 		newNotification.Description.Text = data.Content 
 		newNotification.Icon.Image = GetIcon(data.Icon, data.ImageSource)
 
+		local notifGradient = newNotification:FindFirstChild("ExterNotifGradient") or Instance.new("UIGradient")
+		notifGradient.Name = "ExterNotifGradient"
+		notifGradient.Rotation = 20
+		notifGradient.Color = ColorSequence.new{
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(32, 30, 38)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(24, 23, 31))
+		}
+		notifGradient.Parent = newNotification
+
 		-- Set initial transparency values
 		newNotification.BackgroundTransparency = 1
 		newNotification.Title.TextTransparency = 1
@@ -2138,36 +2152,37 @@ function Sobing:Notification(data) -- action e.g open messages
 		local bounds = newNotification.Description.TextBounds.Y + 55
 		newNotification.Description.Size = UDim2.new(1,-65,0, bounds - 35)
 		newNotification.Size = UDim2.new(1, 0, 0, -Notifications:FindFirstChild("UIListLayout").Padding.Offset)
-		TweenService:Create(newNotification, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Size = UDim2.new(1, 0, 0, bounds)}):Play()
+		TweenService:Create(newNotification, SmoothTweenInfo(0.55, Enum.EasingStyle.Quint), {Size = UDim2.new(1, 0, 0, bounds)}):Play()
 
 		task.wait(0.15)
-		TweenService:Create(newNotification, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.45}):Play()
-		TweenService:Create(newNotification.Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+		TweenService:Create(newNotification, SmoothTweenInfo(0.35, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.45}):Play()
+		TweenService:Create(newNotification.Title, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
 
 		task.wait(0.05)
 
-		TweenService:Create(newNotification.Icon, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {ImageTransparency = 0}):Play()
+		TweenService:Create(newNotification.Icon, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 0, Size = UDim2.new(0, 31, 0, 31)}):Play()
+		TweenService:Create(newNotification.Icon, SmoothTweenInfo(0.45, Enum.EasingStyle.Back), {Size = UDim2.new(0, 28, 0, 28)}):Play()
 
 		task.wait(0.05)
-		TweenService:Create(newNotification.Description, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0.35}):Play()
-		TweenService:Create(newNotification.UIStroke, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {Transparency = 0.95}):Play()
-		TweenService:Create(newNotification.Shadow, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {ImageTransparency = 0.82}):Play()
+		TweenService:Create(newNotification.Description, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0.35}):Play()
+		TweenService:Create(newNotification.UIStroke, SmoothTweenInfo(0.35, Enum.EasingStyle.Quint), {Transparency = 0.95}):Play()
+		TweenService:Create(newNotification.Shadow, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 0.82}):Play()
 
 		local waitDuration = math.min(math.max((#newNotification.Description.Text * 0.1) + 2.5, 3), 10)
 		task.wait(data.Duration or waitDuration)
 
 		newNotification.Icon.Visible = false
-		TweenService:Create(newNotification, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
-		TweenService:Create(newNotification.UIStroke, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
-		TweenService:Create(newNotification.Shadow, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
-		TweenService:Create(newNotification.Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
-		TweenService:Create(newNotification.Description, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
+		TweenService:Create(newNotification, SmoothTweenInfo(0.35, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
+		TweenService:Create(newNotification.UIStroke, SmoothTweenInfo(0.35, Enum.EasingStyle.Quint), {Transparency = 1}):Play()
+		TweenService:Create(newNotification.Shadow, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
+		TweenService:Create(newNotification.Title, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play()
+		TweenService:Create(newNotification.Description, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play()
 
-		TweenService:Create(newNotification, TweenInfo.new(1, Enum.EasingStyle.Exponential), {Size = UDim2.new(1, -90, 0, 0)}):Play()
+		TweenService:Create(newNotification, SmoothTweenInfo(0.8, Enum.EasingStyle.Quint), {Size = UDim2.new(1, -90, 0, 0)}):Play()
 
 		task.wait(1)
 
-		TweenService:Create(newNotification, TweenInfo.new(1, Enum.EasingStyle.Exponential), {Size = UDim2.new(1, -90, 0, -Notifications:FindFirstChild("UIListLayout").Padding.Offset)}):Play()
+		TweenService:Create(newNotification, SmoothTweenInfo(0.8, Enum.EasingStyle.Quint), {Size = UDim2.new(1, -90, 0, -Notifications:FindFirstChild("UIListLayout").Padding.Offset)}):Play()
 
 		newNotification.Visible = false
 		newNotification:Destroy()
@@ -2198,11 +2213,11 @@ local function Unhide(Window, currentTab)
 	for _, tabbtn in ipairs(Window.Navigation.Tabs:GetChildren()) do
 		if tabbtn.ClassName == "Frame" and tabbtn.Name ~= "InActive Template" then
 			if tabbtn.Name == currentTab then
-				TweenService:Create(tabbtn, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
-				TweenService:Create(tabbtn.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 0.41}):Play()
+				TweenService:Create(tabbtn, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {BackgroundTransparency = 0}):Play()
+				TweenService:Create(tabbtn.UIStroke, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {Transparency = 0.41}):Play()
 			end
-			TweenService:Create(tabbtn.ImageLabel, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {ImageTransparency = 0}):Play()
-			TweenService:Create(tabbtn.DropShadowHolder.DropShadow, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
+			TweenService:Create(tabbtn.ImageLabel, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 0}):Play()
+			TweenService:Create(tabbtn.DropShadowHolder.DropShadow, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
 		end
 	end
 
@@ -2420,20 +2435,20 @@ function Sobing:CreateWindow(WindowSettings)
 					for _, instance in pairs(KeySystem:GetDescendants()) do
 						if instance.ClassName ~= "UICorner" and instance.ClassName ~= "UIPadding" then
 							if instance.ClassName ~= "UIStroke" then
-								tween(instance, {BackgroundTransparency = 1}, nil,TweenInfo.new(0.6, Enum.EasingStyle.Exponential))
+								tween(instance, {BackgroundTransparency = 1}, nil,SmoothTweenInfo(0.55, Enum.EasingStyle.Quint))
 							end
 							if instance.ClassName == "ImageButton" then
 								tween(instance, {ImageTransparency = 1}, nil,TweenInfo.new(0.5, Enum.EasingStyle.Exponential))
 							end
 							if instance.ClassName == "TextLabel" then
-								tween(instance, {TextTransparency = 1}, nil,TweenInfo.new(0.4, Enum.EasingStyle.Exponential))
+								tween(instance, {TextTransparency = 1}, nil,SmoothTweenInfo(0.35, Enum.EasingStyle.Quint))
 							end
 							if instance.ClassName == "UIStroke" then
 								tween(instance, {Transparency = 1}, nil,TweenInfo.new(0.5, Enum.EasingStyle.Exponential))
 							end
 						end
 					end
-					tween(KeySystem, {BackgroundTransparency = 1}, nil,TweenInfo.new(0.6, Enum.EasingStyle.Exponential))
+					tween(KeySystem, {BackgroundTransparency = 1}, nil,SmoothTweenInfo(0.55, Enum.EasingStyle.Quint))
 					task.wait(0.51)
 					Passthrough = true
 					KeySystem.Visible = false
@@ -2470,7 +2485,7 @@ function Sobing:CreateWindow(WindowSettings)
 	if WindowSettings.LoadingEnabled then
 		task.wait(0.3)
 		TweenService:Create(LoadingFrame.Frame.Frame.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
-		TweenService:Create(LoadingFrame.Frame.ImageLabel, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {ImageTransparency = 0}):Play()
+		TweenService:Create(LoadingFrame.Frame.ImageLabel, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 0}):Play()
 		task.wait(0.05)
 		TweenService:Create(LoadingFrame.Frame.Frame.Subtitle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
 		TweenService:Create(LoadingFrame.Version, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
@@ -2480,7 +2495,7 @@ function Sobing:CreateWindow(WindowSettings)
 		task.wait(3.32)
 
 		TweenService:Create(LoadingFrame.Frame.Frame.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
-		TweenService:Create(LoadingFrame.Frame.ImageLabel, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
+		TweenService:Create(LoadingFrame.Frame.ImageLabel, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
 		task.wait(0.05)
 		TweenService:Create(LoadingFrame.Frame.Frame.Subtitle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
 		TweenService:Create(LoadingFrame.Version, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
@@ -3436,14 +3451,14 @@ function Sobing:CreateWindow(WindowSettings)
 				Bind.BindFrame.UIStroke.Transparency = 1
 				Bind.BindFrame.BindBox.TextTransparency = 1
 
-				TweenService:Create(Bind, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
-				TweenService:Create(Bind.Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+				TweenService:Create(Bind, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.5}):Play()
+				TweenService:Create(Bind.Title, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
 				if BindSettings.Description ~= nil and BindSettings.Description ~= "" then
-					TweenService:Create(Bind.Desc, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+					TweenService:Create(Bind.Desc, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
 				end
-				TweenService:Create(Bind.BindFrame, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.9}):Play()
-				TweenService:Create(Bind.BindFrame.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 0.3}):Play()
-				TweenService:Create(Bind.BindFrame.BindBox, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+				TweenService:Create(Bind.BindFrame, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.9}):Play()
+				TweenService:Create(Bind.BindFrame.UIStroke, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {Transparency = 0.3}):Play()
+				TweenService:Create(Bind.BindFrame.BindBox, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
 
 
 				Bind.BindFrame.BindBox.Text = BindSettings.CurrentBind
@@ -3656,13 +3671,13 @@ function Sobing:CreateWindow(WindowSettings)
 				Input.InputFrame.UIStroke.Transparency = 1
 				Input.InputFrame.InputBox.TextTransparency = 1
 
-				TweenService:Create(Input, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
-				TweenService:Create(Input.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
-				TweenService:Create(Input.Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()	
-				if descriptionbool then TweenService:Create(Input.Desc, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play() end
-				TweenService:Create(Input.InputFrame, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.9}):Play()
-				TweenService:Create(Input.InputFrame.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 0.3}):Play()
-				TweenService:Create(Input.InputFrame.InputBox, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+				TweenService:Create(Input, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.5}):Play()
+				TweenService:Create(Input.UIStroke, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {Transparency = 0.5}):Play()
+				TweenService:Create(Input.Title, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()	
+				if descriptionbool then TweenService:Create(Input.Desc, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play() end
+				TweenService:Create(Input.InputFrame, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.9}):Play()
+				TweenService:Create(Input.InputFrame.UIStroke, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {Transparency = 0.3}):Play()
+				TweenService:Create(Input.InputFrame.InputBox, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
 
 				Input.InputFrame.InputBox.PlaceholderText = InputSettings.PlaceholderText
 				Input.InputFrame.Size = UDim2.new(0, Input.InputFrame.InputBox.TextBounds.X + 52, 0, 30)
@@ -4203,12 +4218,12 @@ function Sobing:CreateWindow(WindowSettings)
 				ColorPicker.Interact.MouseButton1Down:Connect(function()
 					if not opened then
 						opened = true 
-						tween(ColorPicker, {Size = UDim2.new( 1.042, -25,0, 165)}, nil, TweenInfo.new(0.6, Enum.EasingStyle.Exponential))
+						tween(ColorPicker, {Size = UDim2.new( 1.042, -25,0, 165)}, nil, SmoothTweenInfo(0.55, Enum.EasingStyle.Quint))
 						tween(Background, {Size = openedsize})
 						tween(Display, {BackgroundTransparency = 1})
 					else
 						opened = false
-						tween(ColorPicker, {Size = UDim2.new(1.042, -25,0, 38)}, nil, TweenInfo.new(0.6, Enum.EasingStyle.Exponential))
+						tween(ColorPicker, {Size = UDim2.new(1.042, -25,0, 38)}, nil, SmoothTweenInfo(0.55, Enum.EasingStyle.Quint))
 						tween(Background, {Size = closedsize})
 						tween(Display, {BackgroundTransparency = 0})
 					end
@@ -5023,14 +5038,14 @@ function Sobing:CreateWindow(WindowSettings)
 			Bind.BindFrame.UIStroke.Transparency = 1
 			Bind.BindFrame.BindBox.TextTransparency = 1
 
-			TweenService:Create(Bind, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
-			TweenService:Create(Bind.Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+			TweenService:Create(Bind, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.5}):Play()
+			TweenService:Create(Bind.Title, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
 			if BindSettings.Description ~= nil and BindSettings.Description ~= "" then
-				TweenService:Create(Bind.Desc, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+				TweenService:Create(Bind.Desc, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
 			end
-			TweenService:Create(Bind.BindFrame, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.9}):Play()
-			TweenService:Create(Bind.BindFrame.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 0.3}):Play()
-			TweenService:Create(Bind.BindFrame.BindBox, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+			TweenService:Create(Bind.BindFrame, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.9}):Play()
+			TweenService:Create(Bind.BindFrame.UIStroke, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {Transparency = 0.3}):Play()
+			TweenService:Create(Bind.BindFrame.BindBox, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
 
 
 			Bind.BindFrame.BindBox.Text = BindSettings.CurrentBind
@@ -5236,14 +5251,14 @@ function Sobing:CreateWindow(WindowSettings)
 			Bind.BindFrame.UIStroke.Transparency = 1
 			Bind.BindFrame.BindBox.TextTransparency = 1
 
-			TweenService:Create(Bind, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
-			TweenService:Create(Bind.Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+			TweenService:Create(Bind, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.5}):Play()
+			TweenService:Create(Bind.Title, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
 			if BindSettings.Description ~= nil and BindSettings.Description ~= "" then
-				TweenService:Create(Bind.Desc, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+				TweenService:Create(Bind.Desc, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
 			end
-			TweenService:Create(Bind.BindFrame, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.9}):Play()
-			TweenService:Create(Bind.BindFrame.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 0.3}):Play()
-			TweenService:Create(Bind.BindFrame.BindBox, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+			TweenService:Create(Bind.BindFrame, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.9}):Play()
+			TweenService:Create(Bind.BindFrame.UIStroke, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {Transparency = 0.3}):Play()
+			TweenService:Create(Bind.BindFrame.BindBox, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
 
 
 			Bind.BindFrame.BindBox.Text = BindSettings.CurrentBind
@@ -5436,13 +5451,13 @@ function Sobing:CreateWindow(WindowSettings)
 			Input.InputFrame.UIStroke.Transparency = 1
 			Input.InputFrame.InputBox.TextTransparency = 1
 
-			TweenService:Create(Input, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
-			TweenService:Create(Input.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
-			TweenService:Create(Input.Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()	
-			if descriptionbool then TweenService:Create(Input.Desc, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play() end
-			TweenService:Create(Input.InputFrame, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.9}):Play()
-			TweenService:Create(Input.InputFrame.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 0.3}):Play()
-			TweenService:Create(Input.InputFrame.InputBox, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+			TweenService:Create(Input, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.5}):Play()
+			TweenService:Create(Input.UIStroke, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {Transparency = 0.5}):Play()
+			TweenService:Create(Input.Title, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()	
+			if descriptionbool then TweenService:Create(Input.Desc, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play() end
+			TweenService:Create(Input.InputFrame, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.9}):Play()
+			TweenService:Create(Input.InputFrame.UIStroke, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {Transparency = 0.3}):Play()
+			TweenService:Create(Input.InputFrame.InputBox, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
 
 			Input.InputFrame.InputBox.PlaceholderText = InputSettings.PlaceholderText
 			Input.InputFrame.Size = UDim2.new(0, Input.InputFrame.InputBox.TextBounds.X + 52, 0, 30)
@@ -5981,12 +5996,12 @@ function Sobing:CreateWindow(WindowSettings)
 			ColorPicker.Interact.MouseButton1Down:Connect(function()
 				if not opened then
 					opened = true 
-					tween(ColorPicker, {Size = UDim2.new( 1.042, -25,0, 165)}, nil, TweenInfo.new(0.6, Enum.EasingStyle.Exponential))
+					tween(ColorPicker, {Size = UDim2.new( 1.042, -25,0, 165)}, nil, SmoothTweenInfo(0.55, Enum.EasingStyle.Quint))
 					tween(Background, {Size = openedsize})
 					tween(Display, {BackgroundTransparency = 1})
 				else
 					opened = false
-					tween(ColorPicker, {Size = UDim2.new(1.042, -25,0, 38)}, nil, TweenInfo.new(0.6, Enum.EasingStyle.Exponential))
+					tween(ColorPicker, {Size = UDim2.new(1.042, -25,0, 38)}, nil, SmoothTweenInfo(0.55, Enum.EasingStyle.Quint))
 					tween(Background, {Size = closedsize})
 					tween(Display, {BackgroundTransparency = 0})
 				end
