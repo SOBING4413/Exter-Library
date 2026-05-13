@@ -16,6 +16,12 @@ local Player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local CoreGui = game:GetService("CoreGui")
 
+local SobingUI = {}
+local Elements = {}
+local Main = {}
+local Navigation = {}
+local Notifications = {}
+
 local isStudio
 local website = "https://discord.gg/77WnqnJcPu"
 
@@ -1815,7 +1821,32 @@ local function unpackt(array : table)
 end
 
 -- Interface Management
-local SobingUI = isStudio and script.Parent:WaitForChild("Sobing UI") or game:GetObjects("rbxassetid://86467455075715")[1]
+local function ResolveGuiParent()
+	if syn and syn.protect_gui then
+		return CoreGui, true
+	elseif gethui then
+		return gethui(), false
+	else
+		return CoreGui, false
+	end
+end
+
+local function LoadInterfaceTemplate()
+	local ok, assets = pcall(game.GetObjects, game, "rbxassetid://86467455075715")
+	if ok and assets and assets[1] then
+		return assets[1]
+	end
+
+	-- Legacy Studio fallback for contributors editing the UI file locally.
+	if isStudio and script.Parent:FindFirstChild("Sobing UI") then
+		warn("[ExterLibrary] Falling back to local Studio template because remote asset failed to load.")
+		return script.Parent:FindFirstChild("Sobing UI")
+	end
+
+	error("[ExterLibrary] Failed to load UI template asset (rbxassetid://86467455075715). This library requires the published UI asset to run.")
+end
+
+SobingUI = LoadInterfaceTemplate()
 
 local SizeBleh = nil
 
@@ -1860,16 +1891,12 @@ local function Hide(Window, bind, notif)
 end
 
 
-if gethui then
-	SobingUI.Parent = gethui()
-elseif syn and syn.protect_gui then 
+local parentGui, shouldProtect = ResolveGuiParent()
+if shouldProtect and syn and syn.protect_gui then
 	syn.protect_gui(SobingUI)
-	SobingUI.Parent = CoreGui
-elseif not isStudio and CoreGui:FindFirstChild("RobloxGui") then
-	SobingUI.Parent = CoreGui:FindFirstChild("RobloxGui")
-elseif not isStudio then
-	SobingUI.Parent = CoreGui
 end
+
+SobingUI.Parent = parentGui
 
 if gethui then
 	for _, Interface in ipairs(gethui():GetChildren()) do
@@ -1894,16 +1921,16 @@ SobingUI.SmartWindow.Visible = false
 SobingUI.Notifications.Template.Visible = false
 SobingUI.DisplayOrder = 1000000000
 
-local Main : Frame = SobingUI.SmartWindow
+Main = SobingUI.SmartWindow
 local Dragger = Main.Drag
 local dragBar = SobingUI.Drag
 local dragInteract = dragBar and dragBar.Interact or nil
 local dragBarCosmetic = dragBar and dragBar.Drag or nil
-local Elements = Main.Elements.Interactions
+Elements = Main.Elements.Interactions
 local LoadingFrame = Main.LoadingFrame
-local Navigation = Main.Navigation
+Navigation = Main.Navigation
 local Tabs = Navigation.Tabs
-local Notifications = SobingUI.Notifications
+Notifications = SobingUI.Notifications
 local KeySystem : Frame = Main.KeySystem
 
 local function Draggable(Bar, Window, enableTaptic, tapticOffset)
