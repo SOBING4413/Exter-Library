@@ -8,6 +8,7 @@ Professional Roblox UI Library focused on smooth animations, modern theming, and
 - Theme gradient system + presets.
 - Config Save/Load/Autoload helpers.
 - Mobile support and window hide/minimize controls.
+- Optional premium visual layer (`PremiumEffects = true`) for richer title styling.
 - Executor GUI parent fallback (`syn.protect_gui`, `gethui`, `CoreGui`).
 
 ## Installation
@@ -26,6 +27,7 @@ local Window = Exter:CreateWindow({
     Subtitle = "Release",
     Bind = Enum.KeyCode.K,
     LoadingTitle = "Exter Library",
+    PremiumEffects = true,
     ConfigSettings = {
         ConfigFolder = "MyHub",
         RootFolder = "ExterConfigs"

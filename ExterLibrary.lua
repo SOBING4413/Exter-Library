@@ -1830,6 +1830,31 @@ local function unpackt(array : table)
 end
 
 
+
+local function ApplyPremiumVisuals(windowFrame)
+	if not windowFrame or not windowFrame:IsA("Frame") then
+		return
+	end
+
+	local title = windowFrame:FindFirstChild("Title")
+	if title and title:IsA("Frame") then
+		local grad = title:FindFirstChild("ExterTitleGradient") or Instance.new("UIGradient")
+		grad.Name = "ExterTitleGradient"
+		grad.Rotation = 25
+		grad.Color = ColorSequence.new{
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(38, 36, 47)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(28, 27, 36))
+		}
+		grad.Parent = title
+	end
+
+	local stroke = windowFrame:FindFirstChildOfClass("UIStroke")
+	if stroke then
+		stroke.Thickness = 1.25
+		stroke.Transparency = 0.35
+	end
+end
+
 local function StyleAvatarImage(imageLabel)
 	if not imageLabel or not imageLabel:IsA("ImageLabel") then
 		return
@@ -2174,6 +2199,7 @@ function Sobing:CreateWindow(WindowSettings)
 		LoadingEnabled = true,
 		LoadingTitle = "Exter Library",
 		LoadingSubtitle = "by Exter Interactive",
+		PremiumEffects = true,
 
 		ConfigSettings = {},
 
@@ -2214,6 +2240,9 @@ function Sobing:CreateWindow(WindowSettings)
 	Main.Size = MainSize
 	Main.Size = UDim2.fromOffset(Main.Size.X.Offset - 70, Main.Size.Y.Offset - 55)
 	Main.Parent.ShadowHolder.Size = Main.Size
+	if WindowSettings.PremiumEffects then
+		ApplyPremiumVisuals(Main)
+	end
 	LoadingFrame.Frame.Frame.Title.TextTransparency = 1
 	LoadingFrame.Frame.Frame.Subtitle.TextTransparency = 1
 	LoadingFrame.Version.TextTransparency = 1
