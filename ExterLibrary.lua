@@ -1955,8 +1955,11 @@ SobingUI = LoadInterfaceTemplate()
 
 local SizeBleh = nil
 local MenuAnimDuration = 0.32
+local MenuTransitionNonce = 0
 
 local function Hide(Window, bind, notif)
+	MenuTransitionNonce += 1
+	local nonce = MenuTransitionNonce
 	SizeBleh = Window.Size
 	bind = string.split(tostring(bind), "Enum.KeyCode.")
 	bind = bind[2]
@@ -1990,6 +1993,7 @@ local function Hide(Window, bind, notif)
 
 	TweenService:Create(Window, SmoothTweenInfo(MenuAnimDuration, Enum.EasingStyle.Quint), {Size = UDim2.new(0,0,0,0)}):Play()
 	task.delay(MenuAnimDuration, function()
+		if nonce ~= MenuTransitionNonce then return end
 		if Window and Window.Parent then
 			Window.Parent.ShadowHolder.Visible = false
 			Window.Elements.Parent.Visible = false
@@ -2200,6 +2204,7 @@ function Sobing:Notification(data) -- action e.g open messages
 end
 
 local function Unhide(Window, currentTab)
+	MenuTransitionNonce += 1
 	Window.Size = SizeBleh
 	Window.Elements.Visible = true
 	Window.Visible = true
@@ -2304,7 +2309,7 @@ function Sobing:CreateWindow(WindowSettings)
 
 	local Passthrough = false
 
-	local Window = { Bind = Enum.KeyCode.K, CurrentTab = nil, State = true, Size = false, Settings = nil, CanUnload = true }
+	local Window = { Bind = Enum.KeyCode.K, CurrentTab = nil, State = true, Size = false, Settings = nil, CanUnload = true, IsTransitioning = false }
 
 	local function ResolveKeyCode(value, fallback)
 		if typeof(value) == "EnumItem" and value.EnumType == Enum.KeyCode then
@@ -6803,6 +6808,8 @@ function Sobing:CreateWindow(WindowSettings)
 	end
 
 	function Window:ToggleVisibility()
+		if Window.IsTransitioning then return false end
+		Window.IsTransitioning = true
 		if Window.State then
 			Hide(Main, Window.Bind, false)
 			dragBar.Visible = false
@@ -6816,6 +6823,10 @@ function Sobing:CreateWindow(WindowSettings)
 			dragBar.Visible = true
 			Window.State = true
 		end
+		task.delay(MenuAnimDuration + 0.03, function()
+			Window.IsTransitioning = false
+		end)
+		return true
 	end
 
 	function Window:Unload()
