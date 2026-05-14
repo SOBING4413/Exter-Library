@@ -33,7 +33,7 @@ local Window = Exter:CreateWindow({
     LoadingTitle = "Exter Library",
     PremiumEffects = true,
     MobileOptimization = true,
-    BlurEnabled = false, -- recommended for Android
+    BlurEnabled = false, -- default for best FPS on all devices
     ConfigSettings = {
         ConfigFolder = "MyHub",
         RootFolder = "ExterConfigs"
@@ -126,3 +126,9 @@ Before publishing your script hub:
 - Confirm config save/load path.
 - Confirm icon names used by your tabs/buttons.
 - Verify keybind and mobile support behavior.
+
+
+## Performance Tips
+- Keep `BlurEnabled = false` for best FPS.
+- Keep `MobileOptimization = true` even on low-end PC/laptop.
+- Avoid creating excessive tabs/elements in one frame; batch creation with small `task.wait()` between groups.

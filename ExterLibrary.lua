@@ -1900,11 +1900,21 @@ local function StyleAvatarImage(imageLabel)
 end
 
 
+local ThemedCache = nil
+local LastThemeApply = 0
+
 local function ApplyGlobalTheme(root)
 	if not root then return end
-	local accent = Sobing.ThemeGradient.Keypoints[1].Value
+	local now = os.clock()
+	if now - LastThemeApply < 0.08 then return end
+	LastThemeApply = now
 
-	for _, ui in ipairs(root:GetDescendants()) do
+	local accent = Sobing.ThemeGradient.Keypoints[1].Value
+	if not ThemedCache then
+		ThemedCache = root:GetDescendants()
+	end
+
+	for _, ui in ipairs(ThemedCache) do
 		if ui:IsA("UIStroke") then
 			ui.Color = accent
 		elseif ui:IsA("TextLabel") and (ui.Name == "Title" or ui.Name == "subtitle" or ui.Name == "Namez") then
@@ -2084,7 +2094,7 @@ local function Draggable(Bar, Window, enableTaptic, tapticOffset)
 				local Delta = Input.Position - MousePos
 
 				local newMainPosition = UDim2.new(FramePos.X.Scale, FramePos.X.Offset + Delta.X, FramePos.Y.Scale, FramePos.Y.Offset + Delta.Y)
-				TweenService:Create(Window, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Position = newMainPosition}):Play()
+				Window.Position = newMainPosition
 
 				if dragBar then
 					local newDragBarPosition = UDim2.new(FramePos.X.Scale, FramePos.X.Offset + Delta.X, FramePos.Y.Scale, FramePos.Y.Offset + Delta.Y + 240)
@@ -2111,10 +2121,7 @@ function Sobing:Notification(data) -- action e.g open messages
 		newNotification.Parent = Notifications
 		newNotification.LayoutOrder = #Notifications:GetChildren()
 		newNotification.Visible = false
-		if not UserInputService.TouchEnabled then
-			BlurModule(newNotification)
-		end
-
+		
 		-- Set Data
 		newNotification.Title.Text = data.Title
 		newNotification.Description.Text = data.Content 
@@ -2259,7 +2266,7 @@ function Sobing:CreateWindow(WindowSettings)
 		LoadingSubtitle = "by Exter Interactive",
 		PremiumEffects = true,
 		MobileOptimization = true,
-		BlurEnabled = true,
+		BlurEnabled = false,
 
 		ConfigSettings = {},
 
@@ -2337,6 +2344,7 @@ function Sobing:CreateWindow(WindowSettings)
 	end)
 	Main:GetPropertyChangedSignal("Size"):Connect(function()
 		Main.Parent.ShadowHolder.Size = Main.Size
+		ThemedCache = nil
 	end)
 
 	LoadingFrame.Visible = true
