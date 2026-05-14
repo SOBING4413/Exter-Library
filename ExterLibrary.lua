@@ -1954,6 +1954,7 @@ end
 SobingUI = LoadInterfaceTemplate()
 
 local SizeBleh = nil
+local MenuAnimDuration = 0.32
 
 local function Hide(Window, bind, notif)
 	SizeBleh = Window.Size
@@ -1987,12 +1988,14 @@ local function Hide(Window, bind, notif)
 		end
 	end
 
-	task.wait(0.28)
-	Window.Size = UDim2.new(0,0,0,0)
-	Window.Parent.ShadowHolder.Visible = false
-	task.wait()
-	Window.Elements.Parent.Visible = false
-	Window.Visible = false
+	TweenService:Create(Window, SmoothTweenInfo(MenuAnimDuration, Enum.EasingStyle.Quint), {Size = UDim2.new(0,0,0,0)}):Play()
+	task.delay(MenuAnimDuration, function()
+		if Window and Window.Parent then
+			Window.Parent.ShadowHolder.Visible = false
+			Window.Elements.Parent.Visible = false
+			Window.Visible = false
+		end
+	end)
 end
 
 
@@ -2200,7 +2203,6 @@ local function Unhide(Window, currentTab)
 	Window.Size = SizeBleh
 	Window.Elements.Visible = true
 	Window.Visible = true
-	task.wait()
 	tween(Window, {BackgroundTransparency = 0.2})
 	tween(Window.Elements, {BackgroundTransparency = 0.08})
 	tween(Window.Line, {BackgroundTransparency = 0})
@@ -2267,6 +2269,11 @@ function Sobing:CreateWindow(WindowSettings)
 		PremiumEffects = true,
 		MobileOptimization = true,
 		BlurEnabled = false,
+		Bind = Enum.KeyCode.K,
+		MenuKeybind = nil,
+		EnableUnload = true,
+		DefaultSettings = true,
+		MenuAnimationSpeed = 0.32,
 
 		ConfigSettings = {},
 
@@ -2297,7 +2304,21 @@ function Sobing:CreateWindow(WindowSettings)
 
 	local Passthrough = false
 
-	local Window = { Bind = Enum.KeyCode.K, CurrentTab = nil, State = true, Size = false, Settings = nil }
+	local Window = { Bind = Enum.KeyCode.K, CurrentTab = nil, State = true, Size = false, Settings = nil, CanUnload = true }
+
+	local function ResolveKeyCode(value, fallback)
+		if typeof(value) == "EnumItem" and value.EnumType == Enum.KeyCode then
+			return value
+		end
+		if type(value) == "string" and Enum.KeyCode[value] then
+			return Enum.KeyCode[value]
+		end
+		return fallback
+	end
+
+	Window.Bind = ResolveKeyCode(WindowSettings.MenuKeybind or WindowSettings.Bind, Enum.KeyCode.K)
+	Window.CanUnload = WindowSettings.EnableUnload ~= false
+	MenuAnimDuration = math.clamp(tonumber(WindowSettings.MenuAnimationSpeed) or 0.32, 0.18, 0.7)
 
 	Main.Title.Title.Text = WindowSettings.Name
 	Main.Title.subtitle.Text = WindowSettings.Subtitle
@@ -6680,12 +6701,7 @@ function Sobing:CreateWindow(WindowSettings)
 	end
 
 	Main.Controls.Close.ImageLabel.MouseButton1Click:Connect(function()
-		Hide(Main, Window.Bind, true)
-		dragBar.Visible = false
-		Window.State = false
-		if UserInputService.KeyboardEnabled == false then
-			SobingUI.MobileSupport.Visible = true
-		end
+		Window:ToggleVisibility()
 	end)
 	Main.Controls.Close["MouseEnter"]:Connect(function()
 		tween(Main.Controls.Close.ImageLabel, {ImageColor3 = Color3.new(1,1,1)})
@@ -6696,12 +6712,8 @@ function Sobing:CreateWindow(WindowSettings)
 
 	UserInputService.InputBegan:Connect(function(input, gpe)
 		if gpe then return end
-		if Window.State then return end
 		if input.KeyCode == Window.Bind then
-			Unhide(Main, Window.CurrentTab)
-			SobingUI.MobileSupport.Visible = false
-			dragBar.Visible = true
-			Window.State = true
+			Window:ToggleVisibility()
 		end
 	end)
 
@@ -6753,7 +6765,70 @@ function Sobing:CreateWindow(WindowSettings)
 		SobingUI.MobileSupport.Visible = false
 	end)
 
+
+	if WindowSettings.DefaultSettings then
+		local SettingsTab = Window:CreateTab({ Name = "Settings", Icon = "settings", ImageSource = "Material" })
+		Window.Settings = SettingsTab
+		SettingsTab:CreateSection("GUI Controls")
+		SettingsTab:CreateBind({
+			Name = "Menu Keybind",
+			Description = "Key untuk buka/tutup menu",
+			CurrentBind = tostring(Window.Bind.Name),
+			Callback = function(newKey)
+				Window:SetMenuKeybind(newKey)
+			end
+		})
+		SettingsTab:CreateButton({
+			Name = "Toggle Menu",
+			Description = "Buka atau tutup menu secara manual",
+			Callback = function()
+				Window:ToggleVisibility()
+			end
+		})
+		SettingsTab:CreateButton({
+			Name = "Unload GUI",
+			Description = "Lepas GUI dari sesi saat ini",
+			Callback = function()
+				local ok, err = Window:Unload()
+				if not ok then
+					Sobing:Notification({Title = "Unload Disabled", Content = err, Icon = "warning"})
+				end
+			end
+		})
+	end
+
+	function Window:SetMenuKeybind(newBind)
+		Window.Bind = ResolveKeyCode(newBind, Window.Bind)
+		return Window.Bind
+	end
+
+	function Window:ToggleVisibility()
+		if Window.State then
+			Hide(Main, Window.Bind, false)
+			dragBar.Visible = false
+			Window.State = false
+			if not UserInputService.KeyboardEnabled then
+				SobingUI.MobileSupport.Visible = true
+			end
+		else
+			Unhide(Main, Window.CurrentTab)
+			SobingUI.MobileSupport.Visible = false
+			dragBar.Visible = true
+			Window.State = true
+		end
+	end
+
+	function Window:Unload()
+		if not Window.CanUnload then return false, "Unload disabled" end
+		Sobing:Destroy()
+		return true
+	end
+
 	return Window
+end
+
+function Sobing:Unload()
+	return Sobing:Destroy()
 end
 
 function Sobing:Destroy()
