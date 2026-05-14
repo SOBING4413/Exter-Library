@@ -9,6 +9,9 @@ Professional Roblox UI Library focused on smooth animations, modern theming, and
 - Global theme sync (accent applied across menu strokes/icons, not only theme panel).
 - Config Save/Load/Autoload helpers.
 - Mobile support and window hide/minimize controls.
+- Default unload support with runtime toggle (`EnableUnload`) and `Window:Unload()`.
+- Customizable menu keybind with default `Enum.KeyCode.K` (`Bind`/`MenuKeybind`, `Window:SetMenuKeybind()`).
+- Built-in default Settings tab (`DefaultSettings = true`) with GUI keybind and unload controls.
 - Optional premium visual layer (`PremiumEffects = true`) for richer title styling.
 - Smoother transition engine (Quint easing + adaptive animation multiplier).
 - Premium notification style (gradient card + icon pop animation).
@@ -29,7 +32,10 @@ local Exter = loadstring(game:HttpGet("https://raw.githubusercontent.com/SOBING4
 local Window = Exter:CreateWindow({
     Name = "My Hub",
     Subtitle = "Release",
-    Bind = Enum.KeyCode.K,
+    Bind = Enum.KeyCode.K, -- default menu toggle keybind
+    EnableUnload = true, -- disable if your hub should never unload itself
+    DefaultSettings = true, -- auto-create built-in Settings tab
+    MenuAnimationSpeed = 0.32, -- lower=faster, higher=smoother
     LoadingTitle = "Exter Library",
     PremiumEffects = true,
     MobileOptimization = true,
@@ -94,6 +100,12 @@ If this asset is unavailable/private/moderated, the UI cannot render.
 - `Exter:LoadConfig(name)`
 - `Exter:LoadAutoloadConfig()`
 - `Exter:RefreshConfigList()`
+- `Exter:Unload()` (alias to destroy UI)
+
+### Window Methods
+- `Window:SetMenuKeybind(Enum.KeyCode | string)`
+- `Window:ToggleVisibility()`
+- `Window:Unload()`
 
 ### Tab Methods
 - `CreateButton`
