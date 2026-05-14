@@ -1,1 +1,1 @@
-[DOCS](https://sobing4413.github.io/GOBLOX-GUI-2/)
+[DOCS](http://exter-library.gt.tc/)
