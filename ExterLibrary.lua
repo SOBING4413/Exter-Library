@@ -2267,6 +2267,9 @@ function Sobing:CreateWindow(WindowSettings)
 		PremiumEffects = true,
 		MobileOptimization = true,
 		BlurEnabled = false,
+		Bind = Enum.KeyCode.K,
+		MenuKeybind = nil,
+		EnableUnload = true,
 
 		ConfigSettings = {},
 
@@ -2297,7 +2300,20 @@ function Sobing:CreateWindow(WindowSettings)
 
 	local Passthrough = false
 
-	local Window = { Bind = Enum.KeyCode.K, CurrentTab = nil, State = true, Size = false, Settings = nil }
+	local Window = { Bind = Enum.KeyCode.K, CurrentTab = nil, State = true, Size = false, Settings = nil, CanUnload = true }
+
+	local function ResolveKeyCode(value, fallback)
+		if typeof(value) == "EnumItem" and value.EnumType == Enum.KeyCode then
+			return value
+		end
+		if type(value) == "string" and Enum.KeyCode[value] then
+			return Enum.KeyCode[value]
+		end
+		return fallback
+	end
+
+	Window.Bind = ResolveKeyCode(WindowSettings.MenuKeybind or WindowSettings.Bind, Enum.KeyCode.K)
+	Window.CanUnload = WindowSettings.EnableUnload ~= false
 
 	Main.Title.Title.Text = WindowSettings.Name
 	Main.Title.subtitle.Text = WindowSettings.Subtitle
@@ -6680,12 +6696,7 @@ function Sobing:CreateWindow(WindowSettings)
 	end
 
 	Main.Controls.Close.ImageLabel.MouseButton1Click:Connect(function()
-		Hide(Main, Window.Bind, true)
-		dragBar.Visible = false
-		Window.State = false
-		if UserInputService.KeyboardEnabled == false then
-			SobingUI.MobileSupport.Visible = true
-		end
+		Window:ToggleVisibility()
 	end)
 	Main.Controls.Close["MouseEnter"]:Connect(function()
 		tween(Main.Controls.Close.ImageLabel, {ImageColor3 = Color3.new(1,1,1)})
@@ -6696,12 +6707,8 @@ function Sobing:CreateWindow(WindowSettings)
 
 	UserInputService.InputBegan:Connect(function(input, gpe)
 		if gpe then return end
-		if Window.State then return end
 		if input.KeyCode == Window.Bind then
-			Unhide(Main, Window.CurrentTab)
-			SobingUI.MobileSupport.Visible = false
-			dragBar.Visible = true
-			Window.State = true
+			Window:ToggleVisibility()
 		end
 	end)
 
@@ -6753,7 +6760,38 @@ function Sobing:CreateWindow(WindowSettings)
 		SobingUI.MobileSupport.Visible = false
 	end)
 
+	function Window:SetMenuKeybind(newBind)
+		Window.Bind = ResolveKeyCode(newBind, Window.Bind)
+		return Window.Bind
+	end
+
+	function Window:ToggleVisibility()
+		if Window.State then
+			Hide(Main, Window.Bind, false)
+			dragBar.Visible = false
+			Window.State = false
+			if not UserInputService.KeyboardEnabled then
+				SobingUI.MobileSupport.Visible = true
+			end
+		else
+			Unhide(Main, Window.CurrentTab)
+			SobingUI.MobileSupport.Visible = false
+			dragBar.Visible = true
+			Window.State = true
+		end
+	end
+
+	function Window:Unload()
+		if not Window.CanUnload then return false, "Unload disabled" end
+		Sobing:Destroy()
+		return true
+	end
+
 	return Window
+end
+
+function Sobing:Unload()
+	return Sobing:Destroy()
 end
 
 function Sobing:Destroy()
