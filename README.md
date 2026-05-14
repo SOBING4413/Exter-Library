@@ -11,6 +11,7 @@ Professional Roblox UI Library focused on smooth animations, modern theming, and
 - Mobile support and window hide/minimize controls.
 - Default unload support with runtime toggle (`EnableUnload`) and `Window:Unload()`.
 - Customizable menu keybind with default `Enum.KeyCode.K` (`Bind`/`MenuKeybind`, `Window:SetMenuKeybind()`).
+- Built-in default Settings tab (`DefaultSettings = true`) with GUI keybind and unload controls.
 - Optional premium visual layer (`PremiumEffects = true`) for richer title styling.
 - Smoother transition engine (Quint easing + adaptive animation multiplier).
 - Premium notification style (gradient card + icon pop animation).
@@ -33,6 +34,8 @@ local Window = Exter:CreateWindow({
     Subtitle = "Release",
     Bind = Enum.KeyCode.K, -- default menu toggle keybind
     EnableUnload = true, -- disable if your hub should never unload itself
+    DefaultSettings = true, -- auto-create built-in Settings tab
+    MenuAnimationSpeed = 0.32, -- lower=faster, higher=smoother
     LoadingTitle = "Exter Library",
     PremiumEffects = true,
     MobileOptimization = true,

@@ -1954,6 +1954,7 @@ end
 SobingUI = LoadInterfaceTemplate()
 
 local SizeBleh = nil
+local MenuAnimDuration = 0.32
 
 local function Hide(Window, bind, notif)
 	SizeBleh = Window.Size
@@ -1987,12 +1988,14 @@ local function Hide(Window, bind, notif)
 		end
 	end
 
-	task.wait(0.28)
-	Window.Size = UDim2.new(0,0,0,0)
-	Window.Parent.ShadowHolder.Visible = false
-	task.wait()
-	Window.Elements.Parent.Visible = false
-	Window.Visible = false
+	TweenService:Create(Window, SmoothTweenInfo(MenuAnimDuration, Enum.EasingStyle.Quint), {Size = UDim2.new(0,0,0,0)}):Play()
+	task.delay(MenuAnimDuration, function()
+		if Window and Window.Parent then
+			Window.Parent.ShadowHolder.Visible = false
+			Window.Elements.Parent.Visible = false
+			Window.Visible = false
+		end
+	end)
 end
 
 
@@ -2200,7 +2203,6 @@ local function Unhide(Window, currentTab)
 	Window.Size = SizeBleh
 	Window.Elements.Visible = true
 	Window.Visible = true
-	task.wait()
 	tween(Window, {BackgroundTransparency = 0.2})
 	tween(Window.Elements, {BackgroundTransparency = 0.08})
 	tween(Window.Line, {BackgroundTransparency = 0})
@@ -2270,6 +2272,8 @@ function Sobing:CreateWindow(WindowSettings)
 		Bind = Enum.KeyCode.K,
 		MenuKeybind = nil,
 		EnableUnload = true,
+		DefaultSettings = true,
+		MenuAnimationSpeed = 0.32,
 
 		ConfigSettings = {},
 
@@ -2314,6 +2318,7 @@ function Sobing:CreateWindow(WindowSettings)
 
 	Window.Bind = ResolveKeyCode(WindowSettings.MenuKeybind or WindowSettings.Bind, Enum.KeyCode.K)
 	Window.CanUnload = WindowSettings.EnableUnload ~= false
+	MenuAnimDuration = math.clamp(tonumber(WindowSettings.MenuAnimationSpeed) or 0.32, 0.18, 0.7)
 
 	Main.Title.Title.Text = WindowSettings.Name
 	Main.Title.subtitle.Text = WindowSettings.Subtitle
@@ -6759,6 +6764,38 @@ function Sobing:CreateWindow(WindowSettings)
 		Window.State = true
 		SobingUI.MobileSupport.Visible = false
 	end)
+
+
+	if WindowSettings.DefaultSettings then
+		local SettingsTab = Window:CreateTab({ Name = "Settings", Icon = "settings", ImageSource = "Material" })
+		Window.Settings = SettingsTab
+		SettingsTab:CreateSection("GUI Controls")
+		SettingsTab:CreateBind({
+			Name = "Menu Keybind",
+			Description = "Key untuk buka/tutup menu",
+			CurrentBind = tostring(Window.Bind.Name),
+			Callback = function(newKey)
+				Window:SetMenuKeybind(newKey)
+			end
+		})
+		SettingsTab:CreateButton({
+			Name = "Toggle Menu",
+			Description = "Buka atau tutup menu secara manual",
+			Callback = function()
+				Window:ToggleVisibility()
+			end
+		})
+		SettingsTab:CreateButton({
+			Name = "Unload GUI",
+			Description = "Lepas GUI dari sesi saat ini",
+			Callback = function()
+				local ok, err = Window:Unload()
+				if not ok then
+					Sobing:Notification({Title = "Unload Disabled", Content = err, Icon = "warning"})
+				end
+			end
+		})
+	end
 
 	function Window:SetMenuKeybind(newBind)
 		Window.Bind = ResolveKeyCode(newBind, Window.Bind)
