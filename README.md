@@ -161,9 +161,3 @@ Join the Discord server for support, updates, and to share your scripts:
 ## License
 
 This project is licensed under the [GNU General Public License v3.0](LICENSE).
-
----
-
-<div align="center">
-Made with ❤️ by <a href="https://github.com/SOBING4413">Sobing4413</a> · Exter Interactive
-</div>
