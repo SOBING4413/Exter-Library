@@ -52,6 +52,7 @@ getgenv().ExterUniversal = {
         Rejoin = function()
             game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
         end,
+        PanicKey = Enum.KeyCode.P,
         ServerHop = false,
         AntiAFK = true,
         ChatSpam = false,
@@ -71,6 +72,13 @@ local Lighting = game:GetService("Lighting")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local function resolveOptionValue(value)
+    if type(value) == "table" then
+        return value[1]
+    end
+    return value
+end
 
 local function resolveOptionValue(value)
     if type(value) == "table" then
@@ -810,6 +818,26 @@ local function teleportToPlayer(targetName)
     })
 end
 
+local function disableAllFeatures()
+    E.Aimbot.Enabled = false
+    E.ESP.Enabled = false
+    E.Movement.NoClip = false
+    E.Movement.AntiFall = false
+    E.Movement.Fly = false
+    E.Character.InfiniteJump = false
+    E.Character.NoSlowdown = false
+    E.Character.AutoClick = false
+    E.Character.GodMode = false
+    E.Visuals.FullBright = false
+    E.Visuals.NoFog = false
+    E.Visuals.NightMode = false
+    E.Misc.ChatSpam = false
+    stopFly()
+    stopAutoClick()
+    stopChatSpam()
+    applyVisuals()
+end
+
 -- ============================================================
 -- LOOP ENGINE (OPTIMIZED)
 -- ============================================================
@@ -828,6 +856,19 @@ RunService.RenderStepped:Connect(function()
     antiFallLoop()
     godModeLoop()
     noSlowdownLoop()
+end)
+
+RunService.Heartbeat:Connect(function()
+    if visualStateCache.FullBright ~= E.Visuals.FullBright
+        or visualStateCache.NoFog ~= E.Visuals.NoFog
+        or visualStateCache.NightMode ~= E.Visuals.NightMode
+        or visualStateCache.FOV ~= E.Visuals.FOV then
+        visualStateCache.FullBright = E.Visuals.FullBright
+        visualStateCache.NoFog = E.Visuals.NoFog
+        visualStateCache.NightMode = E.Visuals.NightMode
+        visualStateCache.FOV = E.Visuals.FOV
+        applyVisuals()
+    end
 end)
 
 RunService.Heartbeat:Connect(function()
@@ -1249,6 +1290,40 @@ MiscTab:CreateButton({
 MiscTab:BuildConfigSection()
 MiscTab:BuildThemeSection()
 
+MiscTab:CreateSection("Quick Actions")
+
+MiscTab:CreateButton({
+    Name = "Panic: Disable All Features",
+    Description = "Emergency stop for all active enhancements",
+    Callback = function()
+        disableAllFeatures()
+        Exter:Notification({
+            Title = "Panic Mode",
+            Content = "All features have been disabled.",
+            Icon = "warning",
+            ImageSource = "Material",
+            Duration = 3
+        })
+    end
+})
+
+MiscTab:CreateButton({
+    Name = "Reset Movement Defaults",
+    Description = "Restore Walkspeed 16 / JumpPower 50",
+    Callback = function()
+        E.Movement.Walkspeed = 16
+        E.Movement.JumpPower = 50
+        applyMovement()
+        Exter:Notification({
+            Title = "Movement",
+            Content = "Movement defaults restored.",
+            Icon = "check_circle",
+            ImageSource = "Material",
+            Duration = 2
+        })
+    end
+})
+
 MiscTab:CreateSection("Credits")
 
 MiscTab:CreateLabel({ Text = "Exter Universal v1.2.8" })
@@ -1269,7 +1344,23 @@ Exter:Notification({
 
 applyVisuals()
 
+applyVisuals()
+
 -- Auto load config
 pcall(function()
     Exter:LoadAutoloadConfig()
+end)
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == E.Misc.PanicKey then
+        disableAllFeatures()
+        Exter:Notification({
+            Title = "Panic Key",
+            Content = "Emergency disable triggered (P).",
+            Icon = "warning",
+            ImageSource = "Material",
+            Duration = 3
+        })
+    end
 end)
