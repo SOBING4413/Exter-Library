@@ -2,14 +2,14 @@ local Exter = loadstring(game:HttpGet("https://raw.githubusercontent.com/SOBING4
 
 local Window = Exter:CreateWindow({
     Name = "Example Hub",
-    Subtitle = "by SOBING4413",
+    Subtitle = "Release v1.2.8 — Premium",
     Bind = Enum.KeyCode.K,
     ConfigSettings = {
         ConfigFolder = "ExampleHub"
     }
 })
 
-local MainTab = Window:CreateTab({ Name = "Main", Icon = "home" })
+local MainTab = Window:CreateTab({ Name = "Main", Icon = "home", ImageSource = "Material" })
 MainTab:CreateButton({
     Name = "Rejoin Server",
     Description = "Reconnect to current server",
@@ -24,7 +24,7 @@ MainTab:CreateToggle({
     Callback = function(v) getgenv().InfJump = v end
 }, "InfJumpToggle")
 
-local SettingsTab = Window:CreateTab({ Name = "Settings", Icon = "settings" })
+local SettingsTab = Window:CreateTab({ Name = "Settings", Icon = "settings", ImageSource = "Material" })
 SettingsTab:BuildConfigSection()
 SettingsTab:BuildThemeSection()
 

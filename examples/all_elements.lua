@@ -1,7 +1,7 @@
 local Exter = loadstring(game:HttpGet("https://raw.githubusercontent.com/SOBING4413/Exter-Library/main/ExterLibrary.lua"))()
 
-local Window = Exter:CreateWindow({ Name = "All Elements", Subtitle = "Showcase" })
-local Tab = Window:CreateTab({ Name = "Elements", Icon = "list" })
+local Window = Exter:CreateWindow({ Name = "All Elements", Subtitle = "Release v1.2.8 — Premium Showcase" })
+local Tab = Window:CreateTab({ Name = "Elements", Icon = "dashboard", ImageSource = "Material" })
 local function normalizeOption(v)
     if type(v) == "table" then
         return v[1]
@@ -21,9 +21,9 @@ Tab:CreateLabel({ Text = "Label element" })
 Tab:CreateParagraph({ Title = "Paragraph", Text = "This showcases all core UI elements." })
 
 Exter:Notification({
-    Title = "Loaded",
-    Content = "All element examples created",
-    Icon = "check_circle",
+    Title = "Loaded v1.2.8",
+    Content = "All premium element examples created",
+    Icon = "star_rate",
     ImageSource = "Material",
     Duration = 5
 })

@@ -852,7 +852,7 @@ end)
 -- ============================================================
 local Window = Exter:CreateWindow({
     Name = "Exter Universal",
-    Subtitle = "v2.0 — by SOBING4413 (Fixed & Improved)",
+    Subtitle = "Release v1.2.8 — Premium Edition",
     Bind = Enum.KeyCode.K,
     ConfigSettings = {
         ConfigFolder = "ExterUniversal",
@@ -863,7 +863,7 @@ local Window = Exter:CreateWindow({
 -- ============================================================
 -- TAB: AIMBOT
 -- ============================================================
-local AimbotTab = Window:CreateTab({ Name = "Aimbot", Icon = "gavel" })
+local AimbotTab = Window:CreateTab({ Name = "Aimbot", Icon = "gavel", ImageSource = "Material" })
 
 AimbotTab:CreateSection("Main Settings")
 
@@ -959,7 +959,7 @@ AimbotTab:CreateToggle({
 -- ============================================================
 -- TAB: ESP
 -- ============================================================
-local ESPTab = Window:CreateTab({ Name = "ESP", Icon = "list" })
+local ESPTab = Window:CreateTab({ Name = "ESP", Icon = "visibility", ImageSource = "Material" })
 
 ESPTab:CreateSection("Main Settings")
 
@@ -1018,7 +1018,7 @@ ESPTab:CreateToggle({
 -- ============================================================
 -- TAB: MOVEMENT
 -- ============================================================
-local MovementTab = Window:CreateTab({ Name = "Movement", Icon = "sticky_note_2" })
+local MovementTab = Window:CreateTab({ Name = "Movement", Icon = "open_with", ImageSource = "Material" })
 
 MovementTab:CreateSection("Speed & Jump")
 
@@ -1074,7 +1074,7 @@ MovementTab:CreateToggle({
 -- ============================================================
 -- TAB: CHARACTER
 -- ============================================================
-local CharTab = Window:CreateTab({ Name = "Character", Icon = "table_view" })
+local CharTab = Window:CreateTab({ Name = "Character", Icon = "account_circle", ImageSource = "Material" })
 
 CharTab:CreateSection("Character Options")
 
@@ -1122,7 +1122,7 @@ CharTab:CreateSlider({
 -- ============================================================
 -- TAB: VISUALS
 -- ============================================================
-local VisualsTab = Window:CreateTab({ Name = "Visuals", Icon = "perm_media" })
+local VisualsTab = Window:CreateTab({ Name = "Visuals", Icon = "perm_media", ImageSource = "Material" })
 
 VisualsTab:CreateSection("Visual Settings")
 
@@ -1160,7 +1160,7 @@ VisualsTab:CreateToggle({
 -- ============================================================
 -- TAB: MISC
 -- ============================================================
-local MiscTab = Window:CreateTab({ Name = "Misc", Icon = "alarm_add" })
+local MiscTab = Window:CreateTab({ Name = "Misc", Icon = "settings", ImageSource = "Material" })
 
 MiscTab:CreateSection("Server Options")
 
@@ -1231,13 +1231,28 @@ MiscTab:CreateSlider({
 
 MiscTab:CreateSection("Config")
 
+MiscTab:CreateButton({
+    Name = "Apply Premium Theme",
+    Description = "Set smooth glass-like colors & gradients",
+    Callback = function()
+        Exter:SetTheme("Default")
+        Exter:Notification({
+            Title = "Theme",
+            Content = "Premium theme applied for v1.2.8",
+            Icon = "star_rate",
+            ImageSource = "Material",
+            Duration = 3
+        })
+    end
+})
+
 MiscTab:BuildConfigSection()
 MiscTab:BuildThemeSection()
 
 MiscTab:CreateSection("Credits")
 
-MiscTab:CreateLabel({ Text = "Exter Universal v2.0" })
-MiscTab:CreateLabel({ Text = "Fixed & Improved Edition" })
+MiscTab:CreateLabel({ Text = "Exter Universal v1.2.8" })
+MiscTab:CreateLabel({ Text = "Premium Smooth Edition" })
 MiscTab:CreateLabel({ Text = "Powered by Exter Library" })
 MiscTab:CreateLabel({ Text = "by SOBING4413" })
 
@@ -1245,8 +1260,8 @@ MiscTab:CreateLabel({ Text = "by SOBING4413" })
 -- NOTIFICATION STARTUP
 -- ============================================================
 Exter:Notification({
-    Title = "Exter Universal v2.0",
-    Content = "Loaded successfully! Press K to toggle menu.\nAll features fixed & working.",
+    Title = "Exter Universal v1.2.8",
+    Content = "Loaded successfully! Press K to toggle menu.\nPremium UI + improved stability active.",
     Icon = "check_circle",
     ImageSource = "Material",
     Duration = 5
