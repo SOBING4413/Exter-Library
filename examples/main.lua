@@ -72,6 +72,13 @@ local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local function resolveOptionValue(value)
+    if type(value) == "table" then
+        return value[1]
+    end
+    return value
+end
+
 -- ============================================================
 -- FUNGSI UTILITY
 -- ============================================================
@@ -627,6 +634,7 @@ local function startAutoClick()
 end
 
 local function stopAutoClick()
+    E.Character.AutoClick = false
     autoClickThread = nil
 end
 
@@ -768,6 +776,7 @@ local function startChatSpam()
 end
 
 local function stopChatSpam()
+    E.Misc.ChatSpam = false
     chatSpamThread = nil
 end
 
@@ -804,15 +813,34 @@ end
 -- ============================================================
 -- LOOP ENGINE (OPTIMIZED)
 -- ============================================================
+local visualStateCache = {
+    FullBright = nil,
+    NoFog = nil,
+    NightMode = nil,
+    FOV = nil
+}
+
 RunService.RenderStepped:Connect(function()
     aimbotLoop()
     espLoop()
     flyLoop()
     noclipLoop()
     antiFallLoop()
-    applyVisuals()
     godModeLoop()
     noSlowdownLoop()
+end)
+
+RunService.Heartbeat:Connect(function()
+    if visualStateCache.FullBright ~= E.Visuals.FullBright
+        or visualStateCache.NoFog ~= E.Visuals.NoFog
+        or visualStateCache.NightMode ~= E.Visuals.NightMode
+        or visualStateCache.FOV ~= E.Visuals.FOV then
+        visualStateCache.FullBright = E.Visuals.FullBright
+        visualStateCache.NoFog = E.Visuals.NoFog
+        visualStateCache.NightMode = E.Visuals.NightMode
+        visualStateCache.FOV = E.Visuals.FOV
+        applyVisuals()
+    end
 end)
 
 RunService.Stepped:Connect(function()
@@ -873,7 +901,7 @@ AimbotTab:CreateDropdown({
     Options = {"Head", "Torso", "HumanoidRootPart", "Random"},
     CurrentOption = {E.Aimbot.SelectedPart},
     MultipleOptions = false,
-    Callback = function(v) E.Aimbot.SelectedPart = v end
+    Callback = function(v) E.Aimbot.SelectedPart = resolveOptionValue(v) end
 }, "AimbotPart")
 
 AimbotTab:CreateDropdown({
@@ -881,7 +909,7 @@ AimbotTab:CreateDropdown({
     Options = {"MouseButton2", "MouseButton1", "E", "Q", "F", "C", "X"},
     CurrentOption = {E.Aimbot.TargetKey},
     MultipleOptions = false,
-    Callback = function(v) E.Aimbot.TargetKey = v end
+    Callback = function(v) E.Aimbot.TargetKey = resolveOptionValue(v) end
 }, "AimbotKey")
 
 AimbotTab:CreateToggle({
@@ -1223,6 +1251,8 @@ Exter:Notification({
     ImageSource = "Material",
     Duration = 5
 })
+
+applyVisuals()
 
 -- Auto load config
 pcall(function()
