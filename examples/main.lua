@@ -91,16 +91,42 @@ end
 -- FUNGSI UTILITY
 -- ============================================================
 local function getCharacters()
-    local chars = {}
+    local characters = {}
+
     for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= Player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            local hum = plr.Character:FindFirstChildOfClass("Humanoid")
-            if not hum or hum.Health <= 0 then continue end
-            if E.Aimbot.TeamCheck and plr.Team and Player.Team and plr.Team == Player.Team then continue end
-            table.insert(chars, plr)
+
+        -- Skip local player
+        if plr ~= Player then
+
+            local char = plr.Character
+
+            if char then
+
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local hum = char:FindFirstChildOfClass("Humanoid")
+
+                -- Pastikan character valid & hidup
+                if hrp and hum and hum.Health > 0 then
+
+                    local sameTeam = false
+
+                    -- Team check
+                    if E.Aimbot.TeamCheck then
+                        if plr.Team ~= nil and Player.Team ~= nil then
+                            sameTeam = (plr.Team == Player.Team)
+                        end
+                    end
+
+                    -- Jika bukan satu tim
+                    if not sameTeam then
+                        table.insert(characters, plr)
+                    end
+                end
+            end
         end
     end
-    return chars
+
+    return characters
 end
 
 local function isVisible(part)
@@ -121,34 +147,66 @@ local function isVisible(part)
 end
 
 local function getClosestTarget()
-    local closest, dist = nil, math.huge
-    local fovRad = E.Aimbot.FOVRadius
-    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    local closestTarget = nil
+    local closestDistance = math.huge
+
+    local fovRadius = E.Aimbot.FOVRadius or 150
+    local screenCenter = Vector2.new(
+        Camera.ViewportSize.X / 2,
+        Camera.ViewportSize.Y / 2
+    )
 
     for _, plr in ipairs(getCharacters()) do
-        local char = plr.Character
-        if not char then continue end
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if not hrp then continue end
+        -- Skip diri sendiri
+        if plr ~= LocalPlayer then
 
-        local partName = E.Aimbot.SelectedPart
-        if partName == "Random" then
-            local parts = {"Head", "Torso", "HumanoidRootPart"}
-            partName = parts[math.random(1, #parts)]
-        end
+            local char = plr.Character
+            if char then
 
-        local part = char:FindFirstChild(partName) or hrp
-        local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
-        if not onScreen then continue end
-        if not isVisible(part) then continue end
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                local hrp = char:FindFirstChild("HumanoidRootPart")
 
-        local distFromCenter = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
-        if distFromCenter < fovRad and distFromCenter < dist then
-            dist = distFromCenter
-            closest = plr
+                -- Pastikan hidup
+                if humanoid and humanoid.Health > 0 and hrp then
+
+                    local targetPartName = E.Aimbot.SelectedPart
+
+                    -- Random target part
+                    if targetPartName == "Random" then
+                        targetPartName = TARGET_PARTS[math.random(1, #TARGET_PARTS)]
+                    end
+
+                    local targetPart =
+                        char:FindFirstChild(targetPartName) or hrp
+
+                    if targetPart then
+
+                        local screenPos, onScreen =
+                            Camera:WorldToViewportPoint(targetPart.Position)
+
+                        if onScreen then
+
+                            -- Visibility check
+                            if not E.Aimbot.VisibleCheck or isVisible(targetPart) then
+
+                                local distanceFromCenter =
+                                    (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
+
+                                if distanceFromCenter <= fovRadius
+                                    and distanceFromCenter < closestDistance then
+
+                                    closestDistance = distanceFromCenter
+                                    closestTarget = plr
+                                end
+                            end
+                        end
+                    end
+                end
+            end
         end
     end
-    return closest
+
+    return closestTarget
 end
 
 -- ============================================================
