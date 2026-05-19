@@ -80,6 +80,13 @@ local function resolveOptionValue(value)
     return value
 end
 
+local function resolveOptionValue(value)
+    if type(value) == "table" then
+        return value[1]
+    end
+    return value
+end
+
 -- ============================================================
 -- FUNGSI UTILITY
 -- ============================================================
@@ -864,6 +871,19 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
+RunService.Heartbeat:Connect(function()
+    if visualStateCache.FullBright ~= E.Visuals.FullBright
+        or visualStateCache.NoFog ~= E.Visuals.NoFog
+        or visualStateCache.NightMode ~= E.Visuals.NightMode
+        or visualStateCache.FOV ~= E.Visuals.FOV then
+        visualStateCache.FullBright = E.Visuals.FullBright
+        visualStateCache.NoFog = E.Visuals.NoFog
+        visualStateCache.NightMode = E.Visuals.NightMode
+        visualStateCache.FOV = E.Visuals.FOV
+        applyVisuals()
+    end
+end)
+
 RunService.Stepped:Connect(function()
     applyMovement()
 end)
@@ -1321,6 +1341,8 @@ Exter:Notification({
     ImageSource = "Material",
     Duration = 5
 })
+
+applyVisuals()
 
 applyVisuals()
 
