@@ -24,7 +24,7 @@ Exter Library is a comprehensive UI Library for Roblox scripts, designed to help
 
 ## Features
 
-- **Rich UI Elements** — Buttons, toggles, sliders, dropdowns, textboxes, color pickers, and more
+- **Rich UI Elements** — Buttons, toggles, sliders, dropdowns, text inputs, color pickers, and more
 - **Navigation System** — Tab-based navigation with smooth transitions
 - **Notification System** — Built-in toast-style notifications
 - **Icon Support** — Hundreds of Lucide and Material Icons built-in
@@ -57,7 +57,6 @@ local Library = loadstring(game:HttpGet(
 -- Create a Window
 local Window = Library:CreateWindow({
     Name = "My Script",
-    Icon = "home",
 })
 
 -- Create a Tab
@@ -78,11 +77,13 @@ Tab:CreateButton({
 Tab:CreateToggle({
     Name = "Enable Feature",
     CurrentValue = false,
-    Callback = function(value)
-        print("Toggle:", value)
+    Callback = function(Value)
+        print("Toggle:", Value)
     end,
 })
 ```
+
+`Window` accepts an optional `LogoID` (a numeric Roblox asset id) if you want a custom logo instead of the default one — `Icon` names are only used on tabs and other elements, not on the window itself.
 
 ## UI Elements
 
@@ -91,18 +92,20 @@ Tab:CreateToggle({
 | `CreateButton` | Clickable button with callback |
 | `CreateToggle` | On/off toggle switch |
 | `CreateSlider` | Numeric value slider |
-| `CreateDropdown` | Selection dropdown menu |
-| `CreateTextbox` | Text input field |
+| `CreateDropdown` | Selection dropdown menu, with single or multiple selection |
+| `CreateInput` | Text input field |
 | `CreateColorPicker` | RGB/HSV color picker |
-| `CreateKeybind` | Keybind capture input |
+| `CreateBind` / `CreateKeybind` | Keybind capture input |
 | `CreateLabel` | Static text label |
 | `CreateParagraph` | Multi-line text block |
 | `CreateSection` | Visual separator/section header |
 
+Every element also exposes a `:Set(...)` method afterwards to update its settings or value at runtime.
+
 ## Notifications
 
 ```lua
-Library:Notify({
+Library:Notification({
     Title = "Hello!",
     Content = "This is a notification.",
     Duration = 5,
@@ -121,11 +124,11 @@ Use icon names as strings when creating tabs or other elements:
 ```lua
 local Tab = Window:CreateTab({
     Name = "Settings",
-    Icon = "settings",  -- Material Icon name
+    Icon = "settings",  -- Material Icon name (default ImageSource)
 })
 ```
 
-Browse the full icon list inside `ExterLibrary.lua` or refer to the [documentation](http://exter-library.gt.tc/).
+To use a Lucide icon instead, set `ImageSource = "Lucide"` alongside the icon name. Browse the full icon list inside `ExterLibrary.lua`, or refer to the [documentation](http://exter-library.gt.tc/).
 
 ## Theme
 
