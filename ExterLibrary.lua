@@ -745,12 +745,12 @@ local IconModule = {
 		["add_to_home_screen"] = "http://www.roblox.com/asset/?id=6034983858";
 		["screen_lock_portrait"] = "http://www.roblox.com/asset/?id=6034996706";
 		["data_usage"] = "http://www.roblox.com/asset/?id=6034989568";
-		["_auto_delete"] = "http://www.roblox.com/asset/?id=6031071068";
-		["_error"] = "http://www.roblox.com/asset/?id=6031071057";
-		["_notification_important"] = "http://www.roblox.com/asset/?id=6031071056";
-		["_add_alert"] = "http://www.roblox.com/asset/?id=6031071067";
-		["_warning"] = "http://www.roblox.com/asset/?id=6031071053";
-		["_error_outline"] = "http://www.roblox.com/asset/?id=6031071050";
+		["auto_delete"] = "http://www.roblox.com/asset/?id=6031071068";
+		["error"] = "http://www.roblox.com/asset/?id=6031071057";
+		["notification_important"] = "http://www.roblox.com/asset/?id=6031071056";
+		["add_alert"] = "http://www.roblox.com/asset/?id=6031071067";
+		["warning"] = "http://www.roblox.com/asset/?id=6031071053";
+		["error_outline"] = "http://www.roblox.com/asset/?id=6031071050";
 		["check_box_outline_blank"] = "http://www.roblox.com/asset/?id=6031068420";
 		["toggle_off"] = "http://www.roblox.com/asset/?id=6031068429";
 		["indeterminate_check_box"] = "http://www.roblox.com/asset/?id=6031068445";
@@ -1568,7 +1568,7 @@ local function GetIcon(icon, source)
 
 			local r = sizedicons[icon]
 			if not r then
-				return IconModule.Material.help
+				return IconModule.Material.help_center
 			end
 
 			local rirs = r[2]
@@ -1589,7 +1589,7 @@ local function GetIcon(icon, source)
 
 			return asset
 		end
-		return IconModule.Material.help
+		return IconModule.Material.help_center
 	else	
 		if icon ~= nil and IconModule[source] then
 			local sourceicon = IconModule[source]
@@ -1601,8 +1601,11 @@ local function GetIcon(icon, source)
 end
 
 local function RemoveTable(tablre, value)
-	for i,v in pairs(tablre) do
-		if tostring(v) == tostring(value) then
+	-- Iterate backwards so removing an entry never shifts the index of an
+	-- item we haven't checked yet (the previous pairs()+table.remove combo
+	-- could silently skip the neighbouring element).
+	for i = #tablre, 1, -1 do
+		if tostring(tablre[i]) == tostring(value) then
 			table.remove(tablre, i)
 		end
 	end
@@ -3829,6 +3832,7 @@ function Sobing:CreateWindow(WindowSettings)
 			function Section:CreateDropdown(DropdownSettings, Flag)
 				TabPage.Position = UDim2.new(0,0,0,28)
 				local DropdownV = { IgnoreConfig = false, Class = "Dropdown", Settings = DropdownSettings}
+				local PlayerAddedConn, PlayerRemovingConn
 
 				DropdownSettings = Kwargify({
 					Name = "Dropdown",
@@ -4006,9 +4010,7 @@ function Sobing:CreateWindow(WindowSettings)
 				end
 
 				local function PlayerTableRefresh()
-					for i,v in pairs(DropdownSettings.Options) do
-						table.remove(DropdownSettings.Options, i)
-					end
+					table.clear(DropdownSettings.Options)
 
 					for i,v in pairs(Players:GetChildren()) do
 						table.insert(DropdownSettings.Options, v.Name)
@@ -4029,14 +4031,13 @@ function Sobing:CreateWindow(WindowSettings)
 
 				if DropdownSettings.SpecialType == "Player" then
 
-					for i,v in pairs(DropdownSettings.Options) do
-						table.remove(DropdownSettings.Options, i)
-					end
 					PlayerTableRefresh()
 					DropdownSettings.CurrentOption = DropdownSettings.Options[1]
 
-					Players.PlayerAdded:Connect(function() PlayerTableRefresh() end)
-					Players.PlayerRemoving:Connect(function() PlayerTableRefresh() end)
+					if PlayerAddedConn then PlayerAddedConn:Disconnect() end
+					if PlayerRemovingConn then PlayerRemovingConn:Disconnect() end
+					PlayerAddedConn = Players.PlayerAdded:Connect(function() PlayerTableRefresh() end)
+					PlayerRemovingConn = Players.PlayerRemoving:Connect(function() PlayerTableRefresh() end)
 
 				end
 
@@ -4102,13 +4103,13 @@ function Sobing:CreateWindow(WindowSettings)
 
 					if DropdownSettings.SpecialType == "Player" then
 
-						for i,v in pairs(DropdownSettings.Options) do
-							table.remove(DropdownSettings.Options, i)
-						end
 						PlayerTableRefresh()
-						DropdownSettings.CurrentOption = DropdownSettings.Options[1]                    
-						Players.PlayerAdded:Connect(function() PlayerTableRefresh() end)
-						Players.PlayerRemoving:Connect(function() PlayerTableRefresh() end)
+						DropdownSettings.CurrentOption = DropdownSettings.Options[1]
+
+						if PlayerAddedConn then PlayerAddedConn:Disconnect() end
+						if PlayerRemovingConn then PlayerRemovingConn:Disconnect() end
+						PlayerAddedConn = Players.PlayerAdded:Connect(function() PlayerTableRefresh() end)
+						PlayerRemovingConn = Players.PlayerRemoving:Connect(function() PlayerTableRefresh() end)
 
 					end
 
@@ -5608,6 +5609,7 @@ function Sobing:CreateWindow(WindowSettings)
 		-- Dropdown
 		function Tab:CreateDropdown(DropdownSettings, Flag)
 			local DropdownV = { IgnoreConfig = false, Class = "Dropdown", Settings = DropdownSettings}
+			local PlayerAddedConn, PlayerRemovingConn
 
 			DropdownSettings = Kwargify({
 				Name = "Dropdown",
@@ -5785,9 +5787,7 @@ function Sobing:CreateWindow(WindowSettings)
 			end
 
 			local function PlayerTableRefresh()
-				for i,v in pairs(DropdownSettings.Options) do
-					table.remove(DropdownSettings.Options, i)
-				end
+				table.clear(DropdownSettings.Options)
 
 				for i,v in pairs(Players:GetChildren()) do
 					table.insert(DropdownSettings.Options, v.Name)
@@ -5808,14 +5808,13 @@ function Sobing:CreateWindow(WindowSettings)
 
 			if DropdownSettings.SpecialType == "Player" then
 
-				for i,v in pairs(DropdownSettings.Options) do
-					table.remove(DropdownSettings.Options, i)
-				end
 				PlayerTableRefresh()
 				DropdownSettings.CurrentOption = DropdownSettings.Options[1]
 
-				Players.PlayerAdded:Connect(function() PlayerTableRefresh() end)
-				Players.PlayerRemoving:Connect(function() PlayerTableRefresh() end)
+				if PlayerAddedConn then PlayerAddedConn:Disconnect() end
+				if PlayerRemovingConn then PlayerRemovingConn:Disconnect() end
+				PlayerAddedConn = Players.PlayerAdded:Connect(function() PlayerTableRefresh() end)
+				PlayerRemovingConn = Players.PlayerRemoving:Connect(function() PlayerTableRefresh() end)
 
 			end
 
@@ -5881,13 +5880,13 @@ function Sobing:CreateWindow(WindowSettings)
 
 				if DropdownSettings.SpecialType == "Player" then
 
-					for i,v in pairs(DropdownSettings.Options) do
-						table.remove(DropdownSettings.Options, i)
-					end
 					PlayerTableRefresh()
-					DropdownSettings.CurrentOption = DropdownSettings.Options[1]                    
-					Players.PlayerAdded:Connect(function() PlayerTableRefresh() end)
-					Players.PlayerRemoving:Connect(function() PlayerTableRefresh() end)
+					DropdownSettings.CurrentOption = DropdownSettings.Options[1]
+
+					if PlayerAddedConn then PlayerAddedConn:Disconnect() end
+					if PlayerRemovingConn then PlayerRemovingConn:Disconnect() end
+					PlayerAddedConn = Players.PlayerAdded:Connect(function() PlayerTableRefresh() end)
+					PlayerRemovingConn = Players.PlayerRemoving:Connect(function() PlayerTableRefresh() end)
 
 				end
 
