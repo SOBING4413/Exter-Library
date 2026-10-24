@@ -1,4 +1,4 @@
-local Release = "v1.2.8"
+local Release = "v1.3.0"
 
 local Sobing = { Folder = "Sobing", Options = {}, ThemeGradient = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(117, 164, 206)), ColorSequenceKeypoint.new(0.50, Color3.fromRGB(123, 201, 201)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(224, 138, 175))} }
 Sobing.Credits = {
@@ -11,12 +11,61 @@ Sobing.Credits = {
 local ExterLibrary = Sobing
 local Library = Sobing
 
-local UserInputService = game:GetService("UserInputService")
+-- Single-instance guard: loading the library again cleanly replaces the previous window.
+local __env = (getgenv and getgenv()) or _G
+if __env.__ExterLibraryInstance and __env.__ExterLibraryInstance ~= Sobing then
+	pcall(function() __env.__ExterLibraryInstance:Destroy() end)
+end
+__env.__ExterLibraryInstance = Sobing
+
+Sobing.CurrentThemeName = "Nightlight (Neo)"
+Sobing.Appearance = { AnimatedBorder = true, Wash = true, BackgroundBlur = false }
+Sobing._visuals = {}
+
+-- Connection registry: every global-service connection is tracked so :Destroy() can release it.
+local Connections = {}
+local function Track(conn)
+	Connections[#Connections + 1] = conn
+	if #Connections > 300 then
+		local alive = {}
+		for _, c in ipairs(Connections) do
+			if c.Connected then alive[#alive + 1] = c end
+		end
+		Connections = alive
+	end
+	return conn
+end
+
+local function TrackedSignal(signal)
+	return {
+		Connect = function(_, fn) return Track(signal:Connect(fn)) end,
+		connect = function(_, fn) return Track(signal:Connect(fn)) end,
+		Once = function(_, fn) return Track(signal:Once(fn)) end,
+		Wait = function() return signal:Wait() end,
+	}
+end
+
+local function TrackedService(svc)
+	return setmetatable({}, {
+		__index = function(_, k)
+			local v = svc[k]
+			if typeof(v) == "RBXScriptSignal" then
+				return TrackedSignal(v)
+			elseif type(v) == "function" then
+				return function(_, ...) return v(svc, ...) end
+			end
+			return v
+		end,
+		__newindex = function(_, k, val) svc[k] = val end,
+	})
+end
+
+local UserInputService = TrackedService(game:GetService("UserInputService"))
 local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
-local RunService = game:GetService("RunService")
+local RunService = TrackedService(game:GetService("RunService"))
 local Localization = game:GetService("LocalizationService")
-local Players = game:GetService("Players")
+local Players = TrackedService(game:GetService("Players"))
 local Player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local CoreGui = game:GetService("CoreGui")
@@ -32,6 +81,15 @@ local website = "https://discord.gg/77WnqnJcPu"
 
 if RunService:IsStudio() then
 	isStudio = true
+end
+
+Sobing.Appearance.AnimatedBorder = not UserInputService.TouchEnabled
+
+local function ExecutorName()
+	if isStudio then return "Debugging (Studio)" end
+	if not identifyexecutor then return nil end
+	local ok, name = pcall(identifyexecutor)
+	return ok and name or nil
 end
 
 -- Credits To Latte Softworks And qweery for Lucide And Material Icons Respectively.
@@ -1543,6 +1601,16 @@ local PresetGradients = {
 	Cherry = {Color3.fromRGB(148, 54, 54), Color3.fromRGB(168, 67, 70), Color3.fromRGB(188, 80, 86)},
 	Daylight = {Color3.fromRGB(51, 156, 255), Color3.fromRGB(89, 171, 237), Color3.fromRGB(127, 186, 218)},
 	Blossom = {Color3.fromRGB(255, 165, 243), Color3.fromRGB(213, 129, 231), Color3.fromRGB(170, 92, 218)},
+	Midnight = {Color3.fromRGB(99, 102, 241), Color3.fromRGB(139, 92, 246), Color3.fromRGB(217, 70, 239)},
+	Aurora = {Color3.fromRGB(52, 211, 153), Color3.fromRGB(56, 189, 248), Color3.fromRGB(167, 139, 250)},
+	Sunset = {Color3.fromRGB(251, 146, 60), Color3.fromRGB(244, 114, 182), Color3.fromRGB(167, 139, 250)},
+	Ocean = {Color3.fromRGB(14, 165, 233), Color3.fromRGB(6, 182, 212), Color3.fromRGB(45, 212, 191)},
+	Emerald = {Color3.fromRGB(16, 185, 129), Color3.fromRGB(52, 211, 153), Color3.fromRGB(163, 230, 53)},
+	Crimson = {Color3.fromRGB(239, 68, 68), Color3.fromRGB(244, 63, 94), Color3.fromRGB(251, 113, 133)},
+	["Rose Gold"] = {Color3.fromRGB(253, 186, 116), Color3.fromRGB(251, 146, 160), Color3.fromRGB(232, 121, 249)},
+	Mono = {Color3.fromRGB(229, 229, 229), Color3.fromRGB(163, 163, 163), Color3.fromRGB(115, 115, 115)},
+	Cyberpunk = {Color3.fromRGB(250, 204, 21), Color3.fromRGB(236, 72, 153), Color3.fromRGB(6, 182, 212)},
+	Mint = {Color3.fromRGB(110, 231, 183), Color3.fromRGB(125, 211, 252), Color3.fromRGB(196, 181, 253)},
 }
 
 local LucideCache
@@ -1628,10 +1696,40 @@ local function UnpackColor(Color)
 	return Color3.fromRGB(Color.R, Color.G, Color.B)
 end
 
-function tween(object, goal, callback, tweenin)
-	local tween = TweenService:Create(object,tweenin or tweeninfo, goal)
-	tween.Completed:Connect(callback or function() end)
-	tween:Play()
+local function tween(object, goal, callback, tweenin)
+	local tw = TweenService:Create(object, tweenin or tweeninfo, goal)
+	tw.Completed:Connect(callback or function() end)
+	tw:Play()
+end
+
+-- Pixel width of a slider fill for a value (handles any Range, not only ranges starting at 0).
+local function SliderWidth(Slider, Settings, value)
+	local min, max = Settings.Range[1], Settings.Range[2]
+	local span = max - min
+	if span == 0 then return 5 end
+	local alpha = math.clamp(((tonumber(value) or min) - min) / span, 0, 1)
+	return math.max(5, Slider.Main.AbsoluteSize.X * alpha)
+end
+
+-- Tween a dropdown row only if it exists (prevents "not a valid member" errors).
+local function TweenListItem(Dropdown, name, goal)
+	if type(name) ~= "string" then return end
+	local item = Dropdown.List:FindFirstChild(name)
+	if item then tween(item, goal) end
+end
+
+-- Apply an icon (Material string or Lucide sprite table) to an ImageLabel.
+local function ApplyIcon(imageLabel, icon, source)
+	local asset = GetIcon(icon, source)
+	if type(asset) == "table" then
+		imageLabel.Image = "rbxassetid://" .. tostring(asset.id)
+		imageLabel.ImageRectSize = asset.imageRectSize
+		imageLabel.ImageRectOffset = asset.imageRectOffset
+	elseif type(asset) == "string" then
+		imageLabel.Image = asset
+	else
+		imageLabel.Image = IconModule.Material.help_center
+	end
 end
 
 local function BlurModule(Frame)
@@ -1823,6 +1921,7 @@ local function BlurModule(Frame)
 
 	UpdateOrientation(true)
 	RunService:BindToRenderStep(uid, 2000, UpdateOrientation)
+	Sobing._blur = {uid = uid, dof = DepthOfField, root = root}
 end
 
 local function unpackt(array : table)
@@ -1869,6 +1968,8 @@ local function ApplyPremiumVisuals(windowFrame)
 		return
 	end
 
+	local visuals = Sobing._visuals
+
 	local title = windowFrame:FindFirstChild("Title")
 	if title and title:IsA("Frame") then
 		local grad = title:FindFirstChild("ExterTitleGradient") or Instance.new("UIGradient")
@@ -1881,10 +1982,79 @@ local function ApplyPremiumVisuals(windowFrame)
 		grad.Parent = title
 	end
 
+	-- animated gradient border
 	local stroke = windowFrame:FindFirstChildOfClass("UIStroke")
 	if stroke then
 		stroke.Thickness = 1.25
 		stroke.Transparency = 0.35
+		stroke:SetAttribute("ExterBaseT", 0.35)
+		stroke.Color = Color3.new(1, 1, 1)
+		local g = stroke:FindFirstChild("ExterBorderGradient") or Instance.new("UIGradient")
+		g.Name = "ExterBorderGradient"
+		g.Color = Sobing.ThemeGradient
+		g.Parent = stroke
+		visuals.border = g
+	end
+
+	-- soft theme glow behind the content
+	local wash = windowFrame:FindFirstChild("ExterWash")
+	if not wash then
+		wash = Instance.new("Frame")
+		wash.Name = "ExterWash"
+		wash.Size = UDim2.fromScale(1, 1)
+		wash.BackgroundColor3 = Color3.new(1, 1, 1)
+		wash.BackgroundTransparency = 0.93
+		wash.BorderSizePixel = 0
+		wash.ZIndex = -100
+		wash.Active = false
+		pcall(function() wash.Interactable = false end)
+		local corner = windowFrame:FindFirstChildOfClass("UICorner")
+		if corner then corner:Clone().Parent = wash end
+		local wg = Instance.new("UIGradient")
+		wg.Name = "ExterWashGradient"
+		wg.Rotation = 35
+		wg.Color = Sobing.ThemeGradient
+		wg.Parent = wash
+		wash.Parent = windowFrame
+		visuals.wash = wg
+	end
+	wash.Visible = Sobing.Appearance.Wash
+	visuals.washFrame = wash
+
+	-- accent lines
+	local function AccentLine(frame, key, rotation)
+		if frame and frame:IsA("Frame") then
+			frame.BackgroundColor3 = Color3.new(1, 1, 1)
+			local lg = frame:FindFirstChild("ExterLineGradient") or Instance.new("UIGradient")
+			lg.Name = "ExterLineGradient"
+			lg.Rotation = rotation
+			lg.Color = Sobing.ThemeGradient
+			lg.Parent = frame
+			visuals[key] = lg
+		end
+	end
+	AccentLine(windowFrame:FindFirstChild("Line"), "line", 0)
+	local nav = windowFrame:FindFirstChild("Navigation")
+	AccentLine(nav and nav:FindFirstChild("Line"), "navline", 90)
+
+	if not visuals.borderLoop then
+		visuals.borderLoop = true
+		RunService.Heartbeat:Connect(function()
+			local g = visuals.border
+			if g and g.Parent and Sobing.Appearance.AnimatedBorder and windowFrame.Visible then
+				g.Rotation = (os.clock() * 40) % 360
+			end
+		end)
+	end
+end
+
+local function UpdateWindowVisuals()
+	local grad = Sobing.ThemeGradient
+	for _, key in ipairs({"border", "wash", "line", "navline"}) do
+		local g = Sobing._visuals[key]
+		if g and g.Parent then
+			g.Color = grad
+		end
 	end
 end
 
@@ -1905,11 +2075,22 @@ end
 
 local ThemedCache = nil
 local LastThemeApply = 0
+local ThemeApplyScheduled = false
 
 local function ApplyGlobalTheme(root)
 	if not root then return end
 	local now = os.clock()
-	if now - LastThemeApply < 0.08 then return end
+	if now - LastThemeApply < 0.08 then
+		-- trailing apply so the final colour is never dropped by the throttle
+		if not ThemeApplyScheduled then
+			ThemeApplyScheduled = true
+			task.delay(0.1, function()
+				ThemeApplyScheduled = false
+				ApplyGlobalTheme(root)
+			end)
+		end
+		return
+	end
 	LastThemeApply = now
 
 	local accent = Sobing.ThemeGradient.Keypoints[1].Value
@@ -1918,14 +2099,82 @@ local function ApplyGlobalTheme(root)
 	end
 
 	for _, ui in ipairs(ThemedCache) do
-		if ui:IsA("UIStroke") then
-			ui.Color = accent
-		elseif ui:IsA("TextLabel") and (ui.Name == "Title" or ui.Name == "subtitle" or ui.Name == "Namez") then
-			ui.TextColor3 = Color3.fromRGB(245, 245, 255)
-		elseif ui:IsA("ImageLabel") and ui.Name == "ImageLabel" and ui.Parent and ui.Parent.Name ~= "icon" then
-			ui.ImageColor3 = accent
+		if ui.Parent then
+			if ui:IsA("UIStroke") then
+				if ui.Parent == root then
+					ui.Color = ui:FindFirstChild("ExterBorderGradient") and Color3.new(1, 1, 1) or accent
+				end
+			elseif ui:IsA("TextLabel") and (ui.Name == "Title" or ui.Name == "subtitle" or ui.Name == "Namez") then
+				ui.TextColor3 = Color3.fromRGB(245, 245, 255)
+			elseif ui:IsA("ImageLabel") and ui.Name == "ImageLabel" and ui.Parent.Name ~= "icon" then
+				ui.ImageColor3 = accent
+			end
 		end
 	end
+end
+
+-- Theme API ---------------------------------------------------------------
+local themeAnimToken = 0
+
+local function GradientColors(seq)
+	local kp = seq.Keypoints
+	return { kp[1].Value, (kp[2] or kp[1]).Value, kp[#kp].Value }
+end
+
+local function ApplyAccent(c1, c2, c3)
+	Sobing.ThemeGradient = ColorSequence.new{
+		ColorSequenceKeypoint.new(0, c1),
+		ColorSequenceKeypoint.new(0.5, c2),
+		ColorSequenceKeypoint.new(1, c3),
+	}
+	SobingUI.ThemeRemote.Value = not SobingUI.ThemeRemote.Value
+end
+
+function Sobing:GetThemeNames()
+	local names = {}
+	for name in pairs(PresetGradients) do
+		names[#names + 1] = name
+	end
+	table.sort(names)
+	return names
+end
+
+-- theme: preset name (string) or {Color3, Color3, Color3}; instant skips the transition
+function Sobing:SetTheme(theme, instant, noSave)
+	local colors, name = theme, "Custom"
+	if type(theme) == "string" then
+		colors, name = PresetGradients[theme], theme
+	end
+	if type(colors) ~= "table" or not (colors[1] and colors[2] and colors[3]) then
+		return false
+	end
+
+	Sobing.CurrentThemeName = name
+	themeAnimToken += 1
+	local token = themeAnimToken
+	local from = GradientColors(Sobing.ThemeGradient)
+
+	if not noSave and type(theme) == "string" and Sobing._themeFile and writefile then
+		pcall(writefile, Sobing._themeFile, name)
+	end
+
+	if instant or Sobing._destroyed then
+		ApplyAccent(colors[1], colors[2], colors[3])
+		return true
+	end
+
+	task.spawn(function()
+		local t0 = os.clock()
+		local duration = 0.45
+		while token == themeAnimToken and not Sobing._destroyed do
+			local a = math.clamp((os.clock() - t0) / duration, 0, 1)
+			local e = TweenService:GetValue(a, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+			ApplyAccent(from[1]:Lerp(colors[1], e), from[2]:Lerp(colors[2], e), from[3]:Lerp(colors[3], e))
+			if a >= 1 then break end
+			RunService.Heartbeat:Wait()
+		end
+	end)
+	return true
 end
 
 -- Interface Management
@@ -1960,51 +2209,188 @@ local SizeBleh = nil
 local MenuAnimDuration = 0.32
 local MenuTransitionNonce = 0
 
-local function Hide(Window, bind, notif)
-	MenuTransitionNonce += 1
-	local nonce = MenuTransitionNonce
-	SizeBleh = Window.Size
-	bind = string.split(tostring(bind), "Enum.KeyCode.")
-	bind = bind[2]
-	if notif then
-		Sobing:Notification({Title = "Interface Hidden", Content = "The interface has been hidden, you may reopen the interface by Pressing the UI Bind In Settings ("..tostring(bind)..")", Icon = "visibility_off"})
-	end
-	tween(Window, {BackgroundTransparency = 1})
-	tween(Window.Elements, {BackgroundTransparency = 1})
-	tween(Window.Line, {BackgroundTransparency = 1})
-	tween(Window.Title.Title, {TextTransparency = 1})
-	tween(Window.Title.subtitle, {TextTransparency = 1})
-	tween(Window.Logo, {ImageTransparency = 1})
-	tween(Window.Navigation.Line, {BackgroundTransparency = 1})
+-- Premium motion system -------------------------------------------------------
+local Lighting = game:GetService("Lighting")
+local HiddenShell = {}
+local WindowOpacity = 0.2
 
-	for _, TopbarButton in ipairs(Window.Controls:GetChildren()) do
-		if TopbarButton.ClassName == "Frame" then
-			tween(TopbarButton, {BackgroundTransparency = 1})
-			tween(TopbarButton.UIStroke, {Transparency = 1})
-			tween(TopbarButton.ImageLabel, {ImageTransparency = 1})
-			TopbarButton.Visible = false
+local function BindTheme(fn)
+	pcall(fn)
+	Track(SobingUI.ThemeRemote:GetPropertyChangedSignal("Value"):Connect(fn))
+end
+
+function Sobing:SetWindowOpacity(alpha)
+	WindowOpacity = math.clamp(tonumber(alpha) or 0.2, 0, 0.9)
+	if Main and Main.Visible and Main.BackgroundTransparency < 0.95 then
+		TweenService:Create(Main, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {BackgroundTransparency = WindowOpacity}):Play()
+	end
+end
+
+function Sobing:SetAnimationSpeed(mult)
+	Sobing._animSpeed = math.clamp(tonumber(mult) or 1, 0.4, 3)
+	MenuAnimDuration = math.clamp((Sobing._baseDuration or 0.32) / Sobing._animSpeed, 0.12, 1)
+end
+
+local function SetBlur(visible)
+	if Sobing._destroyed then return end
+	if not Sobing.Appearance.BackgroundBlur then
+		visible = false
+	end
+	local blur = Sobing._blurEffect
+	if not blur then
+		if not visible then return end
+		blur = Instance.new("BlurEffect")
+		blur.Name = "ExterBackgroundBlur"
+		blur.Size = 0
+		blur.Parent = Lighting
+		Sobing._blurEffect = blur
+	end
+	TweenService:Create(blur, TweenInfo.new(MenuAnimDuration, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = visible and 14 or 0}):Play()
+end
+
+local function EnsureMotion(Window)
+	local scale = Window:FindFirstChild("ExterMotionScale")
+	if not scale then
+		scale = Instance.new("UIScale")
+		scale.Name = "ExterMotionScale"
+		scale.Scale = 1
+		scale.Parent = Window
+	end
+
+	local curtain = Window:FindFirstChild("ExterCurtain")
+	if not curtain then
+		curtain = Instance.new("Frame")
+		curtain.Name = "ExterCurtain"
+		curtain.Size = UDim2.fromScale(1, 1)
+		curtain.BackgroundColor3 = Window.BackgroundColor3
+		curtain.BackgroundTransparency = 1
+		curtain.BorderSizePixel = 0
+		curtain.ZIndex = 9999
+		curtain.Active = false
+		pcall(function() curtain.Interactable = false end)
+		local corner = Window:FindFirstChildOfClass("UICorner")
+		if corner then corner:Clone().Parent = curtain end
+		curtain.Parent = Window
+	end
+
+	local shadow = Window.Parent and Window.Parent:FindFirstChild("ShadowHolder")
+	local shadowScale
+	if shadow then
+		shadowScale = shadow:FindFirstChild("ExterMotionScale")
+		if not shadowScale then
+			shadowScale = Instance.new("UIScale")
+			shadowScale.Name = "ExterMotionScale"
+			shadowScale.Scale = 1
+			shadowScale.Parent = shadow
 		end
 	end
-	for _, tabbtn in ipairs(Window.Navigation.Tabs:GetChildren()) do
-		if tabbtn.ClassName == "Frame" and tabbtn.Name ~= "InActive Template" then
-			TweenService:Create(tabbtn, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
-			TweenService:Create(tabbtn.ImageLabel, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
-			TweenService:Create(tabbtn.DropShadowHolder.DropShadow, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
-			TweenService:Create(tabbtn.UIStroke, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {Transparency = 1}):Play()
+	return scale, curtain, shadow, shadowScale
+end
+
+-- hide / restore the direct children of the window (content stays masked by the curtain meanwhile)
+local function SetShell(Window, visible)
+	if visible then
+		for inst in pairs(HiddenShell) do
+			if inst.Parent then inst.Visible = true end
+		end
+		table.clear(HiddenShell)
+	else
+		for _, child in ipairs(Window:GetChildren()) do
+			if child:IsA("GuiObject") and child.Visible and child.Name ~= "ExterCurtain" and child.Name ~= "ExterWash" then
+				HiddenShell[child] = true
+				child.Visible = false
+			end
 		end
 	end
+end
 
-	TweenService:Create(Window, SmoothTweenInfo(MenuAnimDuration, Enum.EasingStyle.Quint), {Size = UDim2.new(0,0,0,0)}):Play()
-	task.delay(MenuAnimDuration, function()
-		if nonce ~= MenuTransitionNonce then return end
-		if Window and Window.Parent then
-			Window.Parent.ShadowHolder.Visible = false
-			Window.Elements.Parent.Visible = false
-			Window.Visible = false
+local function FadeShadow(shadow, hidden, info)
+	if not shadow then return end
+	for _, d in ipairs(shadow:GetDescendants()) do
+		if d:IsA("ImageLabel") or d:IsA("ImageButton") then
+			if d:GetAttribute("ExterBaseT") == nil then
+				d:SetAttribute("ExterBaseT", d.ImageTransparency)
+			end
+			local target = hidden and 1 or d:GetAttribute("ExterBaseT")
+			if info then
+				TweenService:Create(d, info, {ImageTransparency = target}):Play()
+			else
+				d.ImageTransparency = target
+			end
+		end
+	end
+end
+
+-- subtle hover glow for interactive elements
+local function DecorateElement(child)
+	if not child:IsA("GuiObject") then return end
+	local interact = child:FindFirstChild("Interact")
+	if not interact or not interact:IsA("GuiButton") then return end
+	local base
+	interact.MouseEnter:Connect(function()
+		base = child.BackgroundTransparency
+		if base > 0.2 and base < 0.8 then
+			TweenService:Create(child, SmoothTweenInfo(0.2, Enum.EasingStyle.Quad), {BackgroundTransparency = base - 0.14}):Play()
+		else
+			base = nil
+		end
+	end)
+	interact.MouseLeave:Connect(function()
+		if base then
+			TweenService:Create(child, SmoothTweenInfo(0.25, Enum.EasingStyle.Quad), {BackgroundTransparency = base}):Play()
+			base = nil
 		end
 	end)
 end
 
+local function HookDecorations(container)
+	container.ChildAdded:Connect(function(child)
+		task.defer(function()
+			if child.Parent then pcall(DecorateElement, child) end
+		end)
+	end)
+end
+
+local function Hide(Window, bind, notif)
+	MenuTransitionNonce += 1
+	local nonce = MenuTransitionNonce
+
+	if notif then
+		local bindName = string.split(tostring(bind), "Enum.KeyCode.")[2] or tostring(bind)
+		Sobing:Notification({Title = "Interface Hidden", Content = "The interface has been hidden, you may reopen the interface by Pressing the UI Bind In Settings (" .. bindName .. ")", Icon = "visibility_off"})
+	end
+
+	local scale, curtain, shadow, shadowScale = EnsureMotion(Window)
+	local stroke = Window:FindFirstChildOfClass("UIStroke")
+	local d = MenuAnimDuration
+
+	-- phase 1: a dark card covers the content while the window eases down
+	local shrink = TweenInfo.new(d, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+	TweenService:Create(scale, shrink, {Scale = 0.93}):Play()
+	if shadowScale then TweenService:Create(shadowScale, shrink, {Scale = 0.93}):Play() end
+	TweenService:Create(curtain, TweenInfo.new(d * 0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+	SetBlur(false)
+
+	-- phase 2: content is hidden behind the card, then everything fades out
+	task.delay(d * 0.5, function()
+		if nonce ~= MenuTransitionNonce then return end
+		SetShell(Window, false)
+		local fade = TweenInfo.new(d * 0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+		TweenService:Create(curtain, fade, {BackgroundTransparency = 1}):Play()
+		TweenService:Create(Window, fade, {BackgroundTransparency = 1}):Play()
+		if stroke then
+			if stroke:GetAttribute("ExterBaseT") == nil then stroke:SetAttribute("ExterBaseT", stroke.Transparency) end
+			TweenService:Create(stroke, fade, {Transparency = 1}):Play()
+		end
+		FadeShadow(shadow, true, fade)
+	end)
+
+	task.delay(d + 0.02, function()
+		if nonce ~= MenuTransitionNonce then return end
+		Window.Visible = false
+		if shadow then shadow.Visible = false end
+	end)
+end
 
 local parentGui, shouldProtect = ResolveGuiParent()
 if shouldProtect and syn and syn.protect_gui then
@@ -2016,17 +2402,13 @@ SobingUI.Parent = parentGui
 if gethui then
 	for _, Interface in ipairs(gethui():GetChildren()) do
 		if Interface.Name == SobingUI.Name and Interface ~= SobingUI then
-			Hide(Interface.SmartWindow)
-			Interface.Enabled = false
-			Interface.Name = "Sobing-Old"
+			pcall(function() Interface:Destroy() end)
 		end
 	end
 elseif not isStudio then
 	for _, Interface in ipairs(CoreGui:GetChildren()) do
 		if Interface.Name == SobingUI.Name and Interface ~= SobingUI then
-			Hide(Interface.SmartWindow)
-			Interface.Enabled = false
-			Interface.Name = "Sobing-Old"
+			pcall(function() Interface:Destroy() end)
 		end
 	end
 end
@@ -2116,128 +2498,197 @@ local function Draggable(Bar, Window, enableTaptic, tapticOffset)
 	end)
 end
 
-function Sobing:Notification(data) -- action e.g open messages
+local NotificationTypes = {
+	Success = {Icon = "check_circle", Color = Color3.fromRGB(86, 214, 140)},
+	Warning = {Icon = "warning", Color = Color3.fromRGB(250, 204, 82)},
+	Error = {Icon = "error", Color = Color3.fromRGB(240, 92, 92)},
+	Info = {Icon = "info", Color = Color3.fromRGB(104, 170, 255)},
+}
+
+-- data: Title, Content, Icon, ImageSource, Duration, Type ("Success" | "Warning" | "Error" | "Info")
+function Sobing:Notification(data)
+	if Sobing._destroyed then return end
 	task.spawn(function()
-		data = Kwargify({
-			Title = "Missing Title",
-			Content = "Missing or Unknown Content",
-			Icon = "view_in_ar",
-			ImageSource = "Material"
-		}, data or {})
+		local newNotification
+		local ok, err = pcall(function()
+			data = Kwargify({
+				Title = "Missing Title",
+				Content = "Missing or Unknown Content",
+				Icon = "view_in_ar",
+				ImageSource = "Material",
+			}, data or {})
 
-		-- Notification Object Creation
-		local newNotification = Notifications.Template:Clone()
-		newNotification.Name = data.Title
-		newNotification.Parent = Notifications
-		newNotification.LayoutOrder = #Notifications:GetChildren()
-		newNotification.Visible = false
-		
-		-- Set Data
-		newNotification.Title.Text = data.Title
-		newNotification.Description.Text = data.Content 
-		newNotification.Icon.Image = GetIcon(data.Icon, data.ImageSource)
+			local typeInfo = data.Type and NotificationTypes[data.Type] or nil
+			if typeInfo and data.Icon == "view_in_ar" then
+				data.Icon = typeInfo.Icon
+			end
 
-		local notifGradient = newNotification:FindFirstChild("ExterNotifGradient") or Instance.new("UIGradient")
-		notifGradient.Name = "ExterNotifGradient"
-		notifGradient.Rotation = 20
-		notifGradient.Color = ColorSequence.new{
-			ColorSequenceKeypoint.new(0, Color3.fromRGB(32, 30, 38)),
-			ColorSequenceKeypoint.new(1, Color3.fromRGB(24, 23, 31))
-		}
-		notifGradient.Parent = newNotification
+			-- Notification Object Creation
+			newNotification = Notifications.Template:Clone()
+			newNotification.Name = data.Title
+			newNotification.Parent = Notifications
+			newNotification.LayoutOrder = #Notifications:GetChildren()
+			newNotification.Visible = false
 
-		-- Set initial transparency values
-		newNotification.BackgroundTransparency = 1
-		newNotification.Title.TextTransparency = 1
-		newNotification.Description.TextTransparency = 1
-		newNotification.UIStroke.Transparency = 1
-		newNotification.Shadow.ImageTransparency = 1
-		newNotification.Icon.ImageTransparency = 1
-		newNotification.Icon.BackgroundTransparency = 1
+			-- Set Data
+			newNotification.Title.Text = data.Title
+			newNotification.Description.Text = data.Content
+			ApplyIcon(newNotification.Icon, data.Icon, data.ImageSource)
+			if typeInfo then
+				newNotification.Icon.ImageColor3 = typeInfo.Color
+			end
 
-		task.wait()
+			local notifGradient = newNotification:FindFirstChild("ExterNotifGradient") or Instance.new("UIGradient")
+			notifGradient.Name = "ExterNotifGradient"
+			notifGradient.Rotation = 20
+			notifGradient.Color = ColorSequence.new{
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(32, 30, 38)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(24, 23, 31))
+			}
+			notifGradient.Parent = newNotification
 
-		-- Calculate textbounds and set initial values
-		newNotification.Size = UDim2.new(1, 0, 0, -Notifications:FindFirstChild("UIListLayout").Padding.Offset)
+			-- timer bar
+			local bar = Instance.new("Frame")
+			bar.Name = "ExterTimer"
+			bar.AnchorPoint = Vector2.new(0, 1)
+			bar.Position = UDim2.new(0, 14, 1, -7)
+			bar.Size = UDim2.new(1, -28, 0, 2)
+			bar.BackgroundColor3 = Color3.new(1, 1, 1)
+			bar.BackgroundTransparency = 1
+			bar.BorderSizePixel = 0
+			bar.ZIndex = newNotification.ZIndex + 5
+			local barCorner = Instance.new("UICorner")
+			barCorner.CornerRadius = UDim.new(1, 0)
+			barCorner.Parent = bar
+			local barGradient = Instance.new("UIGradient")
+			barGradient.Color = typeInfo and ColorSequence.new(typeInfo.Color) or Sobing.ThemeGradient
+			barGradient.Parent = bar
+			bar.Parent = newNotification
 
-		newNotification.Icon.Size = UDim2.new(0, 28, 0, 28)
-		newNotification.Icon.Position = UDim2.new(0, 16, 0.5, -1)
+			-- Set initial transparency values
+			newNotification.BackgroundTransparency = 1
+			newNotification.Title.TextTransparency = 1
+			newNotification.Description.TextTransparency = 1
+			newNotification.UIStroke.Transparency = 1
+			newNotification.Shadow.ImageTransparency = 1
+			newNotification.Icon.ImageTransparency = 1
+			newNotification.Icon.BackgroundTransparency = 1
 
-		newNotification.Visible = true
+			task.wait()
 
-		newNotification.Description.Size = UDim2.new(1, -65, 0, math.huge)
-		local bounds = newNotification.Description.TextBounds.Y + 55
-		newNotification.Description.Size = UDim2.new(1,-65,0, bounds - 35)
-		newNotification.Size = UDim2.new(1, 0, 0, -Notifications:FindFirstChild("UIListLayout").Padding.Offset)
-		TweenService:Create(newNotification, SmoothTweenInfo(0.55, Enum.EasingStyle.Quint), {Size = UDim2.new(1, 0, 0, bounds)}):Play()
+			local padding = Notifications:FindFirstChild("UIListLayout").Padding.Offset
 
-		task.wait(0.15)
-		TweenService:Create(newNotification, SmoothTweenInfo(0.35, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.45}):Play()
-		TweenService:Create(newNotification.Title, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
+			-- Calculate textbounds and set initial values
+			newNotification.Size = UDim2.new(1, 0, 0, -padding)
 
-		task.wait(0.05)
+			newNotification.Icon.Size = UDim2.new(0, 28, 0, 28)
+			newNotification.Icon.Position = UDim2.new(0, 16, 0.5, -1)
 
-		TweenService:Create(newNotification.Icon, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 0, Size = UDim2.new(0, 31, 0, 31)}):Play()
-		TweenService:Create(newNotification.Icon, SmoothTweenInfo(0.45, Enum.EasingStyle.Back), {Size = UDim2.new(0, 28, 0, 28)}):Play()
+			newNotification.Visible = true
 
-		task.wait(0.05)
-		TweenService:Create(newNotification.Description, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0.35}):Play()
-		TweenService:Create(newNotification.UIStroke, SmoothTweenInfo(0.35, Enum.EasingStyle.Quint), {Transparency = 0.95}):Play()
-		TweenService:Create(newNotification.Shadow, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 0.82}):Play()
+			newNotification.Description.Size = UDim2.new(1, -65, 0, math.huge)
+			local bounds = newNotification.Description.TextBounds.Y + 55
+			newNotification.Description.Size = UDim2.new(1, -65, 0, bounds - 35)
+			newNotification.Size = UDim2.new(1, 0, 0, -padding)
+			TweenService:Create(newNotification, SmoothTweenInfo(0.6, Enum.EasingStyle.Quint), {Size = UDim2.new(1, 0, 0, bounds)}):Play()
 
-		local waitDuration = math.min(math.max((#newNotification.Description.Text * 0.1) + 2.5, 3), 10)
-		task.wait(data.Duration or waitDuration)
+			task.wait(0.15)
+			TweenService:Create(newNotification, SmoothTweenInfo(0.35, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.45}):Play()
+			TweenService:Create(newNotification.Title, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
 
-		newNotification.Icon.Visible = false
-		TweenService:Create(newNotification, SmoothTweenInfo(0.35, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
-		TweenService:Create(newNotification.UIStroke, SmoothTweenInfo(0.35, Enum.EasingStyle.Quint), {Transparency = 1}):Play()
-		TweenService:Create(newNotification.Shadow, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
-		TweenService:Create(newNotification.Title, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play()
-		TweenService:Create(newNotification.Description, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play()
+			task.wait(0.05)
 
-		TweenService:Create(newNotification, SmoothTweenInfo(0.8, Enum.EasingStyle.Quint), {Size = UDim2.new(1, -90, 0, 0)}):Play()
+			TweenService:Create(newNotification.Icon, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 0, Size = UDim2.new(0, 31, 0, 31)}):Play()
+			TweenService:Create(newNotification.Icon, SmoothTweenInfo(0.45, Enum.EasingStyle.Back), {Size = UDim2.new(0, 28, 0, 28)}):Play()
 
-		task.wait(1)
+			task.wait(0.05)
+			TweenService:Create(newNotification.Description, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 0.35}):Play()
+			TweenService:Create(newNotification.UIStroke, SmoothTweenInfo(0.35, Enum.EasingStyle.Quint), {Transparency = 0.95}):Play()
+			TweenService:Create(newNotification.Shadow, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 0.82}):Play()
 
-		TweenService:Create(newNotification, SmoothTweenInfo(0.8, Enum.EasingStyle.Quint), {Size = UDim2.new(1, -90, 0, -Notifications:FindFirstChild("UIListLayout").Padding.Offset)}):Play()
+			local waitDuration = math.min(math.max((#newNotification.Description.Text * 0.1) + 2.5, 3), 10)
+			local duration = data.Duration or waitDuration
 
-		newNotification.Visible = false
-		newNotification:Destroy()
+			TweenService:Create(bar, SmoothTweenInfo(0.3, Enum.EasingStyle.Quad), {BackgroundTransparency = 0.15}):Play()
+			TweenService:Create(bar, TweenInfo.new(duration, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 2)}):Play()
+			task.wait(duration)
+
+			newNotification.Icon.Visible = false
+			TweenService:Create(bar, SmoothTweenInfo(0.2, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
+			TweenService:Create(newNotification, SmoothTweenInfo(0.35, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
+			TweenService:Create(newNotification.UIStroke, SmoothTweenInfo(0.35, Enum.EasingStyle.Quint), {Transparency = 1}):Play()
+			TweenService:Create(newNotification.Shadow, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
+			TweenService:Create(newNotification.Title, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play()
+			TweenService:Create(newNotification.Description, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play()
+
+			TweenService:Create(newNotification, SmoothTweenInfo(0.8, Enum.EasingStyle.Quint), {Size = UDim2.new(1, -90, 0, 0)}):Play()
+
+			task.wait(1)
+
+			TweenService:Create(newNotification, SmoothTweenInfo(0.8, Enum.EasingStyle.Quint), {Size = UDim2.new(1, -90, 0, -padding)}):Play()
+			newNotification.Visible = false
+		end)
+		if not ok then
+			warn("[ExterLibrary] Notification error: " .. tostring(err))
+		end
+		if newNotification then
+			newNotification:Destroy()
+		end
 	end)
 end
 
+Sobing.Notify = Sobing.Notification
+
 local function Unhide(Window, currentTab)
 	MenuTransitionNonce += 1
-	Window.Size = SizeBleh
-	Window.Elements.Visible = true
+	local nonce = MenuTransitionNonce
+
+	local scale, curtain, shadow, shadowScale = EnsureMotion(Window)
+	local stroke = Window:FindFirstChildOfClass("UIStroke")
+	local d = MenuAnimDuration
+
+	-- start from an empty, slightly smaller window (content is still hidden)
+	scale.Scale = 0.92
+	if shadowScale then shadowScale.Scale = 0.92 end
+	Window.BackgroundTransparency = 1
+	curtain.BackgroundTransparency = 1
+	if stroke then
+		if stroke:GetAttribute("ExterBaseT") == nil then stroke:SetAttribute("ExterBaseT", 0.35) end
+		stroke.Transparency = 1
+	end
+	if shadow then
+		FadeShadow(shadow, true, nil)
+		shadow.Visible = true
+	end
 	Window.Visible = true
-	tween(Window, {BackgroundTransparency = 0.2})
-	tween(Window.Elements, {BackgroundTransparency = 0.08})
-	tween(Window.Line, {BackgroundTransparency = 0})
-	tween(Window.Title.Title, {TextTransparency = 0})
-	tween(Window.Title.subtitle, {TextTransparency = 0})
-	tween(Window.Logo, {ImageTransparency = 0})
-	tween(Window.Navigation.Line, {BackgroundTransparency = 0})
+	SetBlur(true)
 
-	for _, TopbarButton in ipairs(Window.Controls:GetChildren()) do
-		if TopbarButton.ClassName == "Frame" and TopbarButton.Name ~= "Theme" then
-			TopbarButton.Visible = true
-			tween(TopbarButton, {BackgroundTransparency = 0.25})
-			tween(TopbarButton.UIStroke, {Transparency = 0.5})
-			tween(TopbarButton.ImageLabel, {ImageTransparency = 0.25})
-		end
+	-- phase 1: the card fades in while the window springs up
+	local spring = TweenInfo.new(d, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+	TweenService:Create(scale, spring, {Scale = 1}):Play()
+	if shadowScale then TweenService:Create(shadowScale, spring, {Scale = 1}):Play() end
+	local appear = TweenInfo.new(d * 0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	TweenService:Create(curtain, appear, {BackgroundTransparency = 0}):Play()
+	TweenService:Create(Window, appear, {BackgroundTransparency = WindowOpacity}):Play()
+	if stroke then
+		TweenService:Create(stroke, appear, {Transparency = stroke:GetAttribute("ExterBaseT")}):Play()
 	end
-	for _, tabbtn in ipairs(Window.Navigation.Tabs:GetChildren()) do
-		if tabbtn.ClassName == "Frame" and tabbtn.Name ~= "InActive Template" then
-			if tabbtn.Name == currentTab then
-				TweenService:Create(tabbtn, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {BackgroundTransparency = 0}):Play()
-				TweenService:Create(tabbtn.UIStroke, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {Transparency = 0.41}):Play()
-			end
-			TweenService:Create(tabbtn.ImageLabel, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 0}):Play()
-			TweenService:Create(tabbtn.DropShadowHolder.DropShadow, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
-		end
-	end
+	FadeShadow(shadow, false, appear)
 
+	-- phase 2: restore the content under the card, then lift the card
+	task.delay(d * 0.5, function()
+		if nonce ~= MenuTransitionNonce then return end
+		SetShell(Window, true)
+		TweenService:Create(curtain, TweenInfo.new(d * 0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
+	end)
+
+	task.delay(d * 1.1, function()
+		if nonce ~= MenuTransitionNonce then return end
+		scale.Scale = 1
+		if shadowScale then shadowScale.Scale = 1 end
+		curtain.BackgroundTransparency = 1
+		Window.BackgroundTransparency = WindowOpacity
+	end)
 end
 
 local MainSize
@@ -2252,16 +2703,16 @@ end
 
 local function Maximise(Window)
 	Window.Controls.ToggleSize.ImageLabel.Image = "rbxassetid://10137941941"
-	tween(Window, {Size = MainSize})
 	Window.Elements.Visible = true
 	Window.Navigation.Visible = true
+	TweenService:Create(Window, SmoothTweenInfo(0.5, Enum.EasingStyle.Quint), {Size = MainSize}):Play()
 end
 
 local function Minimize(Window)
 	Window.Controls.ToggleSize.ImageLabel.Image = "rbxassetid://11036884234"
 	Window.Elements.Visible = false
 	Window.Navigation.Visible = false
-	tween(Window, {Size = MinSize})
+	TweenService:Create(Window, SmoothTweenInfo(0.5, Enum.EasingStyle.Quint), {Size = MinSize}):Play()
 end
 
 
@@ -2326,7 +2777,8 @@ function Sobing:CreateWindow(WindowSettings)
 
 	Window.Bind = ResolveKeyCode(WindowSettings.MenuKeybind or WindowSettings.Bind, Enum.KeyCode.K)
 	Window.CanUnload = WindowSettings.EnableUnload ~= false
-	MenuAnimDuration = math.clamp(tonumber(WindowSettings.MenuAnimationSpeed) or 0.32, 0.18, 0.7)
+	Sobing._baseDuration = math.clamp(tonumber(WindowSettings.MenuAnimationSpeed) or 0.32, 0.18, 0.7)
+	MenuAnimDuration = Sobing._baseDuration / (Sobing._animSpeed or 1)
 
 	Main.Title.Title.Text = WindowSettings.Name
 	Main.Title.subtitle.Text = WindowSettings.Subtitle
@@ -2334,14 +2786,21 @@ function Sobing:CreateWindow(WindowSettings)
 	Main.Visible = true
 	Main.BackgroundTransparency = 1
 	Main.Size = MainSize
-	Main.Size = UDim2.fromOffset(Main.Size.X.Offset - 70, Main.Size.Y.Offset - 55)
 	Main.Parent.ShadowHolder.Size = Main.Size
+	do
+		local introScale, _, _, introShadowScale = EnsureMotion(Main)
+		introScale.Scale = 0.9
+		if introShadowScale then introShadowScale.Scale = 0.9 end
+	end
 	if WindowSettings.PremiumEffects then
 		ApplyPremiumVisuals(Main)
 	end
 	ApplyGlobalTheme(Main)
 	if WindowSettings.MobileOptimization then
 		ApplyMobileOptimization(Main)
+		if UserInputService.TouchEnabled then
+			WindowOpacity = math.max(WindowOpacity, 0.25)
+		end
 	end
 	LoadingFrame.Frame.Frame.Title.TextTransparency = 1
 	LoadingFrame.Frame.Frame.Subtitle.TextTransparency = 1
@@ -2379,9 +2838,10 @@ function Sobing:CreateWindow(WindowSettings)
 	LoadingFrame.Visible = true
 
 	SobingUI.Enabled = true
-	SobingUI.ThemeRemote:GetPropertyChangedSignal("Value"):Connect(function()
+	Track(SobingUI.ThemeRemote:GetPropertyChangedSignal("Value"):Connect(function()
 		ApplyGlobalTheme(Main)
-	end)
+		UpdateWindowVisuals()
+	end))
 
 	if WindowSettings.BlurEnabled and not UserInputService.TouchEnabled then
 		BlurModule(Main)
@@ -2519,8 +2979,38 @@ function Sobing:CreateWindow(WindowSettings)
 		repeat task.wait() until Passthrough
 	end
 
+	local loadBar
 	if WindowSettings.LoadingEnabled then
 		task.wait(0.3)
+		pcall(function()
+			loadBar = Instance.new("Frame")
+			loadBar.Name = "ExterLoadBar"
+			loadBar.AnchorPoint = Vector2.new(0.5, 1)
+			loadBar.Position = UDim2.new(0.5, 0, 1, -22)
+			loadBar.Size = UDim2.fromOffset(180, 3)
+			loadBar.BackgroundColor3 = Color3.new(1, 1, 1)
+			loadBar.BackgroundTransparency = 0.88
+			loadBar.BorderSizePixel = 0
+			loadBar.ZIndex = 50
+			local barCorner = Instance.new("UICorner")
+			barCorner.CornerRadius = UDim.new(1, 0)
+			barCorner.Parent = loadBar
+			local loadFill = Instance.new("Frame")
+			loadFill.Name = "Fill"
+			loadFill.Size = UDim2.fromScale(0, 1)
+			loadFill.BackgroundColor3 = Color3.new(1, 1, 1)
+			loadFill.BorderSizePixel = 0
+			loadFill.ZIndex = 51
+			local fillCorner = Instance.new("UICorner")
+			fillCorner.CornerRadius = UDim.new(1, 0)
+			fillCorner.Parent = loadFill
+			local fillGradient = Instance.new("UIGradient")
+			fillGradient.Color = Sobing.ThemeGradient
+			fillGradient.Parent = loadFill
+			loadFill.Parent = loadBar
+			loadBar.Parent = LoadingFrame
+			TweenService:Create(loadFill, TweenInfo.new(3.5, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut), {Size = UDim2.fromScale(1, 1)}):Play()
+		end)
 		TweenService:Create(LoadingFrame.Frame.Frame.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
 		TweenService:Create(LoadingFrame.Frame.ImageLabel, SmoothTweenInfo(0.28, Enum.EasingStyle.Quint), {ImageTransparency = 0}):Play()
 		task.wait(0.05)
@@ -2540,8 +3030,14 @@ function Sobing:CreateWindow(WindowSettings)
 		TweenService:Create(LoadingFrame, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
 	end
 
-	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundTransparency = 0.2, Size = MainSize}):Play()
-	TweenService:Create(Main.Parent.ShadowHolder, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = MainSize}):Play()
+	do
+		local introScale, _, _, introShadowScale = EnsureMotion(Main)
+		local spring = TweenInfo.new(0.65, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+		TweenService:Create(Main, TweenInfo.new(0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundTransparency = WindowOpacity}):Play()
+		TweenService:Create(introScale, spring, {Scale = 1}):Play()
+		if introShadowScale then TweenService:Create(introShadowScale, spring, {Scale = 1}):Play() end
+		SetBlur(true)
+	end
 	TweenService:Create(Main.Title.Title, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
 	TweenService:Create(Main.Title.subtitle, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
 	TweenService:Create(Main.Logo, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
@@ -2550,10 +3046,19 @@ function Sobing:CreateWindow(WindowSettings)
 	TweenService:Create(Main.Line, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
 	task.wait(0.4)
 	LoadingFrame.Visible = false
+	if loadBar then loadBar:Destroy() end
 
 	Draggable(Dragger, Main)
 	Draggable(SobingUI.MobileSupport, SobingUI.MobileSupport)
 	if dragBar then Draggable(dragInteract, Main, true, 255) end
+
+	pcall(function()
+		local pageLayout = Elements.UIPageLayout
+		pageLayout.Animated = true
+		pageLayout.TweenTime = 0.42
+		pageLayout.EasingStyle = Enum.EasingStyle.Quint
+		pageLayout.EasingDirection = Enum.EasingDirection.Out
+	end)
 
 	Elements.Template.LayoutOrder = 1000000000
 	Elements.Template.Visible = false
@@ -2620,10 +3125,10 @@ function Sobing:CreateWindow(WindowSettings)
 			HomeTabPage.Credits.Text.Text = "Created By Sobing4413 | Who Am I: Sobing4413 | Organization: Exter Interactive"
 		end
 
-		HomeTabPage.detailsholder.dashboard.Client.Title.Text = (isStudio and "Debugging (Studio)" or identifyexecutor()) or "Your Executor Does Not Support identifyexecutor."
+		HomeTabPage.detailsholder.dashboard.Client.Title.Text = ExecutorName() or "Your Executor Does Not Support identifyexecutor."
 		for i,v in pairs(HomeTabSettings.SupportedExecutors) do
 			if isStudio then HomeTabPage.detailsholder.dashboard.Client.Subtitle.Text = "Exter Library - Debugging Mode" break end
-			if v == identifyexecutor() then
+			if v == ExecutorName() then
 				HomeTabPage.detailsholder.dashboard.Client.Subtitle.Text = "Your Executor Supports This Script."
 				break
 			else
@@ -2670,7 +3175,7 @@ function Sobing:CreateWindow(WindowSettings)
 				while true do -- loop through all the pages
 					for _, data in list:GetCurrentPage() do
 						friendsInTotal +=1
-						table.insert(playersFriends, Data)
+						table.insert(playersFriends, data)
 					end
 
 					if list.IsFinished then
@@ -2713,26 +3218,28 @@ function Sobing:CreateWindow(WindowSettings)
 			return format(Hours)..":"..format(Minutes)..":"..format(Seconds)
 		end
 
-		coroutine.wrap(function()
-			while task.wait() do
+		local regionText = "Unknown"
+		task.spawn(function()
+			local okRegion, region = pcall(function()
+				return Localization:GetCountryRegionForPlayerAsync(Players.LocalPlayer)
+			end)
+			if okRegion and region then regionText = tostring(region) end
+		end)
 
-
-				-- Players
-				HomeTabPage.detailsholder.dashboard.Server.Players.Value.Text = #Players:GetPlayers().." playing"
-				HomeTabPage.detailsholder.dashboard.Server.MaxPlayers.Value.Text = Players.MaxPlayers.." players can join this server"
-
-				-- Ping
-				HomeTabPage.detailsholder.dashboard.Server.Latency.Value.Text = isStudio and tostring(math.round((Players.LocalPlayer:GetNetworkPing() * 2 ) / 0.01)) .."ms" or tostring(math.floor(getPing()) .."ms")
-
-				-- Time
-				HomeTabPage.detailsholder.dashboard.Server.Time.Value.Text = convertToHMS(time())
-
-				-- Region
-				HomeTabPage.detailsholder.dashboard.Server.Region.Value.Text = Localization:GetCountryRegionForPlayerAsync(Players.LocalPlayer)
-
-				checkFriends()
+		task.spawn(function()
+			while SobingUI and SobingUI.Parent do
+				pcall(function()
+					local server = HomeTabPage.detailsholder.dashboard.Server
+					server.Players.Value.Text = #Players:GetPlayers() .. " playing"
+					server.MaxPlayers.Value.Text = Players.MaxPlayers .. " players can join this server"
+					server.Latency.Value.Text = isStudio and (tostring(math.round((Players.LocalPlayer:GetNetworkPing() * 2) / 0.01)) .. "ms") or (tostring(math.floor(getPing())) .. "ms")
+					server.Time.Value.Text = convertToHMS(math.floor(time()))
+					server.Region.Value.Text = regionText
+					checkFriends()
+				end)
+				task.wait(1)
 			end
-		end)()
+		end)
 
 		-- Stolen From Sirius Stuff ends here
 
@@ -2754,7 +3261,7 @@ function Sobing:CreateWindow(WindowSettings)
 		TabButton.Name = TabSettings.Name
 		TabButton.TextLabel.Text = TabSettings.Name
 		TabButton.Parent = Navigation.Tabs
-		TabButton.ImageLabel.Image = GetIcon(TabSettings.Icon, TabSettings.ImageSource)
+		ApplyIcon(TabButton.ImageLabel, TabSettings.Icon, TabSettings.ImageSource)
 
 		TabButton.Visible = true
 
@@ -2778,6 +3285,7 @@ function Sobing:CreateWindow(WindowSettings)
 			end
 		end
 		TabPage.Parent = Elements
+		HookDecorations(TabPage)
 
 		function Tab:Activate()
 			tween(TabButton.ImageLabel, {ImageColor3 = Color3.fromRGB(255,255,255)})
@@ -2826,6 +3334,7 @@ function Sobing:CreateWindow(WindowSettings)
 			Sectiont.Visible = true
 			Sectiont.Parent = TabPage
 			local TabPage = Sectiont.Frame
+			HookDecorations(TabPage)
 
 			Sectiont.TextTransparency = 1
 			tween(Sectiont, {TextTransparency = 0})
@@ -3096,12 +3605,18 @@ function Sobing:CreateWindow(WindowSettings)
 				TweenService:Create(Slider.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
 				TweenService:Create(Slider.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()	
 
-				Slider.Main.Progress.Size =	UDim2.new(0, Slider.Main.AbsoluteSize.X * ((SliderSettings.CurrentValue + SliderSettings.Range[1]) / (SliderSettings.Range[2] - SliderSettings.Range[1])) > 5 and Slider.Main.AbsoluteSize.X * (SliderSettings.CurrentValue / (SliderSettings.Range[2] - SliderSettings.Range[1])) or 5, 1, 0)
+				Slider.Main.Progress.Size = UDim2.new(0, SliderWidth(Slider, SliderSettings, SliderSettings.CurrentValue), 1, 0)
 
-				Slider.Value.Text = tostring(SliderSettings.CurrentValue)
+				local internalText = false
+				local function SetValueText(t)
+					internalText = true
+					Slider.Value.Text = tostring(t)
+					task.defer(function() internalText = false end)
+				end
+				SetValueText(SliderSettings.CurrentValue)
 				SliderV.CurrentValue = Slider.Value.Text
 
-				SliderSettings.Callback(SliderSettings.CurrentValue)
+				pcall(SliderSettings.Callback, SliderSettings.CurrentValue)
 
 				Slider["MouseEnter"]:Connect(function()
 					tween(Slider.UIStroke, {Color = Color3.fromRGB(87, 84, 104)})
@@ -3154,7 +3669,7 @@ function Sobing:CreateWindow(WindowSettings)
 
 							NewValue = math.floor(NewValue / SliderSettings.Increment + 0.5) * (SliderSettings.Increment * 10000000) / 10000000
 
-							Slider.Value.Text = tostring(NewValue)
+							SetValueText(NewValue)
 
 							if SliderSettings.CurrentValue ~= NewValue then
 								local Success, Response = pcall(function()
@@ -3188,8 +3703,8 @@ function Sobing:CreateWindow(WindowSettings)
 
 					NewVal = NewVal or SliderSettings.CurrentValue
 
-					TweenService:Create(Slider.Main.Progress, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.InOut), {Size = UDim2.new(0, Slider.Main.AbsoluteSize.X * ((NewVal + SliderSettings.Range[1]) / (SliderSettings.Range[2] - SliderSettings.Range[1])) > 5 and Slider.Main.AbsoluteSize.X * (NewVal / (SliderSettings.Range[2] - SliderSettings.Range[1])) or 5, 1, 0)}):Play()
-					if not bleh then Slider.Value.Text = tostring(NewVal) end
+					TweenService:Create(Slider.Main.Progress, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.InOut), {Size = UDim2.new(0, SliderWidth(Slider, SliderSettings, NewVal), 1, 0)}):Play()
+					if not bleh then SetValueText(NewVal) end
 					local Success, Response = pcall(function()
 						SliderSettings.Callback(NewVal)
 					end)
@@ -3217,11 +3732,12 @@ function Sobing:CreateWindow(WindowSettings)
 				end 
 
 				Slider.Value:GetPropertyChangedSignal("Text"):Connect(function()
+					if internalText then return end
 					local text = Slider.Value.Text
 					if not tonumber(text) and text ~= "." then
 						Slider.Value.Text = text:match("[0-9.]*") or ""
 					end
-					if SliderSettings.Range[2] < (tonumber(Slider.Value.Text) or 0) then Slider.Value.Text = SliderSettings.Range[2] end
+					if SliderSettings.Range[2] < (tonumber(Slider.Value.Text) or 0) then Slider.Value.Text = tostring(SliderSettings.Range[2]) end
 					Slider.Value.Size = UDim2.fromOffset(Slider.Value.TextBounds.X, 23)
 					Set(tonumber(Slider.Value.Text), true)
 				end)
@@ -3255,7 +3771,7 @@ function Sobing:CreateWindow(WindowSettings)
 					Sobing.Options[Flag] = SliderV
 				end
 
-				SobingUI.ThemeRemote:GetPropertyChangedSignal("Value"):Connect(function()
+				BindTheme(function()
 					Slider.Main.color.Color = Sobing.ThemeGradient
 					Slider.Main.UIStroke.color.Color = Sobing.ThemeGradient
 				end)
@@ -3428,7 +3944,7 @@ function Sobing:CreateWindow(WindowSettings)
 					Toggle:Destroy()
 				end
 
-				SobingUI.ThemeRemote:GetPropertyChangedSignal("Value"):Connect(function()
+				BindTheme(function()
 					Toggle.toggle.color.Color = Sobing.ThemeGradient
 					Toggle.toggle.UIStroke.color.Color = Sobing.ThemeGradient
 				end)
@@ -3933,7 +4449,7 @@ function Sobing:CreateWindow(WindowSettings)
 					end
 
 					Toggle()
-					tween(Dropdown.List[name], {BackgroundTransparency = 0.95, TextColor3 = Color3.fromRGB(240,240,240)})
+					TweenListItem(Dropdown, name, {BackgroundTransparency = 0.95, TextColor3 = Color3.fromRGB(240,240,240)})
 				end
 
 				local function Refresh()
@@ -4061,10 +4577,10 @@ function Sobing:CreateWindow(WindowSettings)
 				if ind == 1 then bleh = DropdownSettings.CurrentOption[1] else bleh = DropdownSettings.CurrentOption end
 				SafeCallback(bleh)
 				if type(bleh) == "string" then 
-					tween(Dropdown.List[bleh], {TextColor3 = Color3.fromRGB(240,240,240), BackgroundTransparency = 0.95})
+					TweenListItem(Dropdown, bleh, {TextColor3 = Color3.fromRGB(240,240,240), BackgroundTransparency = 0.95})
 				else
 					for i,v in pairs(bleh) do
-						tween(Dropdown.List[v], {TextColor3 = Color3.fromRGB(240,240,240), BackgroundTransparency = 0.95})
+						TweenListItem(Dropdown, v, {TextColor3 = Color3.fromRGB(240,240,240), BackgroundTransparency = 0.95})
 					end
 				end
 
@@ -4082,7 +4598,7 @@ function Sobing:CreateWindow(WindowSettings)
 						Dropdown.Selected.PlaceholderText = "None"
 					end
 					for _, name in pairs(DropdownSettings.CurrentOption) do
-						tween(Dropdown.List[name], {TextColor3 = Color3.fromRGB(227,227,227), BackgroundTransparency = 0.95})
+						TweenListItem(Dropdown, name, {TextColor3 = Color3.fromRGB(227,227,227), BackgroundTransparency = 0.95})
 					end
 				else
 					Dropdown.Selected.PlaceholderText = DropdownSettings.CurrentOption[1] or "None"
@@ -4137,7 +4653,7 @@ function Sobing:CreateWindow(WindowSettings)
 							tween(Option, {TextColor3 = Color3.fromRGB(200,200,200), BackgroundTransparency = 0.98})
 						end
 					end
-					tween(Dropdown.List[bleh], {TextColor3 = Color3.fromRGB(240,240,240), BackgroundTransparency = 0.95})
+					TweenListItem(Dropdown, bleh, {TextColor3 = Color3.fromRGB(240,240,240), BackgroundTransparency = 0.95})
 
 					if DropdownSettings.MultipleOptions then
 						if DropdownSettings.CurrentOption and type(DropdownSettings.CurrentOption) == "table" then
@@ -4153,7 +4669,7 @@ function Sobing:CreateWindow(WindowSettings)
 							Dropdown.Selected.PlaceholderText = "None"
 						end
 						for _, name in pairs(DropdownSettings.CurrentOption) do
-							tween(Dropdown.List[name], {TextColor3 = Color3.fromRGB(227,227,227), BackgroundTransparency = 0.95})
+							TweenListItem(Dropdown, name, {TextColor3 = Color3.fromRGB(227,227,227), BackgroundTransparency = 0.95})
 						end
 					else
 						Dropdown.Selected.PlaceholderText = DropdownSettings.CurrentOption[1] or "None"
@@ -4683,12 +5199,18 @@ function Sobing:CreateWindow(WindowSettings)
 			TweenService:Create(Slider.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
 			TweenService:Create(Slider.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()	
 
-			Slider.Main.Progress.Size =	UDim2.new(0, Slider.Main.AbsoluteSize.X * ((SliderSettings.CurrentValue + SliderSettings.Range[1]) / (SliderSettings.Range[2] - SliderSettings.Range[1])) > 5 and Slider.Main.AbsoluteSize.X * (SliderSettings.CurrentValue / (SliderSettings.Range[2] - SliderSettings.Range[1])) or 5, 1, 0)
+			Slider.Main.Progress.Size = UDim2.new(0, SliderWidth(Slider, SliderSettings, SliderSettings.CurrentValue), 1, 0)
 
-			Slider.Value.Text = tostring(SliderSettings.CurrentValue)
+			local internalText = false
+			local function SetValueText(t)
+				internalText = true
+				Slider.Value.Text = tostring(t)
+				task.defer(function() internalText = false end)
+			end
+			SetValueText(SliderSettings.CurrentValue)
 			SliderV.CurrentValue = Slider.Value.Text
 
-			SliderSettings.Callback(SliderSettings.CurrentValue)
+			pcall(SliderSettings.Callback, SliderSettings.CurrentValue)
 
 			Slider["MouseEnter"]:Connect(function()
 				tween(Slider.UIStroke, {Color = Color3.fromRGB(87, 84, 104)})
@@ -4741,7 +5263,7 @@ function Sobing:CreateWindow(WindowSettings)
 
 						NewValue = math.floor(NewValue / SliderSettings.Increment + 0.5) * (SliderSettings.Increment * 10000000) / 10000000
 
-						Slider.Value.Text = tostring(NewValue)
+						SetValueText(NewValue)
 
 						if SliderSettings.CurrentValue ~= NewValue then
 							local Success, Response = pcall(function()
@@ -4775,8 +5297,8 @@ function Sobing:CreateWindow(WindowSettings)
 
 				NewVal = NewVal or SliderSettings.CurrentValue
 
-				TweenService:Create(Slider.Main.Progress, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.InOut), {Size = UDim2.new(0, Slider.Main.AbsoluteSize.X * ((NewVal + SliderSettings.Range[1]) / (SliderSettings.Range[2] - SliderSettings.Range[1])) > 5 and Slider.Main.AbsoluteSize.X * (NewVal / (SliderSettings.Range[2] - SliderSettings.Range[1])) or 5, 1, 0)}):Play()
-				if not bleh then Slider.Value.Text = tostring(NewVal) end
+				TweenService:Create(Slider.Main.Progress, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.InOut), {Size = UDim2.new(0, SliderWidth(Slider, SliderSettings, NewVal), 1, 0)}):Play()
+				if not bleh then SetValueText(NewVal) end
 				local Success, Response = pcall(function()
 					SliderSettings.Callback(NewVal)
 				end)
@@ -4804,11 +5326,12 @@ function Sobing:CreateWindow(WindowSettings)
 			end 
 
 			Slider.Value:GetPropertyChangedSignal("Text"):Connect(function()
+				if internalText then return end
 				local text = Slider.Value.Text
 				if not tonumber(text) and text ~= "." then
 					Slider.Value.Text = text:match("[0-9.]*") or ""
 				end
-				if SliderSettings.Range[2] < (tonumber(Slider.Value.Text) or 0) then Slider.Value.Text = SliderSettings.Range[2] end
+				if SliderSettings.Range[2] < (tonumber(Slider.Value.Text) or 0) then Slider.Value.Text = tostring(SliderSettings.Range[2]) end
 				Slider.Value.Size = UDim2.fromOffset(Slider.Value.TextBounds.X, 23)
 				Set(tonumber(Slider.Value.Text), true)
 			end)
@@ -4842,7 +5365,7 @@ function Sobing:CreateWindow(WindowSettings)
 				Sobing.Options[Flag] = SliderV
 			end
 
-			SobingUI.ThemeRemote:GetPropertyChangedSignal("Value"):Connect(function()
+			BindTheme(function()
 				Slider.Main.color.Color = Sobing.ThemeGradient
 				Slider.Main.UIStroke.color.Color = Sobing.ThemeGradient
 			end)
@@ -5014,7 +5537,7 @@ function Sobing:CreateWindow(WindowSettings)
 				Toggle:Destroy()
 			end
 
-			SobingUI.ThemeRemote:GetPropertyChangedSignal("Value"):Connect(function()
+			BindTheme(function()
 				Toggle.toggle.color.Color = Sobing.ThemeGradient
 				Toggle.toggle.UIStroke.color.Color = Sobing.ThemeGradient
 			end)
@@ -5710,7 +6233,7 @@ function Sobing:CreateWindow(WindowSettings)
 				end
 
 				Toggle()
-				tween(Dropdown.List[name], {BackgroundTransparency = 0.95, TextColor3 = Color3.fromRGB(240,240,240)})
+				TweenListItem(Dropdown, name, {BackgroundTransparency = 0.95, TextColor3 = Color3.fromRGB(240,240,240)})
 			end
 
 			local function Refresh()
@@ -5838,10 +6361,10 @@ function Sobing:CreateWindow(WindowSettings)
 			if ind == 1 then bleh = DropdownSettings.CurrentOption[1] else bleh = DropdownSettings.CurrentOption end
 			SafeCallback(bleh)
 			if type(bleh) == "string" then 
-				tween(Dropdown.List[bleh], {TextColor3 = Color3.fromRGB(240,240,240), BackgroundTransparency = 0.95})
+				TweenListItem(Dropdown, bleh, {TextColor3 = Color3.fromRGB(240,240,240), BackgroundTransparency = 0.95})
 			else
 				for i,v in pairs(bleh) do
-					tween(Dropdown.List[v], {TextColor3 = Color3.fromRGB(240,240,240), BackgroundTransparency = 0.95})
+					TweenListItem(Dropdown, v, {TextColor3 = Color3.fromRGB(240,240,240), BackgroundTransparency = 0.95})
 				end
 			end
 
@@ -5859,7 +6382,7 @@ function Sobing:CreateWindow(WindowSettings)
 					Dropdown.Selected.PlaceholderText = "None"
 				end
 				for _, name in pairs(DropdownSettings.CurrentOption) do
-					tween(Dropdown.List[name], {TextColor3 = Color3.fromRGB(227,227,227), BackgroundTransparency = 0.95})
+					TweenListItem(Dropdown, name, {TextColor3 = Color3.fromRGB(227,227,227), BackgroundTransparency = 0.95})
 				end
 			else
 				Dropdown.Selected.PlaceholderText = DropdownSettings.CurrentOption[1] or "None"
@@ -5914,7 +6437,7 @@ function Sobing:CreateWindow(WindowSettings)
 						tween(Option, {TextColor3 = Color3.fromRGB(200,200,200), BackgroundTransparency = 0.98})
 					end
 				end
-				tween(Dropdown.List[bleh], {TextColor3 = Color3.fromRGB(240,240,240), BackgroundTransparency = 0.95})
+				TweenListItem(Dropdown, bleh, {TextColor3 = Color3.fromRGB(240,240,240), BackgroundTransparency = 0.95})
 
 				if DropdownSettings.MultipleOptions then
 					if DropdownSettings.CurrentOption and type(DropdownSettings.CurrentOption) == "table" then
@@ -5930,7 +6453,7 @@ function Sobing:CreateWindow(WindowSettings)
 						Dropdown.Selected.PlaceholderText = "None"
 					end
 					for _, name in pairs(DropdownSettings.CurrentOption) do
-						tween(Dropdown.List[name], {TextColor3 = Color3.fromRGB(227,227,227), BackgroundTransparency = 0.95})
+						TweenListItem(Dropdown, name, {TextColor3 = Color3.fromRGB(227,227,227), BackgroundTransparency = 0.95})
 					end
 				else
 					Dropdown.Selected.PlaceholderText = DropdownSettings.CurrentOption[1] or "None"
@@ -6533,13 +7056,17 @@ function Sobing:CreateWindow(WindowSettings)
 
 			Tab:CreateSection("Preset Gradients")
 
-			for i,v in pairs(PresetGradients) do
+			for _, presetName in ipairs(Sobing:GetThemeNames()) do
+				local v = PresetGradients[presetName]
 				Tab:CreateButton({
-					Name = tostring(i),
+					Name = presetName,
 					Callback = function()
-						c1cp:Set({ Color = v[1] })
-						c2cp:Set({ Color = v[2] })
-						c3cp:Set({ Color = v[3] })
+						Sobing:SetTheme(presetName)
+						task.delay(0.5, function()
+							c1cp:Set({ Color = v[1] })
+							c2cp:Set({ Color = v[2] })
+							c3cp:Set({ Color = v[3] })
+						end)
 					end,
 				})
 			end
@@ -6735,10 +7262,10 @@ function Sobing:CreateWindow(WindowSettings)
 		Window.Size = not Window.Size
 		if Window.Size then
 			Minimize(Main)
-			dragBar.Visible = false
+			if dragBar then dragBar.Visible = false end
 		else
 			Maximise(Main)
-			dragBar.Visible = true
+			if dragBar then dragBar.Visible = true end
 		end
 	end)
 	Main.Controls.ToggleSize["MouseEnter"]:Connect(function()
@@ -6764,11 +7291,21 @@ function Sobing:CreateWindow(WindowSettings)
 
 	SobingUI.MobileSupport.Interact.MouseButton1Click:Connect(function()
 		Unhide(Main, Window.CurrentTab)
-		dragBar.Visible = true
+		if dragBar then dragBar.Visible = true end
 		Window.State = true
 		SobingUI.MobileSupport.Visible = false
 	end)
 
+
+	Sobing._themeFile = "ExterTheme_" .. (tostring(WindowSettings.ConfigSettings.ConfigFolder):gsub("[^%w_%-]", "_")) .. ".txt"
+	pcall(function()
+		if not isStudio and isfile and readfile and isfile(Sobing._themeFile) then
+			local saved = readfile(Sobing._themeFile)
+			if PresetGradients[saved] then
+				Sobing:SetTheme(saved, true, true)
+			end
+		end
+	end)
 
 	if WindowSettings.DefaultSettings then
 		local SettingsTab = Window:CreateTab({ Name = "Settings", Icon = "settings", ImageSource = "Material" })
@@ -6799,6 +7336,66 @@ function Sobing:CreateWindow(WindowSettings)
 				end
 			end
 		})
+
+		SettingsTab:CreateSection("Appearance")
+		local initThemeDropdown = true
+		Sobing._themeDropdown = SettingsTab:CreateDropdown({
+			Name = "Theme",
+			Description = "Pilih tema warna antarmuka",
+			Options = Sobing:GetThemeNames(),
+			CurrentOption = {PresetGradients[Sobing.CurrentThemeName] and Sobing.CurrentThemeName or "Nightlight (Neo)"},
+			MultipleOptions = false,
+			Callback = function(v)
+				if initThemeDropdown then return end
+				local picked = type(v) == "table" and v[1] or v
+				if picked then Sobing:SetTheme(picked) end
+			end,
+		})
+		initThemeDropdown = false
+
+		SettingsTab:CreateToggle({
+			Name = "Animated Border",
+			Description = "Border jendela berputar mengikuti warna tema",
+			CurrentValue = Sobing.Appearance.AnimatedBorder,
+			Callback = function(v) Sobing.Appearance.AnimatedBorder = v end,
+		})
+		SettingsTab:CreateToggle({
+			Name = "Theme Glow",
+			Description = "Semburat warna tema di latar jendela",
+			CurrentValue = Sobing.Appearance.Wash,
+			Callback = function(v)
+				Sobing.Appearance.Wash = v
+				local washFrame = Sobing._visuals.washFrame
+				if washFrame then washFrame.Visible = v end
+			end,
+		})
+		SettingsTab:CreateToggle({
+			Name = "Background Blur",
+			Description = "Blur latar game saat menu terbuka",
+			CurrentValue = Sobing.Appearance.BackgroundBlur,
+			Callback = function(v)
+				Sobing.Appearance.BackgroundBlur = v
+				SetBlur(Window.State)
+			end,
+		})
+		SettingsTab:CreateSlider({
+			Name = "Window Opacity (%)",
+			Range = {0, 80},
+			Increment = 1,
+			CurrentValue = math.floor(WindowOpacity * 100 + 0.5),
+			Callback = function(v) Sobing:SetWindowOpacity((tonumber(v) or 20) / 100) end,
+		})
+		SettingsTab:CreateSlider({
+			Name = "Animation Speed (%)",
+			Range = {50, 200},
+			Increment = 5,
+			CurrentValue = 100,
+			Callback = function(v) Sobing:SetAnimationSpeed((tonumber(v) or 100) / 100) end,
+		})
+	end
+
+	function Window:SetTheme(theme, instant)
+		return Sobing:SetTheme(theme, instant)
 	end
 
 	function Window:SetMenuKeybind(newBind)
@@ -6811,7 +7408,7 @@ function Sobing:CreateWindow(WindowSettings)
 		Window.IsTransitioning = true
 		if Window.State then
 			Hide(Main, Window.Bind, false)
-			dragBar.Visible = false
+			if dragBar then dragBar.Visible = false end
 			Window.State = false
 			if not UserInputService.KeyboardEnabled then
 				SobingUI.MobileSupport.Visible = true
@@ -6819,10 +7416,10 @@ function Sobing:CreateWindow(WindowSettings)
 		else
 			Unhide(Main, Window.CurrentTab)
 			SobingUI.MobileSupport.Visible = false
-			dragBar.Visible = true
+			if dragBar then dragBar.Visible = true end
 			Window.State = true
 		end
-		task.delay(MenuAnimDuration + 0.03, function()
+		task.delay(MenuAnimDuration * 1.1 + 0.05, function()
 			Window.IsTransitioning = false
 		end)
 		return true
@@ -6830,7 +7427,16 @@ function Sobing:CreateWindow(WindowSettings)
 
 	function Window:Unload()
 		if not Window.CanUnload then return false, "Unload disabled" end
-		Sobing:Destroy()
+		if Window.State and not Window.IsTransitioning then
+			Window.IsTransitioning = true
+			Hide(Main, Window.Bind, false)
+			Window.State = false
+			task.delay(MenuAnimDuration + 0.1, function()
+				Sobing:Destroy()
+			end)
+		else
+			Sobing:Destroy()
+		end
 		return true
 	end
 
@@ -6842,14 +7448,40 @@ function Sobing:Unload()
 end
 
 function Sobing:Destroy()
-	Main.Visible = false
-	for _, Notification in ipairs(Notifications:GetChildren()) do
-		if Notification.ClassName == "Frame" then
-			Notification.Visible = false
-			Notification:Destroy()
-		end
+	if Sobing._destroyed then return end
+	Sobing._destroyed = true
+	themeAnimToken += 1
+
+	for _, c in ipairs(Connections) do
+		pcall(function() c:Disconnect() end)
 	end
-	SobingUI:Destroy()
+	table.clear(Connections)
+
+	pcall(function()
+		if Sobing._blur then
+			RunService:UnbindFromRenderStep(Sobing._blur.uid)
+			if Sobing._blur.dof then Sobing._blur.dof:Destroy() end
+			if Sobing._blur.root then Sobing._blur.root:Destroy() end
+		end
+	end)
+	pcall(function()
+		if Sobing._blurEffect then Sobing._blurEffect:Destroy() end
+	end)
+
+	pcall(function()
+		Main.Visible = false
+		for _, Notification in ipairs(Notifications:GetChildren()) do
+			if Notification.ClassName == "Frame" then
+				Notification.Visible = false
+				Notification:Destroy()
+			end
+		end
+	end)
+	pcall(function() SobingUI:Destroy() end)
+
+	if __env.__ExterLibraryInstance == Sobing then
+		__env.__ExterLibraryInstance = nil
+	end
 end
 
 return ExterLibrary
