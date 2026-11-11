@@ -60,6 +60,158 @@ local function TrackedService(svc)
 	})
 end
 
+-- ===========================================================================
+-- Unload / shutdown manager
+-- On unload EVERYTHING that is running is stopped, not only the UI:
+--   1. every toggle that is ON is switched OFF and its callback(false) is fired
+--   2. every keybind that is active/held gets callback(false)
+--   3. everything registered via Library:OnUnload / :Track / :Connect / :Spawn /
+--      :Delay / :BindToRenderStep is cleaned up (connections, threads, instances)
+--   4. then the library's own connections, effects and the UI are destroyed
+-- ===========================================================================
+Sobing.Unloaded = false
+local UnloadHooks = {}       -- hooks registered by toggles / binds
+local UserCleanups = {}      -- registered by scripts via the public API
+local FeaturesStopped = false
+
+local function SafeCall(fn, ...)
+	local ok, err = pcall(fn, ...)
+	if not ok then
+		warn("[ExterLibrary] unload cleanup error: " .. tostring(err))
+	end
+	return ok
+end
+
+local function CleanupObject(obj)
+	local kind = typeof(obj)
+	if kind == "RBXScriptConnection" then
+		obj:Disconnect()
+	elseif kind == "Instance" then
+		obj:Destroy()
+	elseif kind == "thread" then
+		if obj ~= coroutine.running() and coroutine.status(obj) ~= "dead" then
+			pcall(task.cancel, obj)
+		end
+	elseif kind == "function" then
+		obj()
+	elseif kind == "table" then
+		if type(obj.Disconnect) == "function" then
+			obj:Disconnect()
+		elseif type(obj.Destroy) == "function" then
+			obj:Destroy()
+		elseif type(obj.Cancel) == "function" then
+			obj:Cancel()
+		end
+	end
+end
+
+local function PruneCleanups()
+	if #UserCleanups < 200 then return end
+	local alive = {}
+	for _, o in ipairs(UserCleanups) do
+		local kind = typeof(o)
+		if kind == "RBXScriptConnection" then
+			if o.Connected then alive[#alive + 1] = o end
+		elseif kind == "thread" then
+			if coroutine.status(o) ~= "dead" then alive[#alive + 1] = o end
+		else
+			alive[#alive + 1] = o
+		end
+	end
+	UserCleanups = alive
+end
+
+function Sobing._RegisterUnloadHook(fn)
+	if type(fn) == "function" then
+		UnloadHooks[#UnloadHooks + 1] = fn
+	end
+end
+
+local WrappedBindCallbacks = setmetatable({}, { __mode = "k" })
+function Sobing._WrapBindCallback(BindV, cb)
+	if type(cb) ~= "function" or WrappedBindCallbacks[cb] then return cb end
+	local wrapped = function(v, ...)
+		if type(v) == "boolean" then BindV._state = v end
+		return cb(v, ...)
+	end
+	WrappedBindCallbacks[wrapped] = true
+	return wrapped
+end
+
+-- Stops every running feature. Safe to call many times (runs once).
+local function StopFeatures()
+	if FeaturesStopped then return end
+	FeaturesStopped = true
+	Sobing.Unloaded = true
+
+	-- 1) switch OFF every active toggle / keybind (newest first)
+	for i = #UnloadHooks, 1, -1 do
+		local hook = UnloadHooks[i]
+		if hook then SafeCall(hook) end
+	end
+	table.clear(UnloadHooks)
+
+	-- 2) everything the scripts registered themselves (newest first)
+	local list = UserCleanups
+	UserCleanups = {}
+	for i = #list, 1, -1 do
+		SafeCall(CleanupObject, list[i])
+	end
+end
+Sobing._StopFeatures = StopFeatures
+
+function Sobing:IsUnloaded()
+	return Sobing.Unloaded == true or Sobing._destroyed == true
+end
+
+-- Register anything that must die on unload: connection, thread, Instance, function or table with Destroy/Disconnect.
+function Sobing:Track(obj)
+	if obj == nil then return obj end
+	if Sobing:IsUnloaded() and FeaturesStopped then
+		SafeCall(CleanupObject, obj)
+		return obj
+	end
+	UserCleanups[#UserCleanups + 1] = obj
+	PruneCleanups()
+	return obj
+end
+
+-- Run fn when the library unloads (use it to restore walkspeed, remove ESP objects, ...).
+function Sobing:OnUnload(fn)
+	if type(fn) ~= "function" then return fn end
+	return Sobing:Track(fn)
+end
+
+-- Tracked signal connection: Library:Connect(RunService.Heartbeat, function() ... end)
+function Sobing:Connect(signal, fn)
+	local conn = signal:Connect(fn)
+	Sobing:Track(conn)
+	return conn
+end
+
+-- Tracked task.spawn / task.delay: cancelled automatically on unload.
+function Sobing:Spawn(fn, ...)
+	if Sobing:IsUnloaded() and FeaturesStopped then return nil end
+	local th = task.spawn(fn, ...)
+	if th and coroutine.status(th) ~= "dead" then Sobing:Track(th) end
+	return th
+end
+
+function Sobing:Delay(seconds, fn, ...)
+	if Sobing:IsUnloaded() and FeaturesStopped then return nil end
+	local th = task.delay(seconds, fn, ...)
+	if th then Sobing:Track(th) end
+	return th
+end
+
+-- Tracked BindToRenderStep: unbound automatically on unload.
+function Sobing:BindToRenderStep(name, priority, fn)
+	local rs = game:GetService("RunService")
+	rs:BindToRenderStep(name, priority, fn)
+	Sobing:Track(function() pcall(function() rs:UnbindFromRenderStep(name) end) end)
+	return name
+end
+
 local UserInputService = TrackedService(game:GetService("UserInputService"))
 local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
@@ -2507,7 +2659,7 @@ local NotificationTypes = {
 
 -- data: Title, Content, Icon, ImageSource, Duration, Type ("Success" | "Warning" | "Error" | "Info")
 function Sobing:Notification(data)
-	if Sobing._destroyed then return end
+	if Sobing._destroyed or Sobing.Unloaded then return end
 	task.spawn(function()
 		local newNotification
 		local ok, err = pcall(function()
@@ -3949,6 +4101,15 @@ function Sobing:CreateWindow(WindowSettings)
 					Toggle.toggle.UIStroke.color.Color = Sobing.ThemeGradient
 				end)
 
+				Sobing._RegisterUnloadHook(function()
+					if ToggleSettings.CurrentValue then
+						ToggleSettings.CurrentValue = false
+						ToggleV.CurrentValue = false
+						pcall(Set, false)
+						ToggleSettings.Callback(false)
+					end
+				end)
+
 				if Flag then
 					Sobing.Options[Flag] = ToggleV
 				end
@@ -4148,6 +4309,7 @@ function Sobing:CreateWindow(WindowSettings)
 
 					BindV.Settings = NewBindSettings
 					BindSettings = NewBindSettings
+					BindSettings.Callback = Sobing._WrapBindCallback(BindV, BindSettings.Callback)
 
 					Bind.Name = BindSettings.Name
 					Bind.Title.Text = BindSettings.Name
@@ -4161,6 +4323,15 @@ function Sobing:CreateWindow(WindowSettings)
 
 					BindV.CurrentBind = BindSettings.CurrentBind
 				end
+
+				BindSettings.Callback = Sobing._WrapBindCallback(BindV, BindSettings.Callback)
+				Sobing._RegisterUnloadHook(function()
+					if BindSettings.ReleaseOnUnload ~= false and BindV._state == true then
+						BindV._state = false
+						BindV.Active = false
+						BindSettings.Callback(false)
+					end
+				end)
 
 				function BindV:Destroy()
 					Bind.Visible = false
@@ -5542,6 +5713,15 @@ function Sobing:CreateWindow(WindowSettings)
 				Toggle.toggle.UIStroke.color.Color = Sobing.ThemeGradient
 			end)
 
+			Sobing._RegisterUnloadHook(function()
+				if ToggleSettings.CurrentValue then
+					ToggleSettings.CurrentValue = false
+					ToggleV.CurrentValue = false
+					pcall(Set, false)
+					ToggleSettings.Callback(false)
+				end
+			end)
+
 			if Flag then
 				Sobing.Options[Flag] = ToggleV
 			end
@@ -5740,6 +5920,7 @@ function Sobing:CreateWindow(WindowSettings)
 
 				BindV.Settings = NewBindSettings
 				BindSettings = NewBindSettings
+				BindSettings.Callback = Sobing._WrapBindCallback(BindV, BindSettings.Callback)
 
 				Bind.Name = BindSettings.Name
 				Bind.Title.Text = BindSettings.Name
@@ -5753,6 +5934,15 @@ function Sobing:CreateWindow(WindowSettings)
 
 				BindV.CurrentBind = BindSettings.CurrentBind
 			end
+
+			BindSettings.Callback = Sobing._WrapBindCallback(BindV, BindSettings.Callback)
+			Sobing._RegisterUnloadHook(function()
+				if BindSettings.ReleaseOnUnload ~= false and BindV._state == true then
+					BindV._state = false
+					BindV.Active = false
+					BindSettings.Callback(false)
+				end
+			end)
 
 			function BindV:Destroy()
 				Bind.Visible = false
@@ -5938,6 +6128,7 @@ function Sobing:CreateWindow(WindowSettings)
 
 				BindV.Settings = NewBindSettings
 				BindSettings = NewBindSettings
+				BindSettings.Callback = Sobing._WrapBindCallback(BindV, BindSettings.Callback)
 
 				Bind.Name = BindSettings.Name
 				Bind.Title.Text = BindSettings.Name
@@ -5951,6 +6142,15 @@ function Sobing:CreateWindow(WindowSettings)
 				-- Sobing.Flags[BindSettings.Flag] = BindSettings
 
 			end
+
+			BindSettings.Callback = Sobing._WrapBindCallback(BindV, BindSettings.Callback)
+			Sobing._RegisterUnloadHook(function()
+				if BindSettings.ReleaseOnUnload ~= false and BindV._state == true then
+					BindV._state = false
+					BindV.Active = false
+					BindSettings.Callback(false)
+				end
+			end)
 
 			function BindV:Destroy()
 				Bind.Visible = false
@@ -7427,13 +7627,26 @@ function Sobing:CreateWindow(WindowSettings)
 
 	function Window:Unload()
 		if not Window.CanUnload then return false, "Unload disabled" end
+		if Window._unloading or Sobing._destroyed then return true end
+		Window._unloading = true
+
+		-- stop every running feature (ESP, noclip, loops, binds, ...) immediately,
+		-- before the closing animation, so nothing keeps running while the UI fades
+		Sobing._StopFeatures()
+
 		if Window.State and not Window.IsTransitioning then
 			Window.IsTransitioning = true
-			Hide(Main, Window.Bind, false)
-			Window.State = false
-			task.delay(MenuAnimDuration + 0.1, function()
-				Sobing:Destroy()
+			local okHide = pcall(function()
+				Hide(Main, Window.Bind, false)
 			end)
+			Window.State = false
+			if okHide then
+				task.delay(MenuAnimDuration + 0.1, function()
+					Sobing:Destroy()
+				end)
+			else
+				Sobing:Destroy()
+			end
 		else
 			Sobing:Destroy()
 		end
@@ -7450,13 +7663,19 @@ end
 function Sobing:Destroy()
 	if Sobing._destroyed then return end
 	Sobing._destroyed = true
+	Sobing.Unloaded = true
 	themeAnimToken += 1
 
+	-- 1) stop all running features first (toggles OFF, binds released, user cleanups)
+	SafeCall(StopFeatures)
+
+	-- 2) release every connection the library itself made
 	for _, c in ipairs(Connections) do
 		pcall(function() c:Disconnect() end)
 	end
 	table.clear(Connections)
 
+	-- 3) visual effects
 	pcall(function()
 		if Sobing._blur then
 			RunService:UnbindFromRenderStep(Sobing._blur.uid)
@@ -7467,7 +7686,12 @@ function Sobing:Destroy()
 	pcall(function()
 		if Sobing._blurEffect then Sobing._blurEffect:Destroy() end
 	end)
+	pcall(function()
+		local leftover = game:GetService("Lighting"):FindFirstChild("ExterBackgroundBlur")
+		if leftover then leftover:Destroy() end
+	end)
 
+	-- 4) notifications + the interface
 	pcall(function()
 		Main.Visible = false
 		for _, Notification in ipairs(Notifications:GetChildren()) do
