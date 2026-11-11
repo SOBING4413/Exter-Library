@@ -2868,6 +2868,276 @@ local function Minimize(Window)
 end
 
 
+-- ===========================================================================
+-- Extra elements: ProgressBar + Watermark HUD
+-- ===========================================================================
+local function BuildProgressBar(parent, settings)
+	settings = Kwargify({
+		Name = "Progress",
+		Description = nil,
+		Min = 0,
+		Max = 100,
+		CurrentValue = 0,
+		Suffix = "%",
+		Decimals = 0,
+	}, settings or {})
+
+	local hasDesc = settings.Description ~= nil and settings.Description ~= ""
+	local ProgressV = { Class = "ProgressBar", Settings = settings }
+
+	-- match the width of the other elements
+	local width = UDim2.new(1, -10, 0, 0)
+	pcall(function()
+		local ref = Elements.Template:FindFirstChild("Label") or Elements.Template:FindFirstChild("Toggle")
+		if ref then width = ref.Size end
+	end)
+
+	local holder = Instance.new("Frame")
+	holder.Name = tostring(settings.Name) .. " - Progress"
+	holder.Size = UDim2.new(width.X.Scale, width.X.Offset, 0, hasDesc and 64 or 50)
+	holder.BackgroundColor3 = Color3.fromRGB(32, 30, 38)
+	holder.BackgroundTransparency = 1
+	holder.BorderSizePixel = 0
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 6)
+	corner.Parent = holder
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(64, 61, 76)
+	stroke.Transparency = 1
+	stroke.Parent = holder
+
+	local font = Enum.Font.GothamMedium
+	local title = Instance.new("TextLabel")
+	title.Name = "Title"
+	title.BackgroundTransparency = 1
+	title.Position = UDim2.new(0, 14, 0, 8)
+	title.Size = UDim2.new(1, -90, 0, 16)
+	title.Font = font
+	title.TextSize = 14
+	title.TextColor3 = Color3.fromRGB(240, 240, 245)
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.TextTransparency = 1
+	title.Text = tostring(settings.Name)
+	title.Parent = holder
+
+	local valueLabel = Instance.new("TextLabel")
+	valueLabel.Name = "Value"
+	valueLabel.BackgroundTransparency = 1
+	valueLabel.AnchorPoint = Vector2.new(1, 0)
+	valueLabel.Position = UDim2.new(1, -14, 0, 8)
+	valueLabel.Size = UDim2.new(0, 70, 0, 16)
+	valueLabel.Font = font
+	valueLabel.TextSize = 13
+	valueLabel.TextColor3 = Color3.fromRGB(190, 190, 205)
+	valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+	valueLabel.TextTransparency = 1
+	valueLabel.Parent = holder
+
+	if hasDesc then
+		local desc = Instance.new("TextLabel")
+		desc.Name = "Desc"
+		desc.BackgroundTransparency = 1
+		desc.Position = UDim2.new(0, 14, 0, 26)
+		desc.Size = UDim2.new(1, -28, 0, 14)
+		desc.Font = Enum.Font.Gotham
+		desc.TextSize = 12
+		desc.TextColor3 = Color3.fromRGB(150, 150, 165)
+		desc.TextXAlignment = Enum.TextXAlignment.Left
+		desc.TextTransparency = 1
+		desc.Text = tostring(settings.Description)
+		desc.Parent = holder
+		ProgressV._desc = desc
+	end
+
+	local track = Instance.new("Frame")
+	track.Name = "Track"
+	track.AnchorPoint = Vector2.new(0, 1)
+	track.Position = UDim2.new(0, 14, 1, -10)
+	track.Size = UDim2.new(1, -28, 0, 6)
+	track.BackgroundColor3 = Color3.fromRGB(52, 49, 62)
+	track.BorderSizePixel = 0
+	track.Parent = holder
+	local trackCorner = Instance.new("UICorner")
+	trackCorner.CornerRadius = UDim.new(1, 0)
+	trackCorner.Parent = track
+
+	local fill = Instance.new("Frame")
+	fill.Name = "Fill"
+	fill.Size = UDim2.new(0, 0, 1, 0)
+	fill.BackgroundColor3 = Color3.new(1, 1, 1)
+	fill.BorderSizePixel = 0
+	fill.Parent = track
+	local fillCorner = Instance.new("UICorner")
+	fillCorner.CornerRadius = UDim.new(1, 0)
+	fillCorner.Parent = fill
+	local fillGradient = Instance.new("UIGradient")
+	fillGradient.Color = Sobing.ThemeGradient
+	fillGradient.Parent = fill
+
+	local function Render(animate)
+		local min, max = tonumber(settings.Min) or 0, tonumber(settings.Max) or 100
+		if max == min then max = min + 1 end
+		local v = math.clamp(tonumber(settings.CurrentValue) or min, math.min(min, max), math.max(min, max))
+		local alpha = (v - min) / (max - min)
+		local decimals = math.clamp(tonumber(settings.Decimals) or 0, 0, 4)
+		local text = decimals == 0 and tostring(math.floor(v + 0.5)) or string.format("%." .. decimals .. "f", v)
+		valueLabel.Text = text .. tostring(settings.Suffix or "")
+		local goal = UDim2.new(alpha, 0, 1, 0)
+		if animate and not Sobing._destroyed then
+			TweenService:Create(fill, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = goal}):Play()
+		else
+			fill.Size = goal
+		end
+	end
+
+	holder.Parent = parent
+	Render(false)
+
+	TweenService:Create(holder, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play()
+	TweenService:Create(stroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
+	TweenService:Create(title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+	TweenService:Create(valueLabel, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+	if ProgressV._desc then
+		TweenService:Create(ProgressV._desc, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+	end
+
+	BindTheme(function()
+		fillGradient.Color = Sobing.ThemeGradient
+	end)
+
+	function ProgressV:Set(value)
+		if type(value) == "table" then
+			for k, v in pairs(value) do settings[k] = v end
+			if value.Name ~= nil then title.Text = tostring(value.Name) end
+		else
+			settings.CurrentValue = value
+		end
+		ProgressV.CurrentValue = settings.CurrentValue
+		Render(true)
+	end
+
+	function ProgressV:Get()
+		return settings.CurrentValue
+	end
+
+	function ProgressV:Destroy()
+		holder.Visible = false
+		holder:Destroy()
+	end
+
+	ProgressV.CurrentValue = settings.CurrentValue
+	return ProgressV
+end
+
+-- Watermark HUD (name | FPS | ping | clock). Lives in the library ScreenGui, so it dies on unload.
+function Sobing:CreateWatermark(settings)
+	settings = Kwargify({
+		Text = "Exter Interactive",
+		Visible = true,
+		ShowFPS = true,
+		ShowPing = true,
+		ShowTime = true,
+	}, settings or {})
+
+	if Sobing._watermark then
+		pcall(function() Sobing._watermark:Destroy() end)
+	end
+
+	local WatermarkV = { Settings = settings }
+
+	local frame = Instance.new("Frame")
+	frame.Name = "ExterWatermark"
+	frame.AnchorPoint = Vector2.new(1, 0)
+	frame.Position = UDim2.new(1, -16, 0, 16)
+	frame.Size = UDim2.new(0, 0, 0, 30)
+	frame.AutomaticSize = Enum.AutomaticSize.X
+	frame.BackgroundColor3 = Color3.fromRGB(24, 23, 30)
+	frame.BackgroundTransparency = 0.15
+	frame.BorderSizePixel = 0
+	frame.Visible = settings.Visible and true or false
+	frame.ZIndex = 50
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = frame
+
+	local padding = Instance.new("UIPadding")
+	padding.PaddingLeft = UDim.new(0, 12)
+	padding.PaddingRight = UDim.new(0, 12)
+	padding.Parent = frame
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.new(1, 1, 1)
+	stroke.Thickness = 1.2
+	stroke.Transparency = 0.25
+	stroke.Parent = frame
+	local strokeGradient = Instance.new("UIGradient")
+	strokeGradient.Color = Sobing.ThemeGradient
+	strokeGradient.Parent = stroke
+
+	local label = Instance.new("TextLabel")
+	label.BackgroundTransparency = 1
+	label.AutomaticSize = Enum.AutomaticSize.X
+	label.Size = UDim2.new(0, 0, 1, 0)
+	label.Font = Enum.Font.GothamMedium
+	label.TextSize = 13
+	label.TextColor3 = Color3.fromRGB(235, 235, 245)
+	label.RichText = true
+	label.ZIndex = 51
+	label.Parent = frame
+
+	local frames, acc, fps = 0, 0, 60
+	local function Refresh()
+		local parts = { tostring(settings.Text) }
+		if settings.ShowFPS then parts[#parts + 1] = fps .. " FPS" end
+		if settings.ShowPing then
+			local ok, ping = pcall(function() return math.floor(Players.LocalPlayer:GetNetworkPing() * 2000 + 0.5) end)
+			parts[#parts + 1] = (ok and ping or 0) .. " ms"
+		end
+		if settings.ShowTime then parts[#parts + 1] = os.date("%H:%M:%S") end
+		label.Text = table.concat(parts, "  <font color='#7a7890'>|</font>  ")
+	end
+	Refresh()
+
+	RunService.Heartbeat:Connect(function(dt)
+		if not frame.Visible then return end
+		frames += 1
+		acc += dt
+		if acc >= 0.5 then
+			fps = math.floor(frames / acc + 0.5)
+			frames, acc = 0, 0
+			Refresh()
+		end
+	end)
+
+	BindTheme(function()
+		strokeGradient.Color = Sobing.ThemeGradient
+	end)
+
+	frame.Parent = SobingUI
+
+	function WatermarkV:SetVisible(v)
+		settings.Visible = v and true or false
+		frame.Visible = settings.Visible
+		if settings.Visible then Refresh() end
+	end
+
+	function WatermarkV:SetText(text)
+		settings.Text = tostring(text)
+		Refresh()
+	end
+
+	function WatermarkV:Destroy()
+		frame:Destroy()
+		if Sobing._watermark == WatermarkV then Sobing._watermark = nil end
+	end
+
+	Sobing._watermark = WatermarkV
+	return WatermarkV
+end
+
 function Sobing:CreateWindow(WindowSettings)
 
 	WindowSettings = Kwargify({
@@ -3500,6 +3770,11 @@ function Sobing:CreateWindow(WindowSettings)
 			end
 
 			-- Divider
+			function Section:CreateProgressBar(ProgressSettings)
+				TabPage.Position = UDim2.new(0,0,0,28)
+				return BuildProgressBar(TabPage, ProgressSettings)
+			end
+
 			function Section:CreateDivider()
 				TabPage.Position = UDim2.new(0,0,0,28)
 				local b = Elements.Template.Divider:Clone()
@@ -5119,6 +5394,10 @@ function Sobing:CreateWindow(WindowSettings)
 		end
 
 		-- Divider
+		function Tab:CreateProgressBar(ProgressSettings)
+			return BuildProgressBar(TabPage, ProgressSettings)
+		end
+
 		function Tab:CreateDivider()
 			local b = Elements.Template.Divider:Clone()
 			b.Parent = TabPage
@@ -7530,6 +7809,13 @@ function Sobing:CreateWindow(WindowSettings)
 			Name = "Unload GUI",
 			Description = "Lepas GUI dari sesi saat ini",
 			Callback = function()
+				local now = os.clock()
+				if not Sobing._unloadArmed or now - Sobing._unloadArmed > 3 then
+					Sobing._unloadArmed = now
+					Sobing:Notification({Title = "Konfirmasi Unload", Content = "Klik Unload GUI sekali lagi dalam 3 detik untuk melepas semua script.", Icon = "warning"})
+					return
+				end
+				Sobing._unloadArmed = nil
 				local ok, err = Window:Unload()
 				if not ok then
 					Sobing:Notification({Title = "Unload Disabled", Content = err, Icon = "warning"})
@@ -7576,6 +7862,18 @@ function Sobing:CreateWindow(WindowSettings)
 			Callback = function(v)
 				Sobing.Appearance.BackgroundBlur = v
 				SetBlur(Window.State)
+			end,
+		})
+		SettingsTab:CreateToggle({
+			Name = "Watermark",
+			Description = "Tampilkan FPS, ping, dan jam di pojok layar",
+			CurrentValue = false,
+			Callback = function(v)
+				if not Sobing._watermark then
+					Sobing:CreateWatermark({ Text = tostring(WindowSettings.Name), Visible = v })
+				else
+					Sobing._watermark:SetVisible(v)
+				end
 			end,
 		})
 		SettingsTab:CreateSlider({
